@@ -27,8 +27,10 @@ setup(
     include_package_data=True,
 
     install_requires=[
-        "related==0.1",
+        "related",
         "aiohttp==2.1.0",
+        "jmespath==0.9.3",
+        "Mako==1.0.6",
     ],
 
     setup_requires=[

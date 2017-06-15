@@ -1,0 +1,19 @@
+name: "Show Environment Get"
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - working
+
+steps:
+
+  - description: Pass the show_env=1 flag to the get end-point.
+
+    request:
+        url: /get?show_env=1
+
+    validate:
+      - response.url == "https://httpbin.org/get?show_env=1"
+      - response.args.show_env = "1"
+      - response.headers.Accept == "*/*"
+      - response.headers.Connection == "close"
+      - response.headers["X-Forwarded-Proto"] == "https"

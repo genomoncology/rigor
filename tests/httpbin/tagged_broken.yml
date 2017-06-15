@@ -1,0 +1,18 @@
+name: "Broken Get"
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - broken
+
+steps:
+
+  - description: Not really broken, but tagged that way.
+
+    request:
+        url: /get
+
+    validate:
+      - response.url == "https://httpbin.org/get"
+      - response.args == {}
+      - response.headers.Accept == "*/*"
+      - response.headers.Connection == "close"

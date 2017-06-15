@@ -1,49 +1,51 @@
-rigor: '1'
+name: "Create Classifications"
+format: "1.0"
 
-context:
-    headers:
-        Authorization: Token e1ec1eb80340ffbef8c9b8baf5312f6250d283bc
-        Content-Type: application/json
+scenarios:
 
-outline:
-    name: "Create Classifications"
-    steps:
+  - hgvs_g: NC_000007.13:g.140453136A>T
+    title: NM_004333.4(BRAF):c.1799T>A (p.Val600Glu)
 
-        - step:
-            - description: Create data set for scenario.
+headers:
 
-            - request:
-              - url: /curation/data_sets/
-              - method: POST
-              - body:
-                  - name: ${scenario.uuid}
-                  - full_name: ${scenario.uuid}
-                  - default: false
+    Authorization: Token ${global.auth_token}
+    Content-Type: application/json
 
-            - assert:
-                - scenario.uuid == response.name
-                - scenario.uuid == response.full_name
-                - False == response.default
+steps:
 
-            - bind:
-                - data_set: ${response.name}
+  - description: Create data set for scenario.
 
-        - step:
-            - description: Create classification.
+    request:
+        url: /curation/data_sets/
+        method: POST
+        body:
+            name: ${scenario.uuid}
+            full_name: ${scenario.uuid}
+            default: false
 
-            - request:
-              - url: /curation/classification/
-              - method: POST
-              - body:
-                  - data_set: ${scenario.data_set}
-                  - hgvs_g: ${scenario.hgvs_g}
+    extract:
+        data_set: ${response.name}
 
-            - assert:
-                - scenario.title == response.title
-                - scenario.data_set == response.data_set
+    validate:
+      - scenario.uuid == response.name
+      - scenario.uuid == response.full_name
+      - False == response.default
 
-            - bind:
-                - classification_uuid: ${response.uuid}
+  - description: Create classification.
+
+    request:
+        url: /curation/classification/
+        method: POST
+        body:
+            data_set: ${data_set}
+            hgvs_g: ${scenario.hgvs_g}
+
+    extract:
+        classification_uuid: ${response.uuid}
+
+    validate:
+      - scenario.title == response.title
+      - data_set == response.data_set
 
         # todo: call annotation exists that succeeds
         # todo: call classification get that succeeds
@@ -51,10 +53,4 @@ outline:
         # todo: call classification that fails
         # todo: delete classification
         # todo: delete data_set
-
-    scenarios:
-
-        - scenario:
-            - hgvs_g: NC_000007.13:g.140453136A>T
-            - title: NM_004333.4(BRAF):c.1799T>A (p.Val600Glu)
 

@@ -1,0 +1,19 @@
+name: "Basic Get"
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - working
+
+steps:
+
+  - description: Get call with no parameters
+
+    request:
+        url: /get
+
+    validate:
+      - response.url == "https://httpbin.org/get"
+      - response.args == {}
+      - response.headers.Accept == "*/*"
+      - response.origin is not None
+      - response.headers.Connection == "close"
