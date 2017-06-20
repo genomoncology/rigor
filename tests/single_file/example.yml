@@ -16,7 +16,7 @@ steps:
   - description: Create data set for scenario.
 
     request:
-        url: /curation/data_sets/
+        path: /curation/data_sets/
         method: POST
         body:
             name: ${scenario.uuid}
@@ -34,7 +34,7 @@ steps:
   - description: Create classification.
 
     request:
-        url: /curation/classification/
+        path: /curation/classification/
         method: POST
         body:
             data_set: ${data_set}

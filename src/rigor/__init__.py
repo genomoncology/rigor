@@ -4,8 +4,15 @@ from .collect import (
     collect
 )
 
+from .execute import (
+    execute
+)
+
 from .model import (
     Case,
+    Result,
+    Namespace,
+    State,
     Suite,
 )
 
@@ -13,8 +20,14 @@ __all__ = [
     # collect.py
     "collect",
 
+    # execute.py
+    "execute",
+
     # model.py
     "Case",
+    "Result",
+    "Namespace",
+    "State",
     "Suite",
 ]
 

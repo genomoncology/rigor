@@ -9,11 +9,11 @@ steps:
   - description: Get call with no parameters
 
     request:
-        url: /get
+        path: /get
 
     validate:
       - response.url == "https://httpbin.org/get"
       - response.args == {}
-      - response.headers.Accept == "*/*"
       - response.origin is not None
-      - response.headers.Connection == "close"
+      - response["headers.Accept"] == "*/*"
+      - response["headers.Connection"] == "close"

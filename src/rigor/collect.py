@@ -14,12 +14,12 @@ def collect(suite):
 
 
 async def async_collect(suite):
-    cases = []
+    tasks = []
     for pattern in glob_patterns(suite):
         for file_path in glob.iglob(pattern, recursive=True):
-            case = asyncio.ensure_future(collect_case(suite, file_path))
-            cases.append(case)
-    return await asyncio.gather(*cases)
+            tasks.append(asyncio.ensure_future(collect_case(suite, file_path)))
+    cases = await asyncio.gather(*tasks)
+    return cases
 
 
 async def collect_case(suite, file_path):

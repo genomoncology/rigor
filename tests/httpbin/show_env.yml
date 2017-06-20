@@ -4,16 +4,36 @@ domain: https://httpbin.org
 tags:
   - working
 
+scenarios:
+
+  - start: 1
+    adder: 2
+    check: 3
+    final: 5
+
+
 steps:
 
-  - description: Pass the show_env=1 flag to the get end-point.
-
+  - description: Pass the show_env flag, get it back and add a value to it
     request:
-        url: /get?show_env=1
-
+        path: /get
+        params:
+            show_env: ${scenario.start}
+    extract:
+        check: ${response['args.show_env']} + ${scenario.adder}
     validate:
-      - response.url == "https://httpbin.org/get?show_env=1"
-      - response.args.show_env = "1"
-      - response.headers.Accept == "*/*"
-      - response.headers.Connection == "close"
-      - response.headers["X-Forwarded-Proto"] == "https"
+      - "'${response.url}' == 'https://httpbin.org/get?show_env=${scenario.start}'"
+      - ${response["args.show_env"]} == ${scenario.start}
+      - ${extract.check} == ${scenario.check}
+
+  - description: Pass the show_env flag from previous case.
+    request:
+        path: /get
+        params:
+            show_env: ${extract.check}
+    extract:
+        final: ${response["args.show_env"]} + ${scenario.adder}
+    validate:
+      - "'${response.url}' == 'https://httpbin.org/get?show_env=${extract.check}'"
+      - ${response["args.show_env"]} == ${extract.check}
+      - ${extract.final} == ${scenario.final}

@@ -9,7 +9,7 @@ steps:
   - description: Not really broken, but tagged that way.
 
     request:
-        url: /get
+        path: /get
 
     validate:
       - response.url == "https://httpbin.org/get"
