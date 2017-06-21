@@ -13,12 +13,12 @@ JSON_DICT = {
     "url": "https://httpbin.org/get"
 }
 
-VALIDATION_STRING = [
-    'response.url == "https://httpbin.org/get"',
-    'response.args == {}',
-    'response.origin is not None',
-    'response["headers.Accept"] == "*/*"',
-    'response["headers.Connection"] == "close"'
+VALIDATION_KWARGS = [
+    dict(expect="${response.url}", actual="https://httpbin.org/get"),
+    dict(expect="${response.args}", actual={}),
+    dict(expect="${response.origin}", actual="127.0.0.1"),
+    dict(expect="${response['headers.Accept']}", actual="*/*"),
+    dict(expect="${response['headers.Connection']}", actual="close"),
 ]
 
 
@@ -35,6 +35,7 @@ def test_mako_templates():
     response = Namespace(JSON_DICT)
     state = State(response=response)
 
-    for validation_string in VALIDATION_STRING:
-        validator = Validator(validation_string)
-        assert validator.is_valid(state)
+    for kwargs in VALIDATION_KWARGS:
+        validator = Validator(**kwargs)
+        result = validator.evaluate(state)
+        assert result.success, "%s != %s" % (result.expect, result.actual)

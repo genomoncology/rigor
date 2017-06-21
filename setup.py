@@ -31,6 +31,7 @@ setup(
         "aiohttp==2.1.0",
         "jmespath==0.9.3",
         "Mako==1.0.6",
+        "click==6.7",
     ],
 
     setup_requires=[
@@ -44,6 +45,12 @@ setup(
     keywords='',
     description="rigor",
     long_description="%s\n\n%s" % (readme, history),
+
+    entry_points={
+        'console_scripts': [
+            'rigor=rigor.cli:main',
+        ]
+    },
 
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

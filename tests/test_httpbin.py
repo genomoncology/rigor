@@ -1,4 +1,5 @@
-from rigor.model import Suite, Method, Namespace
+from rigor.model import Suite, Method, Namespace, Validator
+from collections import OrderedDict
 
 import pytest
 import os
@@ -37,11 +38,10 @@ def test_collect_basic(suite):
     assert step.description == "Get call with no parameters"
     assert step.request.path == "/get"
     assert step.validate == [
-        'response.url == "https://httpbin.org/get"',
-        'response.args == {}',
-        'response.origin is not None',
-        'response["headers.Accept"] == "*/*"',
-        'response["headers.Connection"] == "close"',
+        Validator(expect="${response.url}", actual="https://httpbin.org/get"),
+        Validator(expect="${response.args}", actual=OrderedDict()),
+        Validator(expect="${response['headers.Accept']}", actual="*/*"),
+        Validator(expect="${response['headers.Connection']}", actual="close"),
     ]
 
 
@@ -70,12 +70,15 @@ def test_collect_show_env(suite):
     )
 
     assert step.validate == [
-        "'${response.url}' == 'https://httpbin.org/get?show_env=${extract.check}'",
-        '${response["args.show_env"]} == ${extract.check}',
-        '${extract.final} == ${scenario.final}',
-    ]
+        Validator(expect='https://httpbin.org/get?show_env=${extract.check}',
+                  actual='${response.url}'),
+        Validator(expect='${extract.check}',
+                  actual="${response['args.show_env']}"),
+        Validator(expect='${scenario.final}', actual='${final}'),
+        Validator(expect='${scenario.final}', actual='${extract.final}')]
 
 
 def test_execute(suite):
-    assert suite.execute()
+    success = suite.execute()
+    assert success
     assert len(suite.passed) == 2

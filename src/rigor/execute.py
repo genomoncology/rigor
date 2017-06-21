@@ -42,8 +42,8 @@ async def async_execute(loop, suite):
 async def do_scenario(state):
     from . import Result
 
-    failing_step = None
-    error_message = None
+    fail_step = None
+    fail_validations = None
     start_time = time.time()
 
     for step in state.case.steps:
@@ -54,18 +54,21 @@ async def do_scenario(state):
         state.extract = step.extract.evaluate(state)
 
         # validate response
-        failures = step.validate_response(state)
+        fail_validations = step.validate_response(state)
 
         # check status
-        state.success = failures == []
+        state.success = len(fail_validations) == 0
 
         # break if step fails
         if not state.success:
-            failing_step = step
+            fail_step = step
             break
 
     running_time = time.time() - start_time
 
-    return Result(case=state.case, scenario=state.scenario,
-                  success=state.success, failing_step=failing_step,
-                  error_message=error_message, running_time=running_time)
+    return Result(case=state.case,
+                  scenario=state.scenario,
+                  success=state.success,
+                  fail_step=fail_step,
+                  fail_validations=fail_validations,
+                  running_time=running_time)

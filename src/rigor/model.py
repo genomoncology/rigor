@@ -3,6 +3,7 @@ import os
 import aiohttp
 import jmespath
 import ast
+
 from mako.template import Template
 
 import related
@@ -33,8 +34,7 @@ class Namespace(related.ImmutableDict):
         return self.__getitem__(item)
 
     def __getitem__(self, name):
-        value = jmespath.search(name, self)
-        return value
+        return self.get(name) if name in self else jmespath.search(name, self)
 
     def evaluate(self, state, existing=None):
         values = existing or {}
@@ -46,22 +46,23 @@ class Namespace(related.ImmutableDict):
 
     @classmethod
     def render_value(cls, value, state):
-        template = Template(value)
-        rendered = template.render(**state.namespace)
-        try:
-            value = ast.literal_eval(rendered)
-        except:
-            value = rendered
+        if isinstance(value, str):
+            template = Template(value)
+
+            try:
+                rendered = template.render(**state.namespace)
+            except:
+                rendered = value
+
+            try:
+                value = ast.literal_eval(rendered)
+            except:
+                value = rendered
+
+        if isinstance(value, dict) and not isinstance(value, Namespace):
+            value = Namespace(value)
 
         return value
-
-    @classmethod
-    def render_expression(cls, expression, state):
-        # 1 - resolve any inline ${variables} with state values
-        resolved = cls.render_value(expression, state)
-
-        # 2 - evaluate full expression by wrapping entire string
-        return cls.render_value("${%s}" % resolved, state)
 
 
 class Extractor(Namespace):
@@ -76,10 +77,26 @@ class Extractor(Namespace):
         return super(Extractor, cls).render_value(value, state)
 
 
-class Validator(str):
+@related.immutable
+class ValidationResult(object):
+    actual = related.ChildField(object)
+    expect = related.ChildField(object)
+    success = related.BooleanField()
 
-    def is_valid(self, state):
-        return Namespace.render_expression(self, state)
+
+@related.immutable
+class Validator(object):
+    expect = related.ChildField(object)
+    actual = related.ChildField(object)
+
+    def evaluate(self, state):
+        actual = Namespace.render_value(self.actual, state)
+        expect = Namespace.render_value(self.expect, state)
+        success = actual == expect
+
+        return ValidationResult(actual=actual,
+                                expect=expect,
+                                success=success)
 
 
 @related.immutable
@@ -130,10 +147,9 @@ class Step(object):
         failures = []
 
         for validator in self.validate or []:
-            is_valid = validator.is_valid(state)
-
-            if not is_valid:
-                failures.append(validator)
+            result = validator.evaluate(state)
+            if not result.success:
+                failures.append(result)
 
         return failures
 
@@ -169,8 +185,8 @@ class Result(object):
     case = related.ChildField(Case)
     scenario = related.ChildField(Namespace)
     success = related.BooleanField()
-    failing_step = related.ChildField(Step, required=False)
-    error_message = related.StringField(required=False)
+    fail_step = related.ChildField(Step, required=False)
+    fail_validations = related.SequenceField(ValidationResult, required=False)
     running_time = related.FloatField(required=False)
 
 
@@ -186,7 +202,7 @@ class Suite(object):
     skipped = related.MappingField(Case, "file_path", default={})
     passed = related.SequenceField(Result, default=[])
     failed = related.SequenceField(Result, default=[])
-    concurrency = related.IntegerField(default=10)
+    concurrency = related.IntegerField(default=50)
 
     def __attrs_post_init__(self):
         from . import collect
@@ -226,11 +242,11 @@ class State(object):
 
     @property
     def namespace(self):
-        return dict(
-            scenario=self.scenario,
-            extract=self.extract,
-            response=self.response,
-        )
+        values = self.extract.copy() if self.extract else {}
+        values.update(dict(scenario=self.scenario,
+                           extract=self.extract,
+                           response=self.response))
+        return values
 
 
 # utilities

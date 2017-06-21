@@ -12,8 +12,7 @@ steps:
         path: /get
 
     validate:
-      - response.url == "https://httpbin.org/get"
-      - response.args == {}
-      - response.origin is not None
-      - response["headers.Accept"] == "*/*"
-      - response["headers.Connection"] == "close"
+      - { expect: "${response.url}", actual: "https://httpbin.org/get" }
+      - { expect: "${response.args}", actual: {} }
+      - { expect: "${response['headers.Accept']}", actual: "*/*" }
+      - { expect: "${response['headers.Connection']}", actual: "close" }

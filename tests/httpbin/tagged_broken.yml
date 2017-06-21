@@ -10,9 +10,3 @@ steps:
 
     request:
         path: /get
-
-    validate:
-      - response.url == "https://httpbin.org/get"
-      - response.args == {}
-      - response.headers.Accept == "*/*"
-      - response.headers.Connection == "close"
