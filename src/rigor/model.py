@@ -139,9 +139,15 @@ class Step(object):
 
         # make request and store response
         async with method(url, headers=headers, params=params) as response:
-            json = await response.json()
-            state.response = Namespace(json)
-            state.success = response.status in valid_statuses
+            try:
+                json = await response.json()
+                state.response = Namespace(json)
+                state.success = response.status in valid_statuses
+
+            except Exception as exc:
+                # todo: logging on exc?
+                state.response = Namespace({})
+                state.success = False
 
     def validate_response(self, state):
         failures = []
@@ -171,7 +177,8 @@ class Case(object):
 
     @classmethod
     def loads(cls, content, file_path=None):
-        return related.from_yaml(content, Case, file_path=file_path)
+        return related.from_yaml(content, Case, file_path=file_path,
+                                 object_pairs_hook=dict)
 
     def is_active(self, included, excluded):
         has_steps = len(self.steps) > 0
@@ -192,17 +199,22 @@ class Result(object):
 
 @related.mutable
 class Suite(object):
+    # cli options
     domain = related.StringField(str)
     directories = related.SequenceField(str, default=None)
     file_prefixes = related.SequenceField(str, default=None)
     extensions = related.SequenceField(str, default=["yml", "yaml"])
     tags_included = related.SequenceField(str, default=None)
     tags_excluded = related.SequenceField(str, default=None)
+    concurrency = related.IntegerField(default=50)
+
+    # collect
     queued = related.MappingField(Case, "file_path", default={})
     skipped = related.MappingField(Case, "file_path", default={})
+
+    # execute
     passed = related.SequenceField(Result, default=[])
     failed = related.SequenceField(Result, default=[])
-    concurrency = related.IntegerField(default=50)
 
     def __attrs_post_init__(self):
         from . import collect
@@ -231,13 +243,21 @@ class Suite(object):
 
 @related.mutable
 class State(object):
+    # handle to shared asynchronous, http client
     session = related.ChildField(aiohttp.ClientSession, required=False)
+
+    # final success/failure of this scenario execution
     success = related.BooleanField(default=True)
 
+    # scenario links (immutable)
     suite = related.ChildField(Suite, required=False)
     case = related.ChildField(Case, required=False)
     scenario = related.ChildField(Namespace, required=False)
+
+    # namespace of extracted variables
     extract = related.ChildField(Namespace, required=False)
+
+    # last request's response
     response = related.ChildField(Namespace, required=False)
 
     @property

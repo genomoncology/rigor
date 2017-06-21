@@ -19,7 +19,7 @@ steps:
         path: /curation/data_sets/
         method: POST
         body:
-            name: ${scenario.uuid}
+            name: ${senario.uuid}
             full_name: ${scenario.uuid}
             default: false
 
