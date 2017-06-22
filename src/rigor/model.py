@@ -119,7 +119,17 @@ class Request(object):
         return Namespace(case_headers)
 
     def get_params(self, state):
-        return self.params.evaluate(state) if self.params else Namespace()
+        as_dict = self.params.evaluate(state) if self.params else Namespace()
+
+        params = []
+        for key, value in as_dict.items():
+            if isinstance(value, (tuple, list, set)):
+                for item in value:
+                    params.append((key, str(item)))
+            else:
+                params.append((key, str(value)))
+
+        return params
 
 
 @related.immutable
