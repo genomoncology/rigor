@@ -1,4 +1,4 @@
-name: "Broken Get"
+name: Tagged Broken
 format: "1.0"
 domain: https://httpbin.org
 tags:
@@ -6,7 +6,7 @@ tags:
 
 steps:
 
-  - description: Not really broken, but tagged that way.
+  - description: This won't run
 
     request:
         path: /get

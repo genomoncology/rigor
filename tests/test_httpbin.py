@@ -17,17 +17,23 @@ def suite():
 
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
-    assert len(suite.skipped) == 3
-    assert len(suite.queued) == 2
+    assert len(suite.skipped) == 2
+    assert len(suite.queued) == 3
     assert len(suite.failed) == 0
     assert len(suite.passed) == 0
 
 
-def test_collect_basic(suite):
-    case = suite.get_case(ROOT_DIR, "basic.yml")
+def test_execute(suite):
+    success = suite.execute()
+    assert success
+    assert len(suite.passed) == 5
+
+
+def test_case_get(suite):
+    case = suite.get_case(ROOT_DIR, "get.yml")
 
     # check case root
-    assert case.name == "Basic Get"
+    assert case.name == "Get"
     assert case.format == "1.0"
     assert case.domain == "https://httpbin.org"
     assert case.tags == ["working"]
@@ -45,11 +51,11 @@ def test_collect_basic(suite):
     ]
 
 
-def test_collect_show_env(suite):
-    case = suite.get_case(ROOT_DIR, "show_env.yml")
+def test_case_params(suite):
+    case = suite.get_case(ROOT_DIR, "params.yml")
 
     # check case root
-    assert case.name == "Show Environment Get"
+    assert case.name == "Params"
     assert case.format == "1.0"
     assert case.domain == "https://httpbin.org"
     assert case.tags == ["working"]
@@ -78,7 +84,20 @@ def test_collect_show_env(suite):
         Validator(expect='${scenario.final}', actual='${extract.final}')]
 
 
-def test_execute(suite):
-    success = suite.execute()
-    assert success
-    assert len(suite.passed) == 2
+def test_case_http_status(suite):
+    case = suite.get_case(ROOT_DIR, "http_status.yml")
+
+    # check case root
+    assert case.name == "HTTP Status"
+    assert case.format == "1.0"
+    assert case.domain == "https://httpbin.org"
+    assert len(case.steps) == 1
+    assert len(case.scenarios) == 3
+
+    # check step
+    step = case.steps[0]
+    assert step.validate == [
+        Validator(expect='${scenario.http_status_code}',
+                  actual='${response.http_status_code}'),
+
+    ]

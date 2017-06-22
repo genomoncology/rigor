@@ -1,4 +1,4 @@
-name: "Show Environment Get"
+name: Params
 format: "1.0"
 domain: https://httpbin.org
 tags:

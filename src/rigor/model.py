@@ -108,9 +108,10 @@ class Request(object):
     params = related.ChildField(Namespace, required=False)
     body = related.ChildField(Namespace, required=False)
 
-    def get_url(self, suite, case):
-        domain = self.domain or case.domain or suite.domain
-        return "%s/%s" % (domain, self.path)
+    def get_url(self, state):
+        domain = self.domain or state.case.domain or state.suite.domain
+        path = Namespace.render_value(self.path, state)
+        return "%s/%s" % (domain, path)
 
     def get_headers(self, case):
         case_headers = related.to_dict(case.headers) or {}
@@ -129,11 +130,10 @@ class Step(object):
     validate = related.SequenceField(Validator, required=False)
 
     async def fetch(self, state):
-        valid_statuses = [200]
 
         # construct request
         method = getattr(state.session, self.request.method.value.lower())
-        url = self.request.get_url(state.suite, state.case)
+        url = self.request.get_url(state)
         headers = self.request.get_headers(state.case)
         params = self.request.get_params(state)
 
@@ -141,13 +141,11 @@ class Step(object):
         async with method(url, headers=headers, params=params) as response:
             try:
                 json = await response.json()
-                state.response = Namespace(json)
-                state.success = response.status in valid_statuses
-
             except Exception as exc:
-                # todo: logging on exc?
-                state.response = Namespace({})
-                state.success = False
+                json = {}  # todo: logging
+
+            json['http_status_code'] = response.status
+            state.response = Namespace(json)
 
     def validate_response(self, state):
         failures = []
@@ -162,7 +160,7 @@ class Step(object):
 
 @related.immutable
 class Case(object):
-    name = related.StringField(default=None)
+    name = related.StringField(required=False, default=None)
     steps = related.SequenceField(Step, default=[])
     scenarios = related.SequenceField(Namespace, default=[Namespace()])
     format = related.StringField(default="1.0")
@@ -170,6 +168,7 @@ class Case(object):
     tags = related.SequenceField(str, required=False)
     headers = related.ChildField(Namespace, required=False)
     file_path = related.StringField(default=None)
+    is_valid = related.BooleanField(default=True)
 
     @classmethod
     def load(cls, file_path):
@@ -177,14 +176,18 @@ class Case(object):
 
     @classmethod
     def loads(cls, content, file_path=None):
-        return related.from_yaml(content, Case, file_path=file_path,
-                                 object_pairs_hook=dict)
+        try:
+            return related.from_yaml(content, Case, file_path=file_path,
+                                     object_pairs_hook=dict)
+        except Exception as exc:
+            print("Load Failed: %s: %s" % (file_path, exc))  # todo: logging
+            return Case(file_path=file_path, is_valid=False)
 
     def is_active(self, included, excluded):
         has_steps = len(self.steps) > 0
         is_included = not included or overlap(included, self.tags)
         is_excluded = excluded and overlap(excluded, self.tags)
-        return has_steps and is_included and not is_excluded
+        return self.is_valid and has_steps and is_included and not is_excluded
 
 
 @related.immutable

@@ -1,4 +1,4 @@
-name: "Basic Get"
+name: Get
 format: "1.0"
 domain: https://httpbin.org
 tags:
