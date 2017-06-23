@@ -49,7 +49,7 @@ class Namespace(related.ImmutableDict):
         return Namespace(values)
 
     @classmethod
-    def render_value(cls, value, state):
+    def render_value(cls, value, state, do_eval=True):
         if isinstance(value, str):
             template = Template(value)
 
@@ -59,7 +59,7 @@ class Namespace(related.ImmutableDict):
                 rendered = value
 
             try:
-                value = ast.literal_eval(rendered)
+                value = ast.literal_eval(rendered) if do_eval else rendered
             except:
                 value = rendered
 
@@ -136,6 +136,13 @@ class Request(object):
 
         return params
 
+    def get_data(self, state):
+        # flatten to a string that will include ${expressions} to render
+        data_string = json.dumps(self.data)
+
+        # do_eval = False because this is one case we want to keep a string
+        return Namespace.render_value(data_string, state, do_eval=False)
+
 
 @related.immutable
 class Step(object):
@@ -151,7 +158,7 @@ class Step(object):
         url = self.request.get_url(state)
         kwargs = dict(headers=self.request.get_headers(state.case))
         if self.request.data:
-            kwargs['data'] = json.dumps(self.request.data)
+            kwargs['data'] = self.request.get_data(state)
         else:
             kwargs['params'] = self.request.get_params(state)
 
@@ -224,6 +231,8 @@ class Result(object):
     fail_step = related.ChildField(Step, required=False)
     fail_validations = related.SequenceField(ValidationResult, required=False)
     running_time = related.FloatField(required=False)
+    response = related.ChildField(Namespace, required=False)
+    status = related.IntegerField(required=False)
 
 
 @related.mutable
@@ -272,6 +281,9 @@ class Suite(object):
 
 @related.mutable
 class State(object):
+    # unique id of the running scenario, available in namespace
+    uuid = related.UUIDField()
+
     # handle to shared asynchronous, http client
     session = related.ChildField(aiohttp.ClientSession, required=False)
 
@@ -293,7 +305,8 @@ class State(object):
     @property
     def namespace(self):
         values = self.extract.copy() if self.extract else {}
-        values.update(dict(scenario=self.scenario,
+        values.update(dict(__uuid__=self.uuid,
+                           scenario=self.scenario,
                            extract=self.extract,
                            response=self.response))
         return values

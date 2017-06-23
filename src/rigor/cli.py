@@ -16,7 +16,10 @@ def main(directories):
     i = 1
     for failure in suite.failed:
         print("Failure #%s" % i)
+        print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
+        print("Step:\n%s\n" % related.to_json(failure.fail_step))
         print("Scenario:\n%s\n" % related.to_json(failure.scenario))
+        print("Last Response:\n%s\n" % related.to_json(failure.response))
         print("Failed Validations:")
         for validation in failure.fail_validations:
             print(related.to_json(validation))

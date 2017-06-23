@@ -71,4 +71,6 @@ async def do_scenario(state):
                   success=state.success,
                   fail_step=fail_step,
                   fail_validations=fail_validations,
-                  running_time=running_time)
+                  running_time=running_time,
+                  response=state.response,
+                  status=state.status)
