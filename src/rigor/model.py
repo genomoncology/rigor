@@ -3,6 +3,7 @@ import os
 import aiohttp
 import jmespath
 import ast
+import json
 
 from mako.template import Template
 
@@ -109,7 +110,7 @@ class Request(object):
     domain = related.StringField(required=False)
     headers = related.ChildField(Namespace, required=False)
     params = related.ChildField(Namespace, required=False)
-    body = related.ChildField(Namespace, required=False)
+    data = related.ChildField(Namespace, required=False)
     status = related.SequenceField(int, required=False)
 
     def get_url(self, state):
@@ -146,19 +147,22 @@ class Step(object):
     async def fetch(self, state):
 
         # construct request
-        method = getattr(state.session, self.request.method.value.lower())
+        method = self.request.method.value.lower()
         url = self.request.get_url(state)
-        headers = self.request.get_headers(state.case)
-        params = self.request.get_params(state)
+        kwargs = dict(headers=self.request.get_headers(state.case))
+        if self.request.data:
+            kwargs['data'] = json.dumps(self.request.data)
+        else:
+            kwargs['params'] = self.request.get_params(state)
 
         # make request and store response
-        async with method(url, headers=headers, params=params) as response:
+        async with state.session.request(method, url, **kwargs) as response:
             try:
-                json = await response.json()
+                response_json = await response.json()
             except Exception as exc:
-                json = {}  # todo: logging
+                response_json = {}  # todo: logging
 
-            state.response = Namespace(json)
+            state.response = Namespace(response_json)
             state.status = response.status
 
     def validate_response(self, state):
@@ -231,7 +235,7 @@ class Suite(object):
     extensions = related.SequenceField(str, default=["yml", "yaml"])
     tags_included = related.SequenceField(str, default=None)
     tags_excluded = related.SequenceField(str, default=None)
-    concurrency = related.IntegerField(default=50)
+    concurrency = related.IntegerField(default=20)
 
     # collect
     queued = related.MappingField(Case, "file_path", default={})

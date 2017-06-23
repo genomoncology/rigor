@@ -1,0 +1,31 @@
+name: Post
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - working
+
+steps:
+
+  - description: Post with Data Payload
+
+    request:
+        method: POST
+        path: /post
+        data:
+          request:
+            query: "*:*"
+            pagination:
+              page_num: 2
+              page_size: 10
+
+    extract: # httpbin.org puts the original data request under 'json' key
+        page_num: ${response['json.request.pagination.page_num']}
+
+    validate:
+
+      - expect: "*:*"
+        actual: ${response['json.request.query']}
+
+      - expect: 2
+        actual: ${page_num}
+

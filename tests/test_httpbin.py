@@ -18,7 +18,7 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 3
+    assert len(suite.queued) == 4
     assert len(suite.failed) == 0
     assert len(suite.passed) == 0
 
@@ -26,7 +26,8 @@ def test_collect(suite):
 def test_execute(suite):
     success = suite.execute()
     assert success
-    assert len(suite.passed) == 3
+    assert len(suite.passed) == 4
+    print(related.to_json(suite))
 
 
 def test_case_get(suite):
