@@ -27,6 +27,9 @@ class Method(enum.Enum):
     PATCH = "PATCH"
     DELETE = "DELETE"
 
+# https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
+HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
+
 
 class Namespace(related.ImmutableDict):
 
@@ -107,6 +110,7 @@ class Request(object):
     headers = related.ChildField(Namespace, required=False)
     params = related.ChildField(Namespace, required=False)
     body = related.ChildField(Namespace, required=False)
+    status = related.SequenceField(int, required=False)
 
     def get_url(self, state):
         domain = self.domain or state.case.domain or state.suite.domain
@@ -154,12 +158,20 @@ class Step(object):
             except Exception as exc:
                 json = {}  # todo: logging
 
-            json['http_status_code'] = response.status
             state.response = Namespace(json)
+            state.status = response.status
 
     def validate_response(self, state):
         failures = []
 
+        # status check
+        status = self.request.status or HTTP_SUCCESS
+        if state.status not in status:
+            failures.append(ValidationResult(actual=state.status,
+                                             expect=status,
+                                             success=False))
+
+        # validators check
         for validator in self.validate or []:
             result = validator.evaluate(state)
             if not result.success:
@@ -270,8 +282,9 @@ class State(object):
     # namespace of extracted variables
     extract = related.ChildField(Namespace, required=False)
 
-    # last request's response
+    # last request's response and http status code (e.g. 200)
     response = related.ChildField(Namespace, required=False)
+    status = related.IntegerField(required=False)
 
     @property
     def namespace(self):

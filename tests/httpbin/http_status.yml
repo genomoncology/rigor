@@ -2,20 +2,30 @@ name: HTTP Status
 format: "1.0"
 domain: https://httpbin.org
 
-scenarios:
-
-  - http_status_code: 200
-  - http_status_code: 404
-  - http_status_code: 418
-
 steps:
 
-  - description: Get call with no parameters
+  - description: 200 OK (Default Expected Status)
 
     request:
-        path: /status/${scenario.http_status_code}
+        path: /status/200
 
-    validate:
-       - expect: ${scenario.http_status_code}
-         actual: ${response.http_status_code}
 
+  - description: 200 OK
+
+    request:
+        path: /status/200
+        status: [200]
+
+
+  - description: 404 Page Not Found
+
+    request:
+        path: /status/404
+        status: [404]
+
+
+  - description: 418 -=[ teapot ]=-
+
+    request:
+        path: /status/418
+        status: [418]
