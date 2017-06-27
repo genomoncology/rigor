@@ -19,6 +19,7 @@ def main(directories):
     # suite_dict = related.to_dict(suite)
     k = 0
     j = 1
+    i = 0
     for failure in suite.failed:
         print("Failure #%s" % i)
         print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
