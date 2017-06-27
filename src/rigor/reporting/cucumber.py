@@ -27,4 +27,4 @@ class Cucumber(object):
     feature = related.ImmutableDict(Result.case)
 
     def to_report(self, step, scenario, result):
-        elements =
+        elements = self.elements
