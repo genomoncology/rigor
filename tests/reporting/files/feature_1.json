@@ -1,0 +1,16 @@
+[
+  {
+    "uri": "features/one_passing_one_failing.feature",
+    "keyword": "Feature",
+    "id": "one-passing-scenario,-one-failing-scenario",
+    "name": "One passing scenario, one failing scenario",
+    "line": 2,
+    "description": "",
+    "tags": [
+      {
+        "name": "@a",
+        "line": 1
+      }
+      ]
+  }
+]
