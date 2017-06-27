@@ -3,6 +3,7 @@ rigor
 
 - Functional API Testing Framework
 - Built with Python 3.6
+- Multiple Purposes: Document API, Test API, Smoke/Functional/TDD, etc.
 - Asynchronous (ayncio) collection (aiofiles) and execution (aiohttp)
 - Cucumber-inspired Given/When/Then approach to test cases.
 - Different from Cucumber because it is imperative. Tied explicitly to the
@@ -15,6 +16,8 @@ rigor
 - `tags` can be included (e.g. smoke) or excluded (e.g. broken).
 - Asynchronous mode can be disabled by specifying `concurrency=1`
 - Namespace __uuid__ for uniquely naming things in case of concurrency.
+- Rendering using [mako: http://www.makotemplates.org/]
+- Command-line with [click: http://click.pocoo.org/]
 
 
 Setup
