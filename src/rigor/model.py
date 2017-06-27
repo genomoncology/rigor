@@ -3,6 +3,7 @@ import os
 import aiohttp
 import jmespath
 import ast
+import json
 
 from mako.template import Template
 
@@ -27,6 +28,9 @@ class Method(enum.Enum):
     PATCH = "PATCH"
     DELETE = "DELETE"
 
+# https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
+HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
+
 
 class Namespace(related.ImmutableDict):
 
@@ -45,7 +49,7 @@ class Namespace(related.ImmutableDict):
         return Namespace(values)
 
     @classmethod
-    def render_value(cls, value, state):
+    def render_value(cls, value, state, do_eval=True):
         if isinstance(value, str):
             template = Template(value)
 
@@ -55,7 +59,7 @@ class Namespace(related.ImmutableDict):
                 rendered = value
 
             try:
-                value = ast.literal_eval(rendered)
+                value = ast.literal_eval(rendered) if do_eval else rendered
             except:
                 value = rendered
 
@@ -106,7 +110,8 @@ class Request(object):
     domain = related.StringField(required=False)
     headers = related.ChildField(Namespace, required=False)
     params = related.ChildField(Namespace, required=False)
-    body = related.ChildField(Namespace, required=False)
+    data = related.ChildField(Namespace, required=False)
+    status = related.SequenceField(int, required=False)
 
     def get_url(self, state):
         domain = self.domain or state.case.domain or state.suite.domain
@@ -131,6 +136,13 @@ class Request(object):
 
         return params
 
+    def get_data(self, state):
+        # flatten to a string that will include ${expressions} to render
+        data_string = json.dumps(self.data)
+
+        # do_eval = False because this is one case we want to keep a string
+        return Namespace.render_value(data_string, state, do_eval=False)
+
 
 @related.immutable
 class Step(object):
@@ -142,24 +154,35 @@ class Step(object):
     async def fetch(self, state):
 
         # construct request
-        method = getattr(state.session, self.request.method.value.lower())
+        method = self.request.method.value.lower()
         url = self.request.get_url(state)
-        headers = self.request.get_headers(state.case)
-        params = self.request.get_params(state)
+        kwargs = dict(headers=self.request.get_headers(state.case))
+        if self.request.data:
+            kwargs['data'] = self.request.get_data(state)
+        else:
+            kwargs['params'] = self.request.get_params(state)
 
         # make request and store response
-        async with method(url, headers=headers, params=params) as response:
+        async with state.session.request(method, url, **kwargs) as response:
             try:
-                json = await response.json()
+                response_json = await response.json()
             except Exception as exc:
-                json = {}  # todo: logging
+                response_json = {}  # todo: logging
 
-            json['http_status_code'] = response.status
-            state.response = Namespace(json)
+            state.response = Namespace(response_json)
+            state.status = response.status
 
     def validate_response(self, state):
         failures = []
 
+        # status check
+        status = self.request.status or HTTP_SUCCESS
+        if state.status not in status:
+            failures.append(ValidationResult(actual=state.status,
+                                             expect=status,
+                                             success=False))
+
+        # validators check
         for validator in self.validate or []:
             result = validator.evaluate(state)
             if not result.success:
@@ -208,6 +231,8 @@ class Result(object):
     fail_step = related.ChildField(Step, required=False)
     fail_validations = related.SequenceField(ValidationResult, required=False)
     running_time = related.FloatField(required=False)
+    response = related.ChildField(Namespace, required=False)
+    status = related.IntegerField(required=False)
 
 
 @related.mutable
@@ -219,7 +244,7 @@ class Suite(object):
     extensions = related.SequenceField(str, default=["yml", "yaml"])
     tags_included = related.SequenceField(str, default=None)
     tags_excluded = related.SequenceField(str, default=None)
-    concurrency = related.IntegerField(default=50)
+    concurrency = related.IntegerField(default=20)
 
     # collect
     queued = related.MappingField(Case, "file_path", default={})
@@ -256,6 +281,9 @@ class Suite(object):
 
 @related.mutable
 class State(object):
+    # unique id of the running scenario, available in namespace
+    uuid = related.UUIDField()
+
     # handle to shared asynchronous, http client
     session = related.ChildField(aiohttp.ClientSession, required=False)
 
@@ -270,13 +298,15 @@ class State(object):
     # namespace of extracted variables
     extract = related.ChildField(Namespace, required=False)
 
-    # last request's response
+    # last request's response and http status code (e.g. 200)
     response = related.ChildField(Namespace, required=False)
+    status = related.IntegerField(required=False)
 
     @property
     def namespace(self):
         values = self.extract.copy() if self.extract else {}
-        values.update(dict(scenario=self.scenario,
+        values.update(dict(__uuid__=self.uuid,
+                           scenario=self.scenario,
                            extract=self.extract,
                            response=self.response))
         return values

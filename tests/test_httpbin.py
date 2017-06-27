@@ -18,7 +18,7 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 3
+    assert len(suite.queued) == 4
     assert len(suite.failed) == 0
     assert len(suite.passed) == 0
 
@@ -26,7 +26,8 @@ def test_collect(suite):
 def test_execute(suite):
     success = suite.execute()
     assert success
-    assert len(suite.passed) == 5
+    assert len(suite.passed) == 4
+    print(related.to_json(suite))
 
 
 def test_case_get(suite):
@@ -91,13 +92,11 @@ def test_case_http_status(suite):
     assert case.name == "HTTP Status"
     assert case.format == "1.0"
     assert case.domain == "https://httpbin.org"
-    assert len(case.steps) == 1
-    assert len(case.scenarios) == 3
+    assert len(case.steps) == 4
+    assert len(case.scenarios) == 1  # default empty scenario
 
     # check step
-    step = case.steps[0]
-    assert step.validate == [
-        Validator(expect='${scenario.http_status_code}',
-                  actual='${response.http_status_code}'),
-
-    ]
+    assert case.steps[0].request.status == []
+    assert case.steps[1].request.status == [200]
+    assert case.steps[2].request.status == [404]
+    assert case.steps[3].request.status == [418]

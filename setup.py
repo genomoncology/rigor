@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.0.1',
+    version='0.0.2',
 
     package_dir={
         '': 'src'
@@ -29,6 +29,7 @@ setup(
     install_requires=[
         "related",
         "aiohttp==2.1.0",
+        "aiofiles==0.3.1",
         "jmespath==0.9.3",
         "Mako==1.0.6",
         "click==6.7",
