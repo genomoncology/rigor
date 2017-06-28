@@ -47,22 +47,23 @@ async def do_scenario(state):
     start_time = time.time()
 
     for step in state.case.steps:
-        # fetch
-        await step.fetch(state)
+        for state.iterate in step.iterate.iterate(state):
+            # fetch
+            await step.fetch(state)
 
-        # extract response
-        state.extract = step.extract.evaluate(state)
+            # extract response
+            state.extract = step.extract.evaluate(state)
 
-        # validate response
-        fail_validations = step.validate_response(state)
+            # validate response
+            fail_validations = step.validate_response(state)
 
-        # check status
-        state.success = len(fail_validations) == 0
+            # check status
+            state.success = len(fail_validations) == 0
 
-        # break if step fails
-        if not state.success:
-            fail_step = step
-            break
+            # break if step fails
+            if not state.success:
+                fail_step = step
+                break
 
     running_time = time.time() - start_time
 

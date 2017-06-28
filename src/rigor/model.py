@@ -5,6 +5,7 @@ import jmespath
 import ast
 import json
 
+from itertools import product
 from mako.template import Template
 
 import related
@@ -27,6 +28,27 @@ class Method(enum.Enum):
     PUT = "PUT"
     PATCH = "PATCH"
     DELETE = "DELETE"
+
+
+@enum.unique
+class Comparison(enum.Enum):
+    EQUALS = "equals"
+    IN = "in"
+    NOT_IN = "not in"
+
+    def is_equals(self, actual, expected):
+        return actual == expected
+
+    def is_in(self, actual, expected):
+        return actual in expected
+
+    def is_not_in(self, actual, expected):
+        return actual not in expected
+
+    def evaluate(self, actual, expected):
+        method = getattr(self, "is_%s" % self.value.replace(" ", "_"))
+        return method(actual, expected)
+
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -76,9 +98,26 @@ class Extractor(Namespace):
         return super(Extractor, self).evaluate(state, existing)
 
     @classmethod
-    def render_value(cls, value, state):
+    def render_value(cls, value, state, **kwargs):
         value = value if value.startswith("${") else "${%s}" % value
         return super(Extractor, cls).render_value(value, state)
+
+
+class Iterator(Namespace):
+
+    def iterate(self, state):
+        if len(self):
+            # determine method (product or zip)
+            d = self.copy()
+            method_key = d.pop("__method__", "zip")
+            method = dict(zip=zip, product=product).get(method_key, zip)
+
+            # *values => assumes all values are iterable and thus can zipped.
+            for zipped_values in method(*d.values()):
+                # combine zipped values and construct a Namespace object
+                yield Namespace(dict(zip(d.keys(), zipped_values)))
+        else:
+            yield Namespace()
 
 
 @related.immutable
@@ -90,13 +129,14 @@ class ValidationResult(object):
 
 @related.immutable
 class Validator(object):
-    expect = related.ChildField(object)
     actual = related.ChildField(object)
+    expect = related.ChildField(object)
+    compare = related.ChildField(Comparison, default=Comparison.EQUALS)
 
     def evaluate(self, state):
         actual = Namespace.render_value(self.actual, state)
         expect = Namespace.render_value(self.expect, state)
-        success = actual == expect
+        success = self.compare.evaluate(actual, expect)
 
         return ValidationResult(actual=actual,
                                 expect=expect,
@@ -149,6 +189,7 @@ class Step(object):
     description = related.StringField()
     request = related.ChildField(Request)
     extract = related.ChildField(Extractor, default=Namespace())
+    iterate = related.ChildField(Iterator, default=Iterator())
     validate = related.SequenceField(Validator, required=False)
 
     async def fetch(self, state):
@@ -302,6 +343,9 @@ class State(object):
     # namespace of extracted variables
     extract = related.ChildField(Namespace, required=False)
 
+    # namespace of iterated variables
+    iterate = related.ChildField(Namespace, required=False)
+
     # last request's response and http status code (e.g. 200)
     response = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
@@ -312,7 +356,8 @@ class State(object):
         values.update(dict(__uuid__=self.uuid,
                            scenario=self.scenario,
                            extract=self.extract,
-                           response=self.response))
+                           response=self.response,
+                           iterate=self.iterate))
         return values
 
 
