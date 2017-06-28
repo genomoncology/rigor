@@ -31,7 +31,7 @@ def test_execute(suite):
 
 
 def test_case_get(suite):
-    case = suite.get_case(ROOT_DIR, "get.yml")
+    case = suite.get_case(ROOT_DIR, "get.rigor")
 
     # check case root
     assert case.name == "Get"
@@ -53,7 +53,7 @@ def test_case_get(suite):
 
 
 def test_case_params(suite):
-    case = suite.get_case(ROOT_DIR, "params.yml")
+    case = suite.get_case(ROOT_DIR, "params.rigor")
 
     # check case root
     assert case.name == "Params"
@@ -86,7 +86,7 @@ def test_case_params(suite):
 
 
 def test_case_http_status(suite):
-    case = suite.get_case(ROOT_DIR, "http_status.yml")
+    case = suite.get_case(ROOT_DIR, "http_status.rigor")
 
     # check case root
     assert case.name == "HTTP Status"
@@ -103,7 +103,7 @@ def test_case_http_status(suite):
 
 
 def test_case_iterate(suite):
-    case = suite.get_case(ROOT_DIR, "iterate.yml")
+    case = suite.get_case(ROOT_DIR, "iterate.rigor")
     assert len(case.steps) == 4
     step = case.steps[0]
     assert list(step.iterate.iterate(Namespace())) == [

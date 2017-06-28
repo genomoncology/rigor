@@ -282,7 +282,7 @@ class Suite(object):
     domain = related.StringField(str)
     directories = related.SequenceField(str, default=None)
     file_prefixes = related.SequenceField(str, default=None)
-    extensions = related.SequenceField(str, default=["yml", "yaml"])
+    extensions = related.SequenceField(str, default=["rigor"])
     tags_included = related.SequenceField(str, default=None)
     tags_excluded = related.SequenceField(str, default=None)
     concurrency = related.IntegerField(default=20)
