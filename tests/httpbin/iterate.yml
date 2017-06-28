@@ -1,0 +1,109 @@
+name: Iterate
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - working
+
+
+steps:
+
+  - description: Iterate through 2 sets of values using default method (zip).
+
+    iterate:
+        show_env: [0, 1]
+        other: "ABCDEF"
+
+    request:
+        path: /get
+        params:
+            show_env: ${iterate.show_env}
+            other: ${iterate.other}
+
+    extract:
+        last_combo: ${str(iterate.show_env) + iterate.other}
+
+    validate:
+      - actual: ${response['args.show_env']}
+        compare: equals
+        expect: ${iterate.show_env}
+
+      - actual: ${response['args.other']}
+        compare: equals
+        expect: ${iterate.other}
+
+      - actual: ${iterate.show_env}
+        compare: in
+        expect: [0, 1]
+
+      - actual: ${iterate.other}
+        compare: in
+        expect: AB
+
+      - actual: ${iterate.other}
+        compare: in
+        expect: ["A", "B"]
+
+      - actual: ${iterate.other}
+        compare: not in
+        expect: CDEF
+
+  - description: Call with the last combo (1B) from previous step.
+
+    request:
+        path: /get
+        params:
+            show_env: ${last_combo}
+
+    validate:
+      - actual: ${response['args.show_env']}
+        compare: equals
+        expect: 1B
+
+  - description: Iterate through 2 sets of values using product method.
+
+    iterate:
+        __method__: product
+        show_env: [0, 1]
+        other: ABCDEF
+
+    request:
+        path: /get
+        params:
+            show_env: ${iterate.show_env}
+            other: ${iterate.other}
+
+    extract:
+        last_combo: ${str(iterate.show_env) + iterate.other}
+
+    validate:
+      - actual: ${response['args.show_env']}
+        compare: equals
+        expect: ${iterate.show_env}
+
+      - actual: ${response['args.other']}
+        compare: equals
+        expect: ${iterate.other}
+
+      - actual: ${iterate.show_env}
+        compare: in
+        expect: [0, 1]
+
+      - actual: ${iterate.other}
+        compare: in
+        expect: ABCDEF
+
+      - actual: ${iterate.other}
+        compare: in
+        expect: ["A", "B", "C", "D", "E", "F"]
+
+  - description: Call with the last combo (1B) from previous step.
+
+    request:
+        path: /get
+        params:
+            show_env: ${last_combo}
+
+    validate:
+      - actual: ${response['args.show_env']}
+        compare: equals
+        expect: 1F
