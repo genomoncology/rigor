@@ -278,6 +278,10 @@ class Suite(object):
         from . import execute
         return execute(self)
 
+    def generate_feature_id(self, suite):
+        for failed in suite.failed:
+            id = failed.case.name
+
 
 @related.mutable
 class State(object):
