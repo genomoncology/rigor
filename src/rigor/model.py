@@ -55,10 +55,8 @@ class Comparison(enum.Enum):
         same = actual == expect
         if not same and isinstance(actual, list) and isinstance(expect, list):
             same = len(actual) and len(expect)
-            for item in actual:
-                same = same and item in expect
-                if not same:
-                    break
+            same = same and all([item in expect for item in actual])
+            same = same and all([item in actual for item in expect])
         return same
 
     def evaluate(self, actual, expected):
