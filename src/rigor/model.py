@@ -72,22 +72,34 @@ class Namespace(related.ImmutableDict):
         return Namespace(values)
 
     @classmethod
-    def render_value(cls, value, state, do_eval=True):
+    def wrap_namespace(cls, value):
+        if isinstance(value, dict) and not isinstance(value, cls):
+            return cls(value)
+
+        if isinstance(value, list):
+            new_list = []
+            for item in value:
+                new_list.append(cls.wrap_namespace(item))
+            value = new_list
+
+        return value
+
+    @classmethod
+    def render_value(cls, value, state):
         if isinstance(value, str):
             template = Template(value)
 
             try:
                 rendered = template.render(**state.namespace)
             except:
-                rendered = value
+                raise
 
             try:
-                value = ast.literal_eval(rendered) if do_eval else rendered
+                value = ast.literal_eval(rendered)
             except:
                 value = rendered
 
-        if isinstance(value, dict) and not isinstance(value, Namespace):
-            value = Namespace(value)
+        value = cls.wrap_namespace(value)
 
         return value
 
@@ -180,16 +192,14 @@ class Request(object):
         return params
 
     def get_data(self, state):
-        # flatten to a string that will include ${expressions} to render
-        data = self.data
-        data = data if isinstance(data, str) else json.dumps(data)
+        # flatten data to a string that will include ${expressions} to render
+        ds = self.data if isinstance(self.data, str) else json.dumps(self.data)
 
-        # do_eval = False because this is one case we want to keep a string
-        rendered = Namespace.render_value(data, state)
+        # render data string (ds) template
+        rendered = Namespace.render_value(ds, state)
 
-        # dump
-        dumps = rendered if isinstance(rendered, str) else json.dumps(rendered)
-        return dumps
+        # dump rendered value to a json string, if not already a string
+        return rendered if isinstance(rendered, str) else json.dumps(rendered)
 
 
 @related.immutable
@@ -200,26 +210,32 @@ class Step(object):
     iterate = related.ChildField(Iterator, default=Iterator())
     validate = related.SequenceField(Validator, required=False)
 
-    async def fetch(self, state):
-
-        # construct request
-        method = self.request.method.value.lower()
-        url = self.request.get_url(state)
+    def create_fetch(self, state):
         kwargs = dict(headers=self.request.get_headers(state.case))
         if self.request.data:
             kwargs['data'] = self.request.get_data(state)
         else:
             kwargs['params'] = self.request.get_params(state)
 
+        return Namespace(dict(
+            method=self.request.method.value.lower(),
+            url=self.request.get_url(state),
+            kwargs=kwargs
+        ))
+
+    async def fetch(self, state):
+        # construct fetch
+        f = state.fetch = self.create_fetch(state)
+
         # make request and store response
-        async with state.session.request(method, url, **kwargs) as response:
+        async with state.session.request(f.method, f.url, **f.kwargs) as resp:
             try:
-                response_json = await response.json()
+                response_json = await resp.json()
             except Exception as exc:
                 response_json = {}  # todo: logging
 
             state.response = Namespace(response_json)
-            state.status = response.status
+            state.status = resp.status
 
     def validate_response(self, state):
         failures = []
@@ -284,6 +300,7 @@ class Result(object):
     fail_step = related.ChildField(Step, required=False)
     fail_validations = related.SequenceField(ValidationResult, required=False)
     running_time = related.FloatField(required=False)
+    fetch = related.ChildField(Namespace, required=False)
     response = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
 
@@ -291,7 +308,7 @@ class Result(object):
 @related.mutable
 class Suite(object):
     # cli options
-    domain = related.StringField(str)
+    domain = related.StringField(default="http://localhost:8000")
     directories = related.SequenceField(str, default=None)
     file_prefixes = related.SequenceField(str, default=None)
     extensions = related.SequenceField(str, default=["rigor"])
@@ -354,23 +371,29 @@ class State(object):
     # namespace of iterated variables
     iterate = related.ChildField(Namespace, required=False)
 
+    # request but with template-values rendered
+    fetch = related.ChildField(Namespace, required=False)
+
     # last request's response and http status code (e.g. 200)
     response = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
 
     @property
     def namespace(self):
-        # make extract namespace a top-level
-        values = self.extract.copy() if self.extract else {}
+        # make iterate namespace top-level
+        values = self.iterate.copy() if self.iterate else {}
 
-        # add handles to namespaces (overriding anything in extract!)
+        # make extract namespace top-level accessors (overrides iterate!)
+        values.update(self.extract if self.extract else {})
+
+        # add handles to namespaces (overrides extract and iterate!)
         values.update(dict(__uuid__=self.uuid,
                            scenario=self.scenario,
                            extract=self.extract,
                            response=self.response,
                            iterate=self.iterate))
 
-        # add state-aware functions such as list_yaml (overriding everything!)
+        # add state-aware functions such as list_yaml (overrides all before!)
         values.update(Functions(self).function_map())
 
         return values

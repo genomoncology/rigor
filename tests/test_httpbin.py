@@ -27,7 +27,6 @@ def test_execute(suite):
     success = suite.execute()
     assert success
     assert len(suite.passed) == 6
-    print(related.to_json(suite))
 
 
 def test_case_get(suite):
@@ -130,7 +129,7 @@ def test_case_iterate(suite):
 
 
 def test_case_iyaml(suite):
-    case = suite.get_case(ROOT_DIR, "iyaml.rigor")
+    case = suite.get_case(ROOT_DIR, "list_yaml.rigor")
     assert len(case.steps) == 1
     step = case.steps[0]
     assert step.iterate == dict(data="${list_yaml('./data/example.yaml')}")

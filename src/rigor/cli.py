@@ -10,7 +10,7 @@ import json
 @click.argument('directories', nargs=-1)
 def main(directories):
     # collect
-    suite = Suite(directories=directories, domain="http://localhost:8000")
+    suite = Suite(directories=directories)
 
     # execute
     suite.execute()
@@ -25,6 +25,7 @@ def main(directories):
         print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
         print("Step:\n%s\n" % related.to_json(failure.fail_step))
         print("Scenario:\n%s\n" % related.to_json(failure.scenario))
+        print("Last Fetch:\n%s\n" % related.to_json(failure.fetch))
         print("Last Response:\n%s\n" % related.to_json(failure.response))
         print("Failed Validations:")
         for validation in failure.fail_validations:
