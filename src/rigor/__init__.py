@@ -8,6 +8,10 @@ from .execute import (
     execute
 )
 
+from .functions import (
+    Functions
+)
+
 from .model import (
     Case,
     Result,
@@ -22,6 +26,9 @@ __all__ = [
 
     # execute.py
     "execute",
+
+    # functions.py
+    "Functions",
 
     # model.py
     "Case",

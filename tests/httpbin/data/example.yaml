@@ -1,0 +1,12 @@
+---
+request:
+  query: "field:val"
+  pagination:
+    page_num: 1
+    page_size: 20
+---
+request:
+  query: "field:val"
+  pagination:
+    page_num: 2
+    page_size: 20

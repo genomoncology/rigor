@@ -7,6 +7,7 @@ import json
 
 from itertools import product
 from mako.template import Template
+from . import Functions
 
 import related
 
@@ -112,8 +113,10 @@ class Iterator(Namespace):
             method_key = d.pop("__method__", "zip")
             method = dict(zip=zip, product=product).get(method_key, zip)
 
+            values = [self.render_value(value, state) for value in d.values()]
+
             # *values => assumes all values are iterable and thus can zipped.
-            for zipped_values in method(*d.values()):
+            for zipped_values in method(*values):
                 # combine zipped values and construct a Namespace object
                 yield Namespace(dict(zip(d.keys(), zipped_values)))
         else:
@@ -150,7 +153,7 @@ class Request(object):
     domain = related.StringField(required=False)
     headers = related.ChildField(Namespace, required=False)
     params = related.ChildField(Namespace, required=False)
-    data = related.ChildField(Namespace, required=False)
+    data = related.ChildField(object, required=False)
     status = related.SequenceField(int, required=False)
 
     def get_url(self, state):
@@ -178,10 +181,15 @@ class Request(object):
 
     def get_data(self, state):
         # flatten to a string that will include ${expressions} to render
-        data_string = json.dumps(self.data)
+        data = self.data
+        data = data if isinstance(data, str) else json.dumps(data)
 
         # do_eval = False because this is one case we want to keep a string
-        return Namespace.render_value(data_string, state, do_eval=False)
+        rendered = Namespace.render_value(data, state)
+
+        # dump
+        dumps = rendered if isinstance(rendered, str) else json.dumps(rendered)
+        return dumps
 
 
 @related.immutable
@@ -262,6 +270,10 @@ class Case(object):
         is_included = not included or overlap(included, self.tags)
         is_excluded = excluded and overlap(excluded, self.tags)
         return self.is_valid and has_steps and is_included and not is_excluded
+
+    @property
+    def dir_path(self):
+        return os.path.dirname(self.file_path)
 
 
 @related.immutable
@@ -348,12 +360,19 @@ class State(object):
 
     @property
     def namespace(self):
+        # make extract namespace a top-level
         values = self.extract.copy() if self.extract else {}
+
+        # add handles to namespaces (overriding anything in extract!)
         values.update(dict(__uuid__=self.uuid,
                            scenario=self.scenario,
                            extract=self.extract,
                            response=self.response,
                            iterate=self.iterate))
+
+        # add state-aware functions such as list_yaml (overriding everything!)
+        values.update(Functions(self).function_map())
+
         return values
 
 

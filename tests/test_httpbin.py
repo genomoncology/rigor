@@ -1,4 +1,4 @@
-from rigor.model import Suite, Method, Namespace, Validator
+from rigor.model import Suite, Method, Namespace, Validator, State
 from collections import OrderedDict
 
 import pytest
@@ -18,7 +18,7 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 5
+    assert len(suite.queued) == 6
     assert len(suite.failed) == 0
     assert len(suite.passed) == 0
 
@@ -26,7 +26,7 @@ def test_collect(suite):
 def test_execute(suite):
     success = suite.execute()
     assert success
-    assert len(suite.passed) == 5
+    assert len(suite.passed) == 6
     print(related.to_json(suite))
 
 
@@ -106,12 +106,14 @@ def test_case_iterate(suite):
     case = suite.get_case(ROOT_DIR, "iterate.rigor")
     assert len(case.steps) == 4
     step = case.steps[0]
-    assert list(step.iterate.iterate(Namespace())) == [
+    state = State(case=case)
+
+    assert list(step.iterate.iterate(state)) == [
         dict(show_env=0, other="A"),
         dict(show_env=1, other="B"),
     ]
     step = case.steps[2]
-    assert list(step.iterate.iterate(Namespace())) == [
+    assert list(step.iterate.iterate(state)) == [
         dict(show_env=0, other="A"),
         dict(show_env=0, other="B"),
         dict(show_env=0, other="C"),
@@ -125,3 +127,17 @@ def test_case_iterate(suite):
         dict(show_env=1, other="E"),
         dict(show_env=1, other="F"),
     ]
+
+
+def test_case_iyaml(suite):
+    case = suite.get_case(ROOT_DIR, "iyaml.rigor")
+    assert len(case.steps) == 1
+    step = case.steps[0]
+    assert step.iterate == dict(data="${list_yaml('./data/example.yaml')}")
+
+    state = State(case=case)
+    iterate = list(step.iterate.iterate(state))
+
+    iter0 = iterate[0]
+    assert isinstance(iter0, dict)
+    assert iter0['data']['request']['query'] == "field:val"
