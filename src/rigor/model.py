@@ -34,17 +34,32 @@ class Method(enum.Enum):
 @enum.unique
 class Comparison(enum.Enum):
     EQUALS = "equals"
+    SAME = "same"
     IN = "in"
     NOT_IN = "not in"
 
-    def is_equals(self, actual, expected):
-        return actual == expected
+    def is_equals(self, actual, expect):
+        return actual == expect
 
-    def is_in(self, actual, expected):
-        return actual in expected
+    def is_in(self, actual, expect):
+        return actual in expect
 
-    def is_not_in(self, actual, expected):
-        return actual not in expected
+    def is_not_in(self, actual, expect):
+        return actual not in expect
+
+    def is_same(self, actual, expect):
+        """
+        Returns true if equal or if 2 lists, have the same items
+        regardless of order.
+        """
+        same = actual == expect
+        if not same and isinstance(actual, list) and isinstance(expect, list):
+            same = len(actual) and len(expect)
+            for item in actual:
+                same = same and item in expect
+                if not same:
+                    break
+        return same
 
     def evaluate(self, actual, expected):
         method = getattr(self, "is_%s" % self.value.replace(" ", "_"))
