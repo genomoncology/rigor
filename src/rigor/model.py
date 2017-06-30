@@ -54,7 +54,7 @@ class Comparison(enum.Enum):
         """
         same = actual == expect
         if not same and isinstance(actual, list) and isinstance(expect, list):
-            same = len(actual) and len(expect)
+            same = bool(len(actual) and len(expect))
             same = same and all([item in expect for item in actual])
             same = same and all([item in actual for item in expect])
         return same
@@ -189,6 +189,11 @@ class Request(object):
     def get_headers(self, case):
         case_headers = related.to_dict(case.headers) or {}
         case_headers.update(related.to_dict(self.headers) or {})
+
+        # todo: content-type not really figured out.
+        if "content-type" not in case_headers:
+            case_headers['content-type'] = "application/json"
+
         return Namespace(case_headers)
 
     def get_params(self, state):

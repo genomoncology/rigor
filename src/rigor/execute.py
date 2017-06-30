@@ -60,10 +60,13 @@ async def do_scenario(state):
             # check status
             state.success = len(fail_validations) == 0
 
-            # break if step fails
             if not state.success:
-                fail_step = step
                 break
+
+        # break if step fails
+        if not state.success:
+            fail_step = step
+            break
 
     running_time = time.time() - start_time
 

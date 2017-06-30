@@ -28,3 +28,6 @@ steps:
         compare: in
         expect: [1, 2]
 
+      - actual: ${response['json.request.uuid']}
+        expect: "${__uuid__}"
+
