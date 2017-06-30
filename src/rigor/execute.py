@@ -45,8 +45,16 @@ async def do_scenario(state):
     fail_step = None
     fail_validations = None
     start_time = time.time()
+    first_step = True
 
     for step in state.case.steps:
+
+        # todo: remove!
+        if first_step:
+            first_step = False
+        else:
+            await asyncio.sleep(0.5)
+
         for state.iterate in step.iterate.iterate(state):
             # fetch
             await step.fetch(state)
