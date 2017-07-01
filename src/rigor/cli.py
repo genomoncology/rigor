@@ -4,17 +4,19 @@ import jmespath
 from . import Suite
 import related
 import json
+import sys
 
 
 @click.command()
 @click.argument('directories', nargs=-1)
-def main(directories):
+@click.option('--domain', default="http://localhost:8000",
+              help="Domain name (e.g. http://localhost:8000)")
+def main(directories, domain):
     # collect
-    suite = Suite(directories=directories)
+    suite = Suite(directories=directories, domain=domain)
 
     # execute
     suite.execute()
-
 
     # suite_dict = related.to_dict(suite)
     k = 0
@@ -35,6 +37,10 @@ def main(directories):
 
     print("Passed: %s" % len(suite.passed))
     print("Failed: %s" % len(suite.failed))
+
+    # report success
+    status = 1 if suite.failed else 0
+    sys.exit(status)
 
 if __name__ == '__main__':
     main()
