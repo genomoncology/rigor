@@ -8,6 +8,10 @@ from .execute import (
     execute
 )
 
+from .functions import (
+    Functions
+)
+
 from .model import (
     Case,
     Result,
@@ -23,6 +27,9 @@ __all__ = [
     # execute.py
     "execute",
 
+    # functions.py
+    "Functions",
+
     # model.py
     "Case",
     "Result",
@@ -34,7 +41,7 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.1'
+__version__ = '0.0.7'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

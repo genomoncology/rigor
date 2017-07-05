@@ -1,0 +1,14 @@
+---
+request:
+  query: "field:val"
+  uuid: "${__uuid__}"
+  pagination:
+    page_num: 1
+    page_size: 20
+---
+request:
+  query: "field:val"
+  uuid: "${__uuid__}"
+  pagination:
+    page_num: 2
+    page_size: 20

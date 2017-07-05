@@ -1,0 +1,22 @@
+name: Get
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - working
+
+steps:
+
+  - description: Get call with no parameters
+
+    request:
+        path: /get
+
+    validate:
+      - actual: https://httpbin.org/get
+        expect: ${response.url}
+      - actual: {}
+        expect: ${response.args}
+      - actual: "*/*"
+        expect: ${response['headers.Accept']}
+      - actual: close
+        expect: ${response['headers.Connection']}

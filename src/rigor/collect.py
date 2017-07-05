@@ -30,7 +30,10 @@ async def collect_case(suite, file_path):
 
 def glob_patterns(suite):
     for directory in suite.directories or ['.']:
+        if os.path.exists(directory) and os.path.isfile(directory):
+            yield directory
+
         for file_prefix in suite.file_prefixes or ['']:
-            for extension in suite.extensions or ['yml', 'yaml']:
+            for extension in suite.extensions or ['rigor']:
                 file_pattern = "%s*.%s" % (file_prefix, extension)
                 yield os.path.join(directory, "**", file_pattern)
