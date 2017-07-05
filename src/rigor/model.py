@@ -191,7 +191,7 @@ class Step(object):
     extract = related.ChildField(Extractor, default=Namespace())
     iterate = related.ChildField(Iterator, default=Iterator())
     validate = related.SequenceField(Validator, required=False)
-    name = related.StringField(required=False, default='foo')
+    name = related.StringField(required=False, default=None)
 
     async def fetch(self, state):
 

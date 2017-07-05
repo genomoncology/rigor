@@ -20,7 +20,9 @@ def main(directories):
     temp = related.to_json(Cucumber.load_init(Cucumber, suite=suite))
     dct = json.loads(temp)
     print(related.to_json(dct))
-
+    # temp = related.to_json(suite)
+    # temp = related.to_json(json.loads(temp))
+    # print(temp)
 
     # k = 0
     # j = 1

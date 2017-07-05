@@ -2,11 +2,12 @@ import json
 import urllib
 import related
 
+from rigor import State
+
 
 @related.immutable
 class Tag(object):
     name = related.StringField()
-    # line = related.IntegerField()
 
     @classmethod
     def create(cls, tag):
@@ -33,7 +34,10 @@ class Match(object):
 @related.immutable
 class Validators(object):
     actual = related.ChildField(object)
+    # comparison = related.StringField()
     expect = related.ChildField(object)
+
+    #todo: Account for other comparators
 
     @classmethod
     def create_failing(cls, actual, expect):
@@ -49,48 +53,56 @@ class DocString(object):
     content_type = related.StringField()
     line = related.IntegerField()
 
+    #todo: Figure out alternative for results
     @classmethod
-    def create_failure(cls, step, failure):
+    def create(cls, step, obj):
         v = []
-        for fail_validation in failure.fail_validations:
+        j = 0
+        spacer = "====================\n"
+        for fail_validation in obj.fail_validations:
             i = 0
             for item in fail_validation.actual:
                 if fail_validation.actual[i] != fail_validation.expect[i]:
                     v.append(Validators.create_failing(fail_validation.actual[i], fail_validation.expect[i]))
                 i += 1
-        spacer = "====================\n"
-
-        return cls(
-            value=spacer + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
-            content_type="application/json",
-            line=5
-        )
+                j += 1
+        result = related.to_json(json.loads(related.to_json(step.extract.result)))
+        if j == 0:
+            return cls(
+                value=(spacer + "   RESULT   \n" + spacer + result),
+                content_type="application/json",
+                line=6
+            )
+        else:
+            return cls(
+                value=spacer + "   RESULT   \n" + spacer + result + "\n\n\n" + spacer + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
+                content_type="application/json",
+                line=6
+            )
 
 
 @related.immutable
 class Result(object):
     status = related.StringField()
     line = related.IntegerField()
-    #todo: figure out durations & error message
     duration = related.IntegerField()
 
     @classmethod
-    def create(cls, step):
-
-        for validations in step.validate:
-            if validations.actual != validations.expect:
-                status = "failed"
-                return cls(
-                        status=status,
-                        line=4,
-                        duration=1
-                )
+    def create(cls, step, obj):
+        i = 0
+        for fail_validation in obj.fail_validations:
+            for item in fail_validation.actual:
+                if fail_validation.actual[i] != fail_validation.expect[i]:
+                    status = "failed"
+                i += 1
+        if i == 0:
             status = "passed"
-            return cls(
-                status=status,
-                line=4,
-                duration=1
-            )
+        return cls(
+            status=status,
+            line=4,
+            duration=1
+        )
+
 
 
 @related.immutable
@@ -104,78 +116,16 @@ class Step(object):
     result = related.ChildField(Result, required=False, default=None)
 
     @classmethod
-    def create(cls, step, failure):
+    def create(cls, step, obj):
 
         return cls(
             keyword="",
             line=3,
             name=step.description,
-            doc_string=DocString.create_failure(step, failure),
+            doc_string=DocString.create(step, obj),
             match=Match.create(step),
-            result=Result.create(step)
+            result=Result.create(step, obj)
         )
-
-
-# @related.immutable
-# class Row(object):
-#     # line = related.IntegerField()
-#     id = related.StringField()
-#     cells = related.SequenceField(str)
-#
-#     @classmethod
-#     def create_first(cls, example, case):
-#         dct = example.result[0]
-#         dct = dct.keys()
-#         cells = []
-#         for key in dct:
-#             temp = key
-#             cells.append(temp)
-#         return cls(
-#             cells=cells,
-#             id=urllib.parse.quote_plus(case.name) + ";" + str(Element.name) + ";" + "PlaceHolder" + ";1"
-#             # todo: Find a way tor replace "PlaceHolder" with example.name
-#         )
-#
-#     @classmethod
-#     def create(cls, example, case, i):
-#         dct = example.result[0]
-#         dct = dct.keys()
-#         cells = []
-#         for key in dct:
-#             cells.append(example.result[i][key])
-#         return cls(
-#             cells=cells,
-#             id=urllib.parse.quote_plus(case.name) + ";" + str(Element.name) + ";" + "PlaceHolder" + ";%s" % i
-#             # todo: Find a way to replace "PlaceHolder" with example.name
-#         )
-
-
-# @related.immutable
-# class Example(object):
-#     keyword = related.StringField()
-#     name = related.StringField()
-#     # line = related.IntegerField()
-#     description = related.StringField()
-#     id = related.StringField()
-#     rows = related.SequenceField(Row)
-#
-#     @classmethod
-#     def create(cls, case, example):
-#         rows = []
-#         rows.append(Row.create_first(example, case))
-#         i = 0
-#         for item in example.result:
-#             rows.append(Row.create(example, case, i))
-#             i += 1
-#         return cls(
-#             keyword="Examples",
-#             # Todo: Figure out how to replace "PlaceHolder" with example.name
-#             name="PlaceHolder",
-#             description="Placeholder description",
-#             # Todo: Figure out how to replace "Placeholder description" with example.description
-#             id=urllib.parse.quote_plus(case.name) + ";outline;" + "PlaceHolder",
-#             rows=rows
-#         )
 
 
 @related.immutable
@@ -191,18 +141,19 @@ class Element(object):
 
 
     @classmethod
-    def create(cls, case, failure):
+    def create(cls, case, obj):
         stp = []
         tg = []
         for step in case.steps:
-            stp.append(Step.create(step, failure))
+            stp.append(Step.create(step, obj))
         for tag in case.tags:
             tg.append(Tag.create(tag))
+        temp = State.uuid.default
         return cls(
             keyword="Scenario",
-            # Scenario name
-            name="EGFR L858R and Non-Small Cell Lung Carcinoma",
-            id=(urllib.parse.quote_plus(case.name) + ";PlaceHolder"),
+            # todo: Scenario name = uuid & replace placeholder with uuid
+            name=temp,
+            id=(urllib.parse.quote_plus(case.name) + ";" + str(State.uuid.default)),
             line=2,
             description="",
             type="scenario",
@@ -222,10 +173,10 @@ class Feature(object):
     description = related.StringField(required=False, default=None)
 
     @classmethod
-    def create(cls, case, failure):
+    def create(cls, case, obj):
         elm = []
         for scenario in case.scenarios:
-            elm.append(Element.create(case, failure))
+            elm.append(Element.create(case, obj))
 
         return cls(
             uri=case.file_path,
@@ -243,8 +194,10 @@ class Cucumber(object):
 
     def load_init(self, suite):
         ret = []
-        for failure in suite.failed:
-            ret.append(Feature.create(failure.case, failure))
+        for obj in suite.passed:
+            ret.append(Feature.create(obj.case, obj))
+        for entry in suite.failed:
+            ret.append(Feature.create(entry.case, entry))
         return ret
 
 
