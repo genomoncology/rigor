@@ -22,19 +22,16 @@ class Match(object):
 
     @classmethod
     def create(cls, step):
-        if step.name is None:
-            name = "Placeholder"
-        else:
-            name = step.name
+
         return cls(
-            location="features/step_definitions/steps.rb"
+            location="features/step_definitions/steps.rb" + ";1"
         )
 
 
 @related.immutable
 class Validators(object):
     actual = related.ChildField(object)
-    # comparison = related.StringField()
+    # compare = related.StringField()
     expect = related.ChildField(object)
 
     #todo: Account for other comparators
@@ -53,21 +50,27 @@ class DocString(object):
     content_type = related.StringField()
     line = related.IntegerField()
 
-    #todo: Figure out alternative for results
     @classmethod
-    def create(cls, step, obj):
+    def create(cls, step, obj, status):
         v = []
-        j = 0
+        if status == "skipped":
+            return cls(
+                value="=== STEP NOT EXECUTED ===",
+                content_type="application/json",
+                line=6
+            )
         spacer = "====================\n"
         for fail_validation in obj.fail_validations:
             i = 0
+            #todo:  compare!?!?
             for item in fail_validation.actual:
                 if fail_validation.actual[i] != fail_validation.expect[i]:
                     v.append(Validators.create_failing(fail_validation.actual[i], fail_validation.expect[i]))
                 i += 1
-                j += 1
         result = related.to_json(json.loads(related.to_json(step.extract.result)))
-        if j == 0:
+        if status == "passed":
+            if result == "null":
+                result = "HTTP Respose: Success"
             return cls(
                 value=(spacer + "   RESULT   \n" + spacer + result),
                 content_type="application/json",
@@ -88,19 +91,17 @@ class Result(object):
     duration = related.IntegerField()
 
     @classmethod
-    def create(cls, step, obj):
-        i = 0
-        for fail_validation in obj.fail_validations:
-            for item in fail_validation.actual:
-                if fail_validation.actual[i] != fail_validation.expect[i]:
-                    status = "failed"
-                i += 1
-        if i == 0:
+    def create(cls, step, obj, prev, tags, suite):
+        if step == obj.fail_step:
+            status = "failed"
+        elif prev is False or tags in suite.tags_excluded:
+            status = "skipped"
+        else:
             status = "passed"
         return cls(
             status=status,
             line=4,
-            duration=1
+            duration=14748
         )
 
 
@@ -112,19 +113,27 @@ class Step(object):
     line = related.IntegerField()
     match = related.ChildField(Match)
     name = related.StringField()
-    doc_string = related.ChildField(DocString)
+    duration = related.FloatField()
+    doc_string = related.ChildField(DocString, required=False, default=None)
     result = related.ChildField(Result, required=False, default=None)
 
     @classmethod
-    def create(cls, step, obj):
+    def create(cls, step, obj, prev, tags, suite):
+        keyword = ""
+        temp = step.iterate.keys()
+        for key in temp:
+            keyword = key
 
+        result = Result.create(step, obj, prev, tags, suite)
+        st = result.status
         return cls(
-            keyword="",
+            keyword=keyword.title(),
             line=3,
             name=step.description,
-            doc_string=DocString.create(step, obj),
+            doc_string=DocString.create(step, obj, st),
+            duration=14748,
             match=Match.create(step),
-            result=Result.create(step, obj)
+            result=result
         )
 
 
@@ -137,28 +146,28 @@ class Element(object):
     description = related.StringField()
     type = related.StringField()
     steps = related.SequenceField(Step, default=[])
-    tags = related.SequenceField(Tag, required=False, default=None)
+
 
 
     @classmethod
-    def create(cls, case, obj):
+    def create(cls, case, obj, tags, suite):
         stp = []
-        tg = []
+        prev = True
         for step in case.steps:
-            stp.append(Step.create(step, obj))
-        for tag in case.tags:
-            tg.append(Tag.create(tag))
+            s = Step.create(step, obj, prev, tags, suite)
+            stp.append(s)
+            if s.result.status == "failed":
+                prev = False
         temp = State.uuid.default
+
         return cls(
             keyword="Scenario",
-            # todo: Scenario name = uuid & replace placeholder with uuid
             name=temp,
             id=(urllib.parse.quote_plus(case.name) + ";" + str(State.uuid.default)),
             line=2,
             description="",
             type="scenario",
             steps=stp,
-            tags=tg
         )
 
 
@@ -169,14 +178,21 @@ class Feature(object):
     id = related.StringField()
     name = related.StringField()
     line = related.IntegerField()
+    duration = related.FloatField()
     elements = related.SequenceField(Element, default=[])
     description = related.StringField(required=False, default=None)
+    tags = related.SequenceField(Tag, required=False, default=None)
 
     @classmethod
-    def create(cls, case, obj):
+    def create(cls, case, obj, suite):
         elm = []
+        tg = []
+        for tag in case.tags:
+            tg.append(Tag.create(tag))
         for scenario in case.scenarios:
-            elm.append(Element.create(case, obj))
+            elm.append(Element.create(case, obj, tg, suite))
+
+        duration = obj.running_time
 
         return cls(
             uri=case.file_path,
@@ -184,7 +200,9 @@ class Feature(object):
             id=urllib.parse.quote_plus(case.name),
             name=case.name,
             line=1,
+            duration=duration,
             elements=elm,
+            tags=tg
         )
 
 
@@ -195,9 +213,9 @@ class Cucumber(object):
     def load_init(self, suite):
         ret = []
         for obj in suite.passed:
-            ret.append(Feature.create(obj.case, obj))
+            ret.append(Feature.create(obj.case, obj, suite))
         for entry in suite.failed:
-            ret.append(Feature.create(entry.case, entry))
+            ret.append(Feature.create(entry.case, entry, suite))
         return ret
 
 

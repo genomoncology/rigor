@@ -1,5 +1,4 @@
 import click
-import jmespath
 
 from rigor.reporting.cucumber import Cucumber
 from . import Suite
@@ -22,6 +21,7 @@ import sys
               help="Filter cases by file extension. (e.g. rigor)")
 @click.option('--concurrency', '-c', type=int, default=20,
               help='# of concurrent HTTP requests. (default: 20)')
+# @click.option('--path', '-r', multiple=False, help="File path of cucumber json")
 def main(directories, domain, include, exclude, prefix, extensions,
          concurrency):
     # remove preceding . if provided in extension (.rigor => rigor)
@@ -39,7 +39,25 @@ def main(directories, domain, include, exclude, prefix, extensions,
 
     temp = related.to_json(Cucumber.load_init(Cucumber, suite=suite))
     dct = json.loads(temp)
-    print(related.to_json(dct))
+    final = related.to_json(dct)
+    print(final)
+
+    # todo: Figure out file path - should user pick? - should a directory be made? - should location be static?
+    # Opens and closes file to clear contents
+    f = open("/Users/edward/Desktop/test_responses/response.json",  "r+")
+    f.close()
+
+    # File is actually written to here
+    f = open("/Users/edward/Desktop/test_responses/response.json", "r+")
+    f.write(final)
+    f.close()
+
+    # todo: Figure out how to call cucumber sandwich and open up reporting tool programmatically
+
+
+
+
+
     # temp = related.to_json(suite)
     # temp = related.to_json(json.loads(temp))
     # print(temp)
