@@ -5,6 +5,7 @@ from . import Suite
 import related
 import json
 import sys
+import os
 
 
 @click.command()
@@ -21,7 +22,6 @@ import sys
               help="Filter cases by file extension. (e.g. rigor)")
 @click.option('--concurrency', '-c', type=int, default=20,
               help='# of concurrent HTTP requests. (default: 20)')
-# @click.option('--path', '-r', multiple=False, help="File path of cucumber json")
 def main(directories, domain, include, exclude, prefix, extensions,
          concurrency):
     # remove preceding . if provided in extension (.rigor => rigor)
@@ -42,43 +42,21 @@ def main(directories, domain, include, exclude, prefix, extensions,
     final = related.to_json(dct)
     print(final)
 
-    # todo: Figure out file path - should user pick? - should a directory be made? - should location be static?
     # Opens and closes file to clear contents
-    f = open("/Users/edward/Desktop/test_responses/response.json",  "r+")
+
+    path1 = os.path.expanduser('~/code/knowledge/qa/response/responsejson')
+    path2 = os.path.expanduser('~/code/knowledge/qa/response/result')
+    f = open((str(path1) + "/responsejson"), "wb+")
     f.close()
 
     # File is actually written to here
-    f = open("/Users/edward/Desktop/test_responses/response.json", "r+")
+    f = open((str(path1) + "/response.json"), "r+")
     f.write(final)
     f.close()
-
-    # todo: Figure out how to call cucumber sandwich and open up reporting tool programmatically
-
-
-
-
-
-    # temp = related.to_json(suite)
-    # temp = related.to_json(json.loads(temp))
-    # print(temp)
-
-    # k = 0
-    # j = 1
-    # i = 0
-    # for failure in suite.failed:
-    #     print("Failure #%s" % i)
-    #     print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
-    #     print("Step:\n%s\n" % related.to_json(failure.fail_step))
-    #     print("Scenario:\n%s\n" % related.to_json(failure.scenario))
-    #     print("Last Response:\n%s\n" % related.to_json(failure.response))
-    #     print("Failed Validations:")
-    #     for validation in failure.fail_validations:
-    #         print(related.to_json(validation))
-    #     print("\n")
-    #     i += 1
-    #
-    # print("Passed: %s" % len(suite.passed))
-    # print("Failed: %s" % len(suite.failed))
+    print("\n\n\nResponse Successfully Written to File\n\n\n")
+    from subprocess import call
+    call(["java", "-jar", "/Users/edward/code/cucumber-sandwich/target/cucumber-sandwich.jar", "-n", "-f", path1, "-o", path2])
+    click.launch((str(path2) + '/cucumber-html-reports/cucumber-html-reports/overview-features.html'))
 
     # report success
     status = 1 if suite.failed else 0
