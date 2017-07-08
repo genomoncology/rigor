@@ -34,7 +34,7 @@ async def async_execute(loop, suite):
 
                 tasks.append(task)
 
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
     return results
 
@@ -50,7 +50,7 @@ async def do_scenario(state):
 
     for step in state.case.steps:
 
-        # todo: remove!
+        # todo: replace with sleep on step
         if first_step:
             first_step = False
         else:
@@ -70,8 +70,9 @@ async def do_scenario(state):
                 # check status
                 assert len(fail_validations) == 0
 
-        except:
+        except Exception as exc:
             state.success = False
+            print(type(exc))  # todo: better error handling info for reporting.
 
         # break if step fails
         if not state.success:

@@ -229,7 +229,8 @@ class Step(object):
     validate = related.SequenceField(Validator, required=False)
 
     def create_fetch(self, state):
-        kwargs = dict(headers=self.request.get_headers(state.case))
+        kwargs = dict(headers=self.request.get_headers(state.case),
+                      timeout=None)
         if self.request.data:
             kwargs['data'] = self.request.get_data(state)
         else:
