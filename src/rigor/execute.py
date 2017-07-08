@@ -46,6 +46,7 @@ async def do_scenario(state):
     fail_validations = None
     start_time = time.time()
     first_step = True
+    state.success = True
 
     for step in state.case.steps:
 
@@ -55,21 +56,22 @@ async def do_scenario(state):
         else:
             await asyncio.sleep(0.5)
 
-        for state.iterate in step.iterate.iterate(state):
-            # fetch
-            await step.fetch(state)
+        try:
+            for state.iterate in step.iterate.iterate(state):
+                # fetch
+                await step.fetch(state)
 
-            # extract response
-            state.extract = step.extract.evaluate(state)
+                # extract response
+                state.extract = step.extract.evaluate(state)
 
-            # validate response
-            fail_validations = step.validate_response(state)
+                # validate response
+                fail_validations = step.validate_response(state)
 
-            # check status
-            state.success = len(fail_validations) == 0
+                # check status
+                assert len(fail_validations) == 0
 
-            if not state.success:
-                break
+        except:
+            state.success = False
 
         # break if step fails
         if not state.success:
