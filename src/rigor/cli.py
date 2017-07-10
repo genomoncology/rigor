@@ -55,7 +55,8 @@ def main(directories, domain, include, exclude, prefix, extensions,
     f.close()
     print("\n\n\nResponse Successfully Written to File\n\n\n")
     from subprocess import call
-    call(["java", "-jar", "/Users/edward/code/cucumber-sandwich/target/cucumber-sandwich.jar", "-n", "-f", path1, "-o", path2])
+    sandwich = os.path.expanduser('~/code/cucumber-sandwich/target/cucumber-sandwich.jar')
+    call(["java", "-jar", str(sandwich), "-n", "-f", path1, "-o", path2])
     click.launch((str(path2) + '/cucumber-html-reports/cucumber-html-reports/overview-features.html'))
 
     # report success
