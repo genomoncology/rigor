@@ -1,0 +1,34 @@
+name: Post
+format: "1.0"
+domain: https://httpbin.org
+tags:
+  - working
+
+scenarios:
+
+  - data: ${load_yaml('./data/example.yaml')}
+
+steps:
+
+  - description: Post with Data Payload from iteration of a YAML file
+
+    request:
+        method: POST
+        path: /post
+        data: ${scenario.data}
+
+    extract: # httpbin.org puts the original data request under 'json' key
+        page_num: ${response['json.request.pagination.page_num']}
+
+    validate:
+
+      - actual: ${response['json.request.query']}
+        expect: "field:val"
+
+      - actual: ${page_num}
+        expect: 1
+
+      - actual: ${response['json.request.uuid']}
+        expect: "${__uuid__}"
+
+

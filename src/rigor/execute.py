@@ -48,6 +48,8 @@ async def do_scenario(state):
     first_step = True
     state.success = True
 
+    state.scenario = state.scenario.evaluate(state)
+
     for step in state.case.steps:
 
         # todo: replace with sleep on step

@@ -11,6 +11,9 @@ class Functions(object):
     def get_pattern(self, relative_pattern):
         return os.path.join(self.state.case.dir_path, relative_pattern)
 
+    def load_yaml(self, filename):
+        return next(self.iter_yaml(filename))
+
     def iter_yaml(self, *filenames):
         for filename in filenames:
             file_pattern = self.get_pattern(filename)
@@ -23,7 +26,7 @@ class Functions(object):
         return list(self.iter_yaml(*filenames))
 
     def function_map(self):
-        return dict(list_yaml=self.list_yaml)
+        return dict(list_yaml=self.list_yaml, load_yaml=self.load_yaml)
 
     def read_render(self, filepath):
         from . import Namespace

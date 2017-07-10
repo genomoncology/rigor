@@ -18,7 +18,7 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 6
+    assert len(suite.queued) == 7
     assert len(suite.failed) == 0
     assert len(suite.passed) == 0
 
@@ -26,7 +26,7 @@ def test_collect(suite):
 def test_execute(suite):
     success = suite.execute()
     assert success
-    assert len(suite.passed) == 6
+    assert len(suite.passed) == 7
 
 
 def test_case_get(suite):
@@ -128,7 +128,7 @@ def test_case_iterate(suite):
     ]
 
 
-def test_case_iyaml(suite):
+def test_case_list_yaml(suite):
     case = suite.get_case(ROOT_DIR, "list_yaml.rigor")
     assert len(case.steps) == 1
     step = case.steps[0]
@@ -140,3 +140,12 @@ def test_case_iyaml(suite):
     iter0 = iterate[0]
     assert isinstance(iter0, dict)
     assert iter0['data']['request']['query'] == "field:val"
+
+
+def test_case_load_yaml(suite):
+    case = suite.get_case(ROOT_DIR, "load_yaml.rigor")
+    assert len(case.scenarios) == 1
+    assert len(case.steps) == 1
+
+    scenario = case.scenarios[0]
+    assert scenario == dict(data="${load_yaml('./data/example.yaml')}")
