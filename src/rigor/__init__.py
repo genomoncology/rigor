@@ -4,8 +4,14 @@ from .collect import (
     collect
 )
 
-from .execute import (
-    execute
+from .enums import (
+    Comparison,
+    Method,
+    Status,
+)
+
+from .namespace import (
+    Namespace,
 )
 
 from .functions import (
@@ -14,15 +20,29 @@ from .functions import (
 
 from .model import (
     Case,
-    Result,
-    Namespace,
-    State,
+    Step,
     Suite,
+    Validator,
 )
+
+from .state import (
+    Runner,
+    SuiteResult,
+)
+
+from .execute import (
+    execute
+)
+
 
 __all__ = [
     # collect.py
     "collect",
+
+    # enums.py
+    "Comparison",
+    "Method",
+    "Status",
 
     # execute.py
     "execute",
@@ -30,18 +50,24 @@ __all__ = [
     # functions.py
     "Functions",
 
+    # namespace.py
+    "Namespace",
+
     # model.py
     "Case",
-    "Result",
-    "Namespace",
-    "State",
+    "Step",
     "Suite",
+    "Validator",
+
+    # state.py
+    "Runner",
+    "SuiteResult",
 ]
 
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.0.7'
+__version__ = '0.0.12'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

@@ -1,4 +1,4 @@
-from rigor.model import Suite, Method, Namespace, Validator, State
+from rigor import Suite, Method, Namespace, Validator, Runner
 from collections import OrderedDict
 
 import pytest
@@ -18,15 +18,13 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 6
-    assert len(suite.failed) == 0
-    assert len(suite.passed) == 0
+    assert len(suite.queued) == 7
 
 
 def test_execute(suite):
-    success = suite.execute()
-    assert success
-    assert len(suite.passed) == 6
+    result = suite.execute()
+    assert result.success
+    assert len(result.passed) == 7
 
 
 def test_case_get(suite):
@@ -105,14 +103,14 @@ def test_case_iterate(suite):
     case = suite.get_case(ROOT_DIR, "iterate.rigor")
     assert len(case.steps) == 4
     step = case.steps[0]
-    state = State(case=case)
+    namespace = Runner(case=case).namespace
 
-    assert list(step.iterate.iterate(state)) == [
+    assert list(step.iterate.iterate(namespace)) == [
         dict(show_env=0, other="A"),
         dict(show_env=1, other="B"),
     ]
     step = case.steps[2]
-    assert list(step.iterate.iterate(state)) == [
+    assert list(step.iterate.iterate(namespace)) == [
         dict(show_env=0, other="A"),
         dict(show_env=0, other="B"),
         dict(show_env=0, other="C"),
@@ -128,15 +126,24 @@ def test_case_iterate(suite):
     ]
 
 
-def test_case_iyaml(suite):
+def test_case_list_yaml(suite):
     case = suite.get_case(ROOT_DIR, "list_yaml.rigor")
     assert len(case.steps) == 1
     step = case.steps[0]
     assert step.iterate == dict(data="${list_yaml('./data/example.yaml')}")
 
-    state = State(case=case)
-    iterate = list(step.iterate.iterate(state))
+    namespace = Runner(case=case).namespace
+    iterate = list(step.iterate.iterate(namespace))
 
     iter0 = iterate[0]
     assert isinstance(iter0, dict)
     assert iter0['data']['request']['query'] == "field:val"
+
+
+def test_case_load_yaml(suite):
+    case = suite.get_case(ROOT_DIR, "load_yaml.rigor")
+    assert len(case.scenarios) == 1
+    assert len(case.steps) == 1
+
+    scenario = case.scenarios[0]
+    assert scenario == dict(data="${load_yaml('./data/example.yaml')}")
