@@ -15,7 +15,7 @@ def get_cuke(filename):
 
 
 def test_roundtrip_feature_1_json():
-    cuke, original = get_cuke("feature_4.json")
+    cuke, original = get_cuke("feature_1.json")
     assert len(cuke.features) == 1
     # assert cuke.features[0].uri == "features/one_passing_one_failing.feature"
     # assert len(cuke.features[0].tags) == 1
