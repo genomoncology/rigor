@@ -5,11 +5,11 @@ import yaml
 
 class Functions(object):
 
-    def __init__(self, state):
-        self.state = state
+    def __init__(self, runner):
+        self.runner = runner
 
     def get_pattern(self, relative_pattern):
-        return os.path.join(self.state.case.dir_path, relative_pattern)
+        return os.path.join(self.runner.case.dir_path, relative_pattern)
 
     def load_yaml(self, filename):
         return next(self.iter_yaml(filename))
@@ -31,4 +31,4 @@ class Functions(object):
     def read_render(self, filepath):
         from . import Namespace
         content = open(filepath).read()
-        return Namespace.render_value(content, self.state)
+        return Namespace.render(content, self.runner.namespace)

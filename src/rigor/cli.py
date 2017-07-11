@@ -34,13 +34,12 @@ def main(directories, domain, include, exclude, prefix, extensions,
                   concurrency=concurrency)
 
     # execute
-    suite.execute()
+    results = suite.execute()
 
-    # suite_dict = related.to_dict(suite)
     k = 0
     j = 1
     i = 0
-    for failure in suite.failed:
+    for failure in results.failed:
         print("Failure #%s" % i)
         print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
         print("Step:\n%s\n" % related.to_json(failure.fail_step))
@@ -53,11 +52,11 @@ def main(directories, domain, include, exclude, prefix, extensions,
         print("\n")
         i += 1
 
-    print("Passed: %s" % len(suite.passed))
-    print("Failed: %s" % len(suite.failed))
+    print("Passed: %s" % len(results.passed))
+    print("Failed: %s" % len(results.failed))
 
     # report success
-    status = 1 if suite.failed else 0
+    status = 1 if results.failed else 0
     sys.exit(status)
 
 if __name__ == '__main__':
