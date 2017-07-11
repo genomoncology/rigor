@@ -2,8 +2,6 @@ import json
 import urllib
 import related
 
-from rigor import State
-
 
 @related.immutable
 class Tag(object):
@@ -31,10 +29,7 @@ class Match(object):
 @related.immutable
 class Validators(object):
     actual = related.ChildField(object)
-    # compare = related.StringField()
     expect = related.ChildField(object)
-
-    #todo: Account for other comparators
 
     @classmethod
     def create_failing(cls, actual, expect):
@@ -51,34 +46,37 @@ class DocString(object):
     line = related.IntegerField()
 
     @classmethod
-    def create(cls, step, obj, status):
+    def create(cls, res, result):
         v = []
-        if status == "skipped":
+        if result.status == "skipped":
             return cls(
                 value="=== STEP NOT EXECUTED ===",
                 content_type="application/json",
                 line=6
             )
         spacer = "====================\n"
-        for fail_validation in obj.fail_validations:
-            i = 0
-            #todo:  compare!?!?
-            for item in fail_validation.actual:
-                if fail_validation.actual[i] != fail_validation.expect[i]:
-                    v.append(Validators.create_failing(fail_validation.actual[i], fail_validation.expect[i]))
-                i += 1
-        result = related.to_json(json.loads(related.to_json(step.extract.result)))
-        if status == "passed":
-            if result == "null":
-                result = "HTTP Respose: Success"
+        for validation in res.validations:
+            st = True
+            if not validation.success:
+                v.append(Validators.create_failing(validation.actual, validation.expect))
+                st = False
+            req = related.to_json(json.loads(related.to_json(res.fetch)))
+            if res.fetch.method == "post":
+                ret = related.to_json(json.loads(related.to_json(res.response)))
+                ret = ret + "\nHTTP Response: " + str(res.status)
+            else:
+                ret = related.to_json(json.loads(related.to_json(validation.actual)))
+
+
+        if st is True:
             return cls(
-                value=(spacer + "   RESULT   \n" + spacer + result),
+                value=(spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret),
                 content_type="application/json",
                 line=6
             )
         else:
             return cls(
-                value=spacer + "   RESULT   \n" + spacer + result + "\n\n\n" + spacer + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
+                value=spacer + "   RESULT   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret + "\n\n\n" + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
                 content_type="application/json",
                 line=6
             )
@@ -91,13 +89,13 @@ class Result(object):
     duration = related.IntegerField()
 
     @classmethod
-    def create(cls, step, obj, prev, tags, suite):
-        if step == obj.fail_step:
-            status = "failed"
-        elif prev is False or tags in suite.tags_excluded:
-            status = "skipped"
-        else:
+    def create(cls, res):
+        if res.success is True:
             status = "passed"
+        elif res.success is False:
+            status = "failed"
+        else:
+            status = "skipped"
         return cls(
             status=status,
             line=4,
@@ -118,21 +116,20 @@ class Step(object):
     result = related.ChildField(Result, required=False, default=None)
 
     @classmethod
-    def create(cls, step, obj, prev, tags, suite):
+    def create(cls, res):
         keyword = ""
-        temp = step.iterate.keys()
+        temp = res.step.iterate.keys()
         for key in temp:
             keyword = key
 
-        result = Result.create(step, obj, prev, tags, suite)
-        st = result.status
+        result = Result.create(res)
         return cls(
             keyword=keyword.title(),
             line=3,
-            name=step.description,
-            doc_string=DocString.create(step, obj, st),
+            name=res.step.description,
+            doc_string=DocString.create(res, result),
             duration=14748,
-            match=Match.create(step),
+            match=Match.create(res.step),
             result=result
         )
 
@@ -147,23 +144,18 @@ class Element(object):
     type = related.StringField()
     steps = related.SequenceField(Step, default=[])
 
-
-
     @classmethod
-    def create(cls, case, obj, tags, suite):
+    def create(cls, obj):
         stp = []
-        prev = True
-        for step in case.steps:
-            s = Step.create(step, obj, prev, tags, suite)
+        for res in obj.step_results:
+            s = Step.create(res)
             stp.append(s)
-            if s.result.status == "failed":
-                prev = False
-        temp = State.uuid.default
+        temp = obj.uuid
 
         return cls(
             keyword="Scenario",
             name=temp,
-            id=(urllib.parse.quote_plus(case.name) + ";" + str(State.uuid.default)),
+            id=(urllib.parse.quote_plus(obj.case.name) + ";" + str(obj.uuid)),
             line=2,
             description="",
             type="scenario",
@@ -178,29 +170,27 @@ class Feature(object):
     id = related.StringField()
     name = related.StringField()
     line = related.IntegerField()
-    duration = related.FloatField()
     elements = related.SequenceField(Element, default=[])
     description = related.StringField(required=False, default=None)
     tags = related.SequenceField(Tag, required=False, default=None)
 
     @classmethod
-    def create(cls, case, obj, suite):
+    def create(cls, suite_result):
         elm = []
         tg = []
-        for tag in case.tags:
-            tg.append(Tag.create(tag))
-        for scenario in case.scenarios:
-            elm.append(Element.create(case, obj, tg, suite))
-
-        duration = obj.running_time
+        for obj in suite_result.passed:
+            for tag in obj.case.tags:
+                tg.append(Tag.create(tag))
+            elm.append(Element.create(obj))
+        for obj in suite_result.failed:
+            elm.append(Element.create(obj))
 
         return cls(
-            uri=case.file_path,
+            uri=obj.case.file_path,
             keyword="Feature",
-            id=urllib.parse.quote_plus(case.name),
-            name=case.name,
+            id=urllib.parse.quote_plus(obj.case.name),
+            name=obj.case.name,
             line=1,
-            duration=duration,
             elements=elm,
             tags=tg
         )
@@ -210,14 +200,10 @@ class Feature(object):
 class Cucumber(object):
     features = related.SequenceField(Feature)
 
-    def load_init(self, suite):
+    def load_init(self, suite_result):
         ret = []
-        for obj in suite.passed:
-            ret.append(Feature.create(obj.case, obj, suite))
-        for entry in suite.failed:
-            ret.append(Feature.create(entry.case, entry, suite))
+        ret.append(Feature.create(suite_result))
         return ret
-
 
 
 

@@ -1,10 +1,11 @@
 import click
+import jmespath
 
-from rigor.reporting.cucumber import Cucumber
 from . import Suite
 import related
 import json
 import sys
+from rigor.reporting.cucumber import Cucumber
 import os
 
 
@@ -35,9 +36,9 @@ def main(directories, domain, include, exclude, prefix, extensions,
                   concurrency=concurrency)
 
     # execute
-    suite.execute()
+    results = suite.execute()
 
-    temp = related.to_json(Cucumber.load_init(Cucumber, suite=suite))
+    temp = related.to_json(Cucumber.load_init(Cucumber, suite_result=results))
     dct = json.loads(temp)
     final = related.to_json(dct)
     print(final)
@@ -55,12 +56,31 @@ def main(directories, domain, include, exclude, prefix, extensions,
     f.close()
     print("\n\n\nResponse Successfully Written to File\n\n\n")
     from subprocess import call
-    sandwich = os.path.expanduser('~/code/cucumber-sandwich/target/cucumber-sandwich.jar')
-    call(["java", "-jar", str(sandwich), "-n", "-f", path1, "-o", path2])
+    call(["java", "-jar", "/Users/edward/code/cucumber-sandwich/target/cucumber-sandwich.jar", "-n", "-f", path1, "-o",
+          path2])
     click.launch((str(path2) + '/cucumber-html-reports/cucumber-html-reports/overview-features.html'))
 
+    # k = 0
+    # j = 1
+    # i = 0
+    # for failure in results.failed:
+    #     print("Failure #%s" % i)
+    #     print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
+    #     print("Step:\n%s\n" % related.to_json(failure.fail_step))
+    #     print("Scenario:\n%s\n" % related.to_json(failure.scenario))
+    #     print("Last Fetch:\n%s\n" % related.to_json(failure.fetch))
+    #     print("Last Response:\n%s\n" % related.to_json(failure.response))
+    #     print("Failed Validations:")
+    #     for validation in failure.fail_validations:
+    #         print(related.to_json(validation))
+    #     print("\n")
+    #     i += 1
+    #
+    # print("Passed: %s" % len(results.passed))
+    # print("Failed: %s" % len(results.failed))
+
     # report success
-    status = 1 if suite.failed else 0
+    status = 1 if results.failed else 0
     sys.exit(status)
 
 if __name__ == '__main__':
