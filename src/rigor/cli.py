@@ -1,5 +1,4 @@
 import click
-import jmespath
 
 from . import Suite
 import related
@@ -60,26 +59,6 @@ def main(directories, domain, include, exclude, prefix, extensions,
           path2])
     click.launch((str(path2) + '/cucumber-html-reports/cucumber-html-reports/overview-features.html'))
 
-    # k = 0
-    # j = 1
-    # i = 0
-    # for failure in results.failed:
-    #     print("Failure #%s" % i)
-    #     print("Case:\n%s (%s)\n" % (failure.case.name, failure.case.file_path))
-    #     print("Step:\n%s\n" % related.to_json(failure.fail_step))
-    #     print("Scenario:\n%s\n" % related.to_json(failure.scenario))
-    #     print("Last Fetch:\n%s\n" % related.to_json(failure.fetch))
-    #     print("Last Response:\n%s\n" % related.to_json(failure.response))
-    #     print("Failed Validations:")
-    #     for validation in failure.fail_validations:
-    #         print(related.to_json(validation))
-    #     print("\n")
-    #     i += 1
-    #
-    # print("Passed: %s" % len(results.passed))
-    # print("Failed: %s" % len(results.failed))
-
-    # report success
     status = 1 if results.failed else 0
     sys.exit(status)
 

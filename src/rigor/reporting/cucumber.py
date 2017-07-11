@@ -76,7 +76,8 @@ class DocString(object):
             )
         else:
             return cls(
-                value=spacer + "   RESULT   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret + "\n\n\n" + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
+                value=spacer + "   RESULT   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret +
+                      "\n\n\n" + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
                 content_type="application/json",
                 line=6
             )
@@ -86,7 +87,6 @@ class DocString(object):
 class Result(object):
     status = related.StringField()
     line = related.IntegerField()
-    duration = related.IntegerField()
 
     @classmethod
     def create(cls, res):
@@ -98,8 +98,7 @@ class Result(object):
             status = "skipped"
         return cls(
             status=status,
-            line=4,
-            duration=14748
+            line=4
         )
 
 
@@ -116,7 +115,7 @@ class Step(object):
     result = related.ChildField(Result, required=False, default=None)
 
     @classmethod
-    def create(cls, res):
+    def create(cls, res, obj):
         keyword = ""
         temp = res.step.iterate.keys()
         for key in temp:
@@ -128,7 +127,7 @@ class Step(object):
             line=3,
             name=res.step.description,
             doc_string=DocString.create(res, result),
-            duration=14748,
+            duration=obj.running_time,
             match=Match.create(res.step),
             result=result
         )
@@ -148,7 +147,7 @@ class Element(object):
     def create(cls, obj):
         stp = []
         for res in obj.step_results:
-            s = Step.create(res)
+            s = Step.create(res, obj)
             stp.append(s)
         temp = obj.uuid
 
