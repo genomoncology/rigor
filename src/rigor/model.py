@@ -91,6 +91,7 @@ class Case(object):
     headers = related.ChildField(Namespace, required=False)
     file_path = related.StringField(default=None)
     is_valid = related.BooleanField(default=True)
+    uuid = related.UUIDField()
 
     @classmethod
     def load(cls, file_path):

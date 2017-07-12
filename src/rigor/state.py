@@ -4,7 +4,7 @@ import time
 import aiohttp
 import related
 
-from . import Case, Namespace, Step, Suite, Validator, Functions
+from . import Case, Namespace, Step, Suite, Functions
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -46,11 +46,46 @@ class ScenarioResult(object):
 
 
 @related.immutable
-class SuiteResult(object):
-    success = related.BooleanField()
+class CaseResult(object):
     suite = related.ChildField(Suite)
+    case = related.ChildField(Case)
     passed = related.SequenceField(ScenarioResult, default=[])
     failed = related.SequenceField(ScenarioResult, default=[])
+
+    @property
+    def success(self):
+        return bool(self.passed and not self.failed)
+
+
+@related.immutable
+class SuiteResult(object):
+    suite = related.ChildField(Suite)
+    passed = related.SequenceField(CaseResult, default=[])
+    failed = related.SequenceField(CaseResult, default=[])
+
+    @property
+    def success(self):
+        return bool(self.passed and not self.failed)
+
+    @classmethod
+    def create(cls, suite, scenario_results):
+        case_results = {}
+
+        for result in scenario_results:
+            # todo: handle exceptions...
+            case_result = case_results.setdefault(result.case.uuid,
+                                                  CaseResult(suite=suite,
+                                                             case=result.case))
+
+            sink = case_result.passed if result.success else case_result.failed
+            sink.append(result)
+
+        passed, failed = [], []
+        for case_result in case_results.values():
+            sink = passed if case_result.success else failed
+            sink.append(case_result)
+
+        return cls(suite=suite, passed=passed, failed=failed)
 
 
 @related.mutable

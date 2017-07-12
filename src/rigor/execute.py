@@ -8,23 +8,8 @@ def execute(suite):
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(do_suite(loop, suite))
     loop.run_until_complete(future)
+    return SuiteResult.create(suite, future.result())
 
-    passed = []
-    failed = []
-
-    for result in future.result():
-        # todo: handle exceptions...
-        sink = passed if result.success else failed
-        sink.append(result)
-
-    success = passed and not failed
-
-    return SuiteResult(
-        suite=suite,
-        passed=passed,
-        failed=failed,
-        success=success,
-    )
 
 async def do_suite(loop, suite):
     tasks = []

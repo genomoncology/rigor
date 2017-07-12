@@ -34,6 +34,9 @@ from .execute import (
     execute
 )
 
+from .reporting import (
+    ReportEngine
+)
 
 __all__ = [
     # collect.py

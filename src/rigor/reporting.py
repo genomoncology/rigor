@@ -1,6 +1,9 @@
 import json
 import urllib
 import related
+from itertools import chain
+
+from . import SuiteResult
 
 
 @related.immutable
@@ -67,7 +70,6 @@ class DocString(object):
             else:
                 ret = related.to_json(json.loads(related.to_json(validation.actual)))
 
-
         if st is True:
             return cls(
                 value=(spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret),
@@ -84,23 +86,18 @@ class DocString(object):
 
 
 @related.immutable
-class Result(object):
+class StatusResult(object):
     status = related.StringField()
     line = related.IntegerField()
 
     @classmethod
     def create(cls, res):
-        if res.success is True:
-            status = "passed"
-        elif res.success is False:
-            status = "failed"
-        else:
-            status = "skipped"
+        values = {True: "passed", False: "failed"}
+        status = values.get(res.success, "skipped")
         return cls(
             status=status,
             line=4
         )
-
 
 
 @related.immutable
@@ -112,24 +109,22 @@ class Step(object):
     name = related.StringField()
     duration = related.FloatField()
     doc_string = related.ChildField(DocString, required=False, default=None)
-    result = related.ChildField(Result, required=False, default=None)
+    result = related.ChildField(StatusResult, required=False, default=None)
 
     @classmethod
-    def create(cls, res, obj):
-        keyword = ""
-        temp = res.step.iterate.keys()
-        for key in temp:
-            keyword = key
+    def create(cls, step_result, scenario_result):
+        keyword = step_result.step.iterate.keys()
+        keyword = keyword[0].title() if keyword else ""
 
-        result = Result.create(res)
+        status_result = StatusResult.create(step_result)
         return cls(
-            keyword=keyword.title(),
+            keyword=keyword,
             line=3,
-            name=res.step.description,
-            doc_string=DocString.create(res, result),
-            duration=obj.running_time,
-            match=Match.create(res.step),
-            result=result
+            name=step_result.step.description,
+            doc_string=DocString.create(step_result, status_result),
+            duration=scenario_result.running_time,
+            match=Match.create(step_result.step),
+            result=status_result
         )
 
 
@@ -144,21 +139,19 @@ class Element(object):
     steps = related.SequenceField(Step, default=[])
 
     @classmethod
-    def create(cls, obj):
-        stp = []
-        for res in obj.step_results:
-            s = Step.create(res, obj)
-            stp.append(s)
-        temp = obj.uuid
+    def create(cls, scenario_result):
+        uuid = "%s;%s" % (urllib.parse.quote_plus(scenario_result.case.name),
+                          scenario_result.uuid)
 
         return cls(
             keyword="Scenario",
-            name=temp,
-            id=(urllib.parse.quote_plus(obj.case.name) + ";" + str(obj.uuid)),
+            name=scenario_result.uuid,
+            id=uuid,
             line=2,
             description="",
             type="scenario",
-            steps=stp,
+            steps=[Step.create(step_result, scenario_result)
+                   for step_result in scenario_result.step_results],
         )
 
 
@@ -174,24 +167,18 @@ class Feature(object):
     tags = related.SequenceField(Tag, required=False, default=None)
 
     @classmethod
-    def create(cls, suite_result):
-        elm = []
-        tg = []
-        for obj in suite_result.passed:
-            for tag in obj.case.tags:
-                tg.append(Tag.create(tag))
-            elm.append(Element.create(obj))
-        for obj in suite_result.failed:
-            elm.append(Element.create(obj))
-
+    def create(cls, case_result):
+        case = case_result.case
+        uuid = "%s;%s" % (urllib.parse.quote_plus(case.name), case.uuid)
         return cls(
-            uri=obj.case.file_path,
+            uri=case.file_path,
             keyword="Feature",
-            id=urllib.parse.quote_plus(obj.case.name),
-            name=obj.case.name,
+            id=uuid,
+            name=case.name,
             line=1,
-            elements=elm,
-            tags=tg
+            elements=[Element.create(scenario_result) for scenario_result in
+                      chain(case_result.passed, case_result.failed)],
+            tags=[Tag.create(tag) for tag in case.tags]
         )
 
 
@@ -199,10 +186,23 @@ class Feature(object):
 class Cucumber(object):
     features = related.SequenceField(Feature)
 
-    def load_init(self, suite_result):
-        ret = []
-        ret.append(Feature.create(suite_result))
-        return ret
+    @classmethod
+    def create(cls, suite_result):
+        features = []
+        for case_result in chain(suite_result.passed, suite_result.failed):
+            features.append(Feature.create(case_result))
+        return cls(features=features)
 
 
+@related.immutable
+class ReportEngine(object):
+    report_types = related.SequenceField(str)
+    output_path = related.SequenceField(str)
+    suite_result = related.ChildField(SuiteResult)
 
+    def generate(self):
+        print("GENERATING...")
+        cucumber = Cucumber.create(self.suite_result)
+        fp = open("cucumber.json", "w+")
+        fp.write(related.to_json(cucumber))
+        print("DONE!")

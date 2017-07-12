@@ -1,11 +1,10 @@
 import click
-
-from . import Suite
 import related
 import json
 import sys
-from rigor.reporting.cucumber import Cucumber
 import os
+
+from . import Suite, ReportEngine
 
 
 @click.command()
@@ -22,45 +21,36 @@ import os
               help="Filter cases by file extension. (e.g. rigor)")
 @click.option('--concurrency', '-c', type=int, default=20,
               help='# of concurrent HTTP requests. (default: 20)')
+@click.option('--report', '-r', multiple=True, default=["json"],
+              help='Generate report. (e.g. json, term)')
+@click.option('--output', '-o', default="rigor-output",
+              help='Report output folder. (default: rigor-output/)')
 def main(directories, domain, include, exclude, prefix, extensions,
-         concurrency):
+         concurrency, report, output):
     # remove preceding . if provided in extension (.rigor => rigor)
     extensions = [ext[1:] if ext.startswith(".") else ext
                   for ext in extensions or []]
 
-    # collect
+    # collect suite
     suite = Suite(directories=directories, domain=domain,
                   tags_included=include, tags_excluded=exclude,
                   file_prefixes=prefix, extensions=extensions,
                   concurrency=concurrency)
 
-    # execute
-    results = suite.execute()
+    # execute suite
+    suite_result = suite.execute()
 
-    temp = related.to_json(Cucumber.load_init(Cucumber, suite_result=results))
-    dct = json.loads(temp)
-    final = related.to_json(dct)
-    print(final)
+    # construct report engine
+    report_engine = ReportEngine(report_types=report, output_path=output,
+                                 suite_result=suite_result)
 
-    # Opens and closes file to clear contents
+    # generate report
+    report_engine.generate()
 
-    path1 = os.path.expanduser('~/code/knowledge/qa/response/responsejson')
-    path2 = os.path.expanduser('~/code/knowledge/qa/response/result')
-    f = open((str(path1) + "/responsejson"), "wb+")
-    f.close()
-
-    # File is actually written to here
-    f = open((str(path1) + "/response.json"), "r+")
-    f.write(final)
-    f.close()
-    print("\n\n\nResponse Successfully Written to File\n\n\n")
-    from subprocess import call
-    call(["java", "-jar", "/Users/edward/code/cucumber-sandwich/target/cucumber-sandwich.jar", "-n", "-f", path1, "-o",
-          path2])
-    click.launch((str(path2) + '/cucumber-html-reports/cucumber-html-reports/overview-features.html'))
-
-    status = 1 if results.failed else 0
+    # exit status
+    status = 1 if suite_result.failed else 0
     sys.exit(status)
+
 
 if __name__ == '__main__':
     main()
