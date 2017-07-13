@@ -79,7 +79,7 @@ class DocString(object):
         else:
             return cls(
                 value=spacer + "   RESULT   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret +
-                      "\n\n\n" + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
+                      "\n\n\n" + spacer + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
                 content_type="application/json",
                 line=6
             )
@@ -113,12 +113,12 @@ class Step(object):
 
     @classmethod
     def create(cls, step_result, scenario_result):
-        keyword = step_result.step.iterate.keys()
-        keyword = keyword[0].title() if keyword else ""
+        # keyword = step_result.step.iterate.keys()
+        # keyword = keyword[0].title() if keyword else ""
 
         status_result = StatusResult.create(step_result)
         return cls(
-            keyword=keyword,
+            keyword="",
             line=3,
             name=step_result.step.description,
             doc_string=DocString.create(step_result, status_result),
@@ -184,14 +184,13 @@ class Feature(object):
 
 @related.immutable
 class Cucumber(object):
-    features = related.SequenceField(Feature)
 
     @classmethod
     def create(cls, suite_result):
         features = []
         for case_result in chain(suite_result.passed, suite_result.failed):
             features.append(Feature.create(case_result))
-        return cls(features=features)
+        return features
 
 
 @related.immutable
