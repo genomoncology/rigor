@@ -20,10 +20,19 @@ class Method(enum.Enum):
 
 @enum.unique
 class Comparison(enum.Enum):
+    CONTAINS = "contains"
+    NOT_CONTAINS = "not contains"
+    GREATER_THAN = "greater than"
     EQUALS = "equals"
-    SAME = "same"
     IN = "in"
     NOT_IN = "not in"
+    SAME = "same"
+
+    def is_contains(self, actual, expect):
+        return expect in actual
+
+    def is_not_contains(self, actual, expect):
+        return expect not in actual
 
     def is_equals(self, actual, expect):
         return actual == expect
@@ -48,4 +57,7 @@ class Comparison(enum.Enum):
 
     def evaluate(self, actual, expected):
         method = getattr(self, "is_%s" % self.value.replace(" ", "_"))
-        return method(actual, expected)
+        try:
+            return method(actual, expected)
+        except:
+            return False
