@@ -145,7 +145,7 @@ class Element(object):
 
         return cls(
             keyword="Scenario",
-            name=scenario_result.uuid,
+            name=scenario_result.scenario.__name__,
             id=uuid,
             line=2,
             description="",
