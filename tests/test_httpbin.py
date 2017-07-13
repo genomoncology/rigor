@@ -58,10 +58,13 @@ def test_case_params(suite):
     assert case.domain == "https://httpbin.org"
     assert case.tags == ["working"]
     assert len(case.steps) == 2
-    assert len(case.scenarios) == 1
+    assert len(case.scenarios) == 2
 
     # check scenarios
-    assert case.scenarios[0] == Namespace(start=1, adder=2, check=3, final=5)
+    assert case.scenarios[0] == Namespace(start=1, adder=2, check=3, final=5,
+                                          __name__="Scenario #1")
+    assert case.scenarios[1] == Namespace(start=2, adder=4, check=6, final=10,
+                                          __name__="Override!")
 
     # check last step
     step = case.steps[-1]
@@ -146,4 +149,5 @@ def test_case_load_yaml(suite):
     assert len(case.steps) == 1
 
     scenario = case.scenarios[0]
-    assert scenario == dict(data="${load_yaml('./data/example.yaml')}")
+    assert scenario == dict(data="${load_yaml('./data/example.yaml')}",
+                            __name__="Scenario #1")

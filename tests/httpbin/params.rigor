@@ -10,6 +10,11 @@ scenarios:
     adder: 2
     check: 3
     final: 5
+  - start: 2
+    adder: 4
+    check: 6
+    final: 10
+    __name__: Override!
 
 
 steps:

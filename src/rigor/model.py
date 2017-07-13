@@ -100,8 +100,17 @@ class Case(object):
     @classmethod
     def loads(cls, content, file_path=None):
         try:
-            return related.from_yaml(content, Case, file_path=file_path,
-                                     object_pairs_hook=dict)
+            as_dict = related.from_yaml(content, file_path=file_path,
+                                        object_pairs_hook=dict)
+
+            scenarios = as_dict.get("scenarios", [])
+            counter = 1
+            for scenario in scenarios:
+                scenario.setdefault("__name__", "Scenario #%s" % counter)
+                counter += 1
+
+            return related.to_model(Case, as_dict)
+
         except Exception as exc:
             print("Load Failed: %s: %s" % (file_path, exc))  # todo: logging
             return Case(file_path=file_path, is_valid=False)
