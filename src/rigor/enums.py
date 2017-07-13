@@ -76,7 +76,7 @@ class Comparison(enum.Enum):
     def is_gt(self, actual, expect):
         return actual > expect
 
-    GREATER_THAN_OR_EQUAL = "greater than or equals"
+    GREATER_THAN_OR_EQUALS = "greater than or equals"
 
     def is_greater_than_or_equals(self, actual, expect):
         return actual >= expect
@@ -96,7 +96,7 @@ class Comparison(enum.Enum):
     def is_lt(self, actual, expect):
         return actual < expect
 
-    LESS_THAN_OR_EQUAL = "less than or equals"
+    LESS_THAN_OR_EQUALS = "less than or equals"
 
     def is_less_than_or_equals(self, actual, expect):
         return actual <= expect

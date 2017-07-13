@@ -54,8 +54,40 @@ def test_not_in():
     assert not Comparison.NOT_IN.evaluate(None, None)
 
 
-# todo... finish this!
-# def test_greater_than():
-#     assert Comparison.GREATER_THAN.evaluate(1, 0)
-#     assert Comparison.GT.evaluate(1, 0)
+def test_greater_than():
+    assert Comparison.GREATER_THAN.evaluate(1, 0)
+    assert not Comparison.GREATER_THAN.evaluate(0, 0)
+    assert not Comparison.GREATER_THAN.evaluate(0, 1)
 
+    assert Comparison.GT.evaluate(1, 0)
+    assert not Comparison.GT.evaluate(0, 0)
+    assert not Comparison.GT.evaluate(0, 1)
+    assert not Comparison.GT.evaluate(0, None)
+    assert not Comparison.GT.evaluate(None, 0)
+    assert not Comparison.GT.evaluate("1", 0)
+    assert not Comparison.GT.evaluate(1, "0")
+    assert not Comparison.GT.evaluate(0, "1")
+
+
+def test_greater_than_or_equals():
+    assert Comparison.GREATER_THAN_OR_EQUALS.evaluate(1, 1)
+    assert Comparison.GREATER_THAN_OR_EQUALS.evaluate(2, 1)
+    assert Comparison.GREATER_THAN_OR_EQUALS.evaluate(1, -1)
+    assert not Comparison.GREATER_THAN_OR_EQUALS.evaluate(1, 3)
+
+    assert Comparison.GTE.evaluate(1, 1)
+    assert Comparison.GTE.evaluate(2, 1)
+    assert Comparison.GTE.evaluate(1, -1)
+    assert not Comparison.GTE.evaluate(1, 3)
+
+
+def test_less_than_or_equals():
+    assert Comparison.LESS_THAN_OR_EQUALS.evaluate(1, 1)
+    assert Comparison.LESS_THAN_OR_EQUALS.evaluate(1, 2)
+    assert Comparison.LESS_THAN_OR_EQUALS.evaluate(-1, 1)
+    assert not Comparison.LESS_THAN_OR_EQUALS.evaluate(3, 1)
+
+    assert Comparison.LTE.evaluate(1, 1)
+    assert Comparison.LTE.evaluate(1, 2)
+    assert Comparison.LTE.evaluate(-1, 1)
+    assert not Comparison.LTE.evaluate(3, 1)
