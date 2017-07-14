@@ -19,7 +19,7 @@ steps:
               page_size: 10
 
     extract: # httpbin.org puts the original data request under 'json' key
-        page_num: ${response['json.request.pagination.page_num']}
+        page_num: ${int(response['json.request.pagination.page_num'])}
 
     validate:
 

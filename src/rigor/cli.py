@@ -47,10 +47,10 @@ def main(directories, domain, include, exclude, prefix, extensions,
     # generate report
     report_engine.generate()
 
-    # exit status
-    status = 1 if suite_result.failed else 0
-    sys.exit(status)
+    # report success
+    return 1 if results.failed else 0
+
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
