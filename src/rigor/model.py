@@ -82,9 +82,9 @@ class Step(object):
 
 @related.immutable
 class Case(object):
+    scenarios = related.SequenceField(Namespace)
     name = related.StringField(required=False, default=None)
     steps = related.SequenceField(Step, default=[])
-    scenarios = related.SequenceField(Namespace, default=[Namespace()])
     format = related.StringField(default="1.0")
     domain = related.StringField(required=False)
     tags = related.SequenceField(str, required=False)
@@ -101,7 +101,7 @@ class Case(object):
     def prep_scenarios(cls, original, dir_path):
         updated = []
         counter = 1
-        for scenario in original:
+        for scenario in original or [{}]:
             if isinstance(scenario, str):
                 scenario_file_path = os.path.join(dir_path, scenario)
                 scenario = related.from_yaml(open(scenario_file_path),
@@ -119,10 +119,9 @@ class Case(object):
             as_dict = related.from_yaml(content, file_path=file_path,
                                         object_pairs_hook=dict)
 
-            scenarios = as_dict.get("scenarios", None)
-            if scenarios:
-                dir_path = os.path.dirname(file_path)
-                as_dict['scenarios'] = cls.prep_scenarios(scenarios, dir_path)
+            scenarios = as_dict.get("scenarios", [])
+            dir_path = os.path.dirname(file_path)
+            as_dict['scenarios'] = cls.prep_scenarios(scenarios, dir_path)
 
             return related.to_model(Case, as_dict)
 

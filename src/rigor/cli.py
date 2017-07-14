@@ -48,8 +48,7 @@ def main(directories, domain, include, exclude, prefix, extensions,
     report_engine.generate()
 
     # report success
-    return 1 if results.failed else 0
-
+    return 1 if suite_result.failed else 0
 
 
 if __name__ == '__main__':
