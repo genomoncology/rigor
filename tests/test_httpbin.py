@@ -1,6 +1,7 @@
-from rigor import Suite, Method, Namespace, Validator, Runner
+from rigor import Suite, Method, Namespace, Validator, Runner, ReportEngine
 from collections import OrderedDict
 
+import tempfile
 import pytest
 import os
 import related
@@ -25,6 +26,12 @@ def test_execute(suite):
     result = suite.execute()
     assert result.success
     assert len(result.passed) == 7
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        print(tmpdir)
+        engine = ReportEngine(report_types=["json"], output_path=tmpdir,
+                              suite_result=result)
+        engine.generate()
 
 
 def test_case_get(suite):

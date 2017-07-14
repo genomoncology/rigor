@@ -143,6 +143,8 @@ class Element(object):
         uuid = "%s;%s" % (urllib.parse.quote_plus(scenario_result.case.name),
                           scenario_result.uuid)
 
+        steps = [Step.create(step_result, scenario_result) for step_result in scenario_result.step_results]
+
         return cls(
             keyword="Scenario",
             name=scenario_result.scenario.__name__,
@@ -150,8 +152,7 @@ class Element(object):
             line=2,
             description="",
             type="scenario",
-            steps=[Step.create(step_result, scenario_result)
-                   for step_result in scenario_result.step_results],
+            steps=steps,
         )
 
 
