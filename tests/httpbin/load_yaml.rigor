@@ -6,7 +6,19 @@ tags:
 
 scenarios:
 
-  - data: ${load_yaml('./data/example.yaml')}
+  - data: ${load_yaml('./data/load_scenario.yml')}
+    __name__: same
+
+  - data:
+      request:
+        query: "field:val"
+        uuid: "${__uuid__}"
+        pagination:
+          page_num: 10
+          page_size: 20
+    __name__: same
+
+  - ./data/file_scenario.yml
 
 steps:
 
@@ -26,9 +38,10 @@ steps:
         expect: "field:val"
 
       - actual: ${page_num}
-        expect: 1
+        expect: 10
 
       - actual: ${response['json.request.uuid']}
         expect: "${__uuid__}"
 
-
+      - actual: ${scenario.__name__}
+        expect: same

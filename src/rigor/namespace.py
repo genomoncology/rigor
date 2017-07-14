@@ -17,7 +17,7 @@ class Namespace(related.ImmutableDict):
         values = existing or {}
 
         for key, value in self.items():
-            values[key] = self.render(value, namespace)
+            values[key] = self.render(str(value), namespace)
 
         return Namespace(values)
 

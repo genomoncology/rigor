@@ -145,9 +145,17 @@ def test_case_list_yaml(suite):
 
 def test_case_load_yaml(suite):
     case = suite.get_case(ROOT_DIR, "load_yaml.rigor")
-    assert len(case.scenarios) == 1
+    assert len(case.scenarios) == 3
     assert len(case.steps) == 1
 
     scenario = case.scenarios[0]
-    assert scenario == dict(data="${load_yaml('./data/example.yaml')}",
-                            __name__="Scenario #1")
+    assert scenario == dict(data="${load_yaml('./data/load_scenario.yml')}",
+                            __name__="same")
+
+    scenario = case.scenarios[1]
+    assert scenario.keys() == {"data", "__name__"}
+    assert scenario['__name__'] == "same"
+
+    scenario = case.scenarios[2]
+    assert scenario.keys() == {"data", "__name__"}
+    assert scenario['__name__'] == "same"

@@ -98,16 +98,31 @@ class Case(object):
         return related.from_yaml(open(file_path), Case, file_path=file_path)
 
     @classmethod
+    def prep_scenarios(cls, original, dir_path):
+        updated = []
+        counter = 1
+        for scenario in original:
+            if isinstance(scenario, str):
+                scenario_file_path = os.path.join(dir_path, scenario)
+                scenario = related.from_yaml(open(scenario_file_path),
+                                             object_pairs_hook=dict)
+
+            scenario.setdefault("__name__", "Scenario #%s" % counter)
+            counter += 1
+            updated.append(scenario)
+
+        return updated
+
+    @classmethod
     def loads(cls, content, file_path=None):
         try:
             as_dict = related.from_yaml(content, file_path=file_path,
                                         object_pairs_hook=dict)
 
-            scenarios = as_dict.get("scenarios", [])
-            counter = 1
-            for scenario in scenarios:
-                scenario.setdefault("__name__", "Scenario #%s" % counter)
-                counter += 1
+            scenarios = as_dict.get("scenarios", None)
+            if scenarios:
+                dir_path = os.path.dirname(file_path)
+                as_dict['scenarios'] = cls.prep_scenarios(scenarios, dir_path)
 
             return related.to_model(Case, as_dict)
 
