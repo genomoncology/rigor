@@ -1,4 +1,6 @@
 import enum
+from pydoc import locate  # https://stackoverflow.com/a/29831586
+from re import search
 
 
 @enum.unique
@@ -26,6 +28,11 @@ class Comparison(enum.Enum):
 
     def is_equals(self, actual, expect):
         return actual == expect
+
+    NOT_EQUALS = "not equals"
+
+    def is_not_equals(self, actual, expect):
+        return actual != expect
 
     SAME = "same"
 
@@ -105,6 +112,20 @@ class Comparison(enum.Enum):
 
     def is_lte(self, actual, expect):
         return actual <= expect
+
+    # type
+
+    TYPE = "type"
+
+    def is_type(self, actual, expect):
+        return isinstance(actual, locate(expect))
+
+    # regex
+
+    REGEX = "regex"
+
+    def is_regex(self, actual, expect):
+        return bool(search(expect, actual))
 
     # evaluate
 

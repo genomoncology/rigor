@@ -6,56 +6,31 @@ tags:
 
 scenarios:
 
-  - start: 1
-    adder: 2
-    check: 3
-    final: 5
+  - value: 1
 
 
 steps:
 
-  - description: Pass the show_env flag, get it back and add a value to it
+  - description: Pass value and get response
     request:
         path: /get
         params:
-            show_env: ${scenario.start}
+            sent: ${scenario.value}
 
     extract:
-        check: ${response['args.show_env']} + ${scenario.adder}
+        extracted: ${response['args.sent']}
 
     validate:
 
-      - expect: https://httpbin.org/get?show_env=${scenario.start}
+      - expect: https://httpbin.org/get?sent=${scenario.value}
         actual: ${response.url}
 
-      - expect: ${scenario.start}
-        actual: ${response['args.show_env']}
+      - expect: ${scenario.value}
+        actual: ${response['args.sent']}
 
-      - expect: ${scenario.check}
-        actual: ${check}                # extract values are top-level in NS
+      - expect: ${scenario.value}
+        actual: ${extracted}            # extract values are top-level in NS
 
-      - expect: ${scenario.check}
-        actual: ${extract.check}        # extract values under 'extract.' too!
+      - expect: ${scenario.value}
+        actual: ${extract.extracted}    # extract values under 'extract.' too!
 
-  - description: Pass the show_env flag from previous case.
-
-    request:
-        path: /get
-        params:
-            show_env: ${extract.check}
-
-    extract:
-        final: ${response["args.show_env"]} + ${scenario.adder}
-
-    validate:
-      - expect: https://httpbin.org/get?show_env=${extract.check}
-        actual: ${response.url}
-
-      - expect: ${extract.check}
-        actual: ${response['args.show_env']}
-
-      - expect: ${scenario.final}
-        actual: ${final}             # extract values are top-level in NS
-
-      - expect: ${scenario.final}
-        actual: ${extract.final}     # extract values under 'extract.' too!

@@ -18,13 +18,13 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 7
+    assert len(suite.queued) == 8
 
 
 def test_execute(suite):
     result = suite.execute()
     assert result.success
-    assert len(result.passed) == 7
+    assert len(result.passed) == 8
 
 
 def test_case_get(suite):
@@ -57,29 +57,11 @@ def test_case_params(suite):
     assert case.format == "1.0"
     assert case.domain == "https://httpbin.org"
     assert case.tags == ["working"]
-    assert len(case.steps) == 2
+    assert len(case.steps) == 1
     assert len(case.scenarios) == 1
 
     # check scenarios
-    assert case.scenarios[0] == Namespace(start=1, adder=2, check=3, final=5)
-
-    # check last step
-    step = case.steps[-1]
-    assert step.description == "Pass the show_env flag from previous case."
-    assert step.request.path == "/get"
-    assert step.request.params == dict(show_env="${extract.check}")
-
-    assert step.extract == Namespace(
-        final='${response["args.show_env"]} + ${scenario.adder}'
-    )
-
-    assert step.validate == [
-        Validator(expect='https://httpbin.org/get?show_env=${extract.check}',
-                  actual='${response.url}'),
-        Validator(expect='${extract.check}',
-                  actual="${response['args.show_env']}"),
-        Validator(expect='${scenario.final}', actual='${final}'),
-        Validator(expect='${scenario.final}', actual='${extract.final}')]
+    assert case.scenarios[0] == Namespace(value=1)
 
 
 def test_case_http_status(suite):

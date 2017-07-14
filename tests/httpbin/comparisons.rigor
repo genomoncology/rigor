@@ -1,0 +1,89 @@
+name: Comparisons
+format: "1.0"
+domain: https://httpbin.org
+
+steps:
+
+  - description: Do a get just to do the comparison validations.
+
+    request:
+        path: /get
+
+    validate:
+      - actual: 1
+        compare: equals
+        expect: 1
+      - actual: '2'
+        compare: equals
+        expect: 2
+
+      - actual: [1, 2]
+        compare: same
+        expect: [2, 1]
+
+      - actual: 2
+        compare: not equals
+        expect: 1
+
+      - actual: [1, 2, 3]
+        compare: contains
+        expect: 3
+      - actual: [1, 2, 3]
+        compare: not contains
+        expect: 4
+
+      - actual: 1
+        compare: in
+        expect: [1, 2, 3]
+      - actual: 4
+        compare: not in
+        expect: [1, 2, 3]
+
+      - actual: 4
+        compare: greater than
+        expect: 2
+      - actual: 4
+        compare: gt
+        expect: 2
+      - actual: 4
+        compare: greater than or equals
+        expect: 4
+      - actual: 4
+        compare: gte
+        expect: 4
+
+      - actual: 4
+        compare: less than
+        expect: 5
+      - actual: 4
+        compare: lt
+        expect: 5
+      - actual: 4
+        compare: less than or equals
+        expect: 4
+      - actual: 4
+        compare: lte
+        expect: 4
+
+      - actual: 1
+        compare: type
+        expect: int
+      - actual: 1.1
+        compare: type
+        expect: float
+      - actual: hello, world.
+        compare: type
+        expect: str
+      - actual: { first: "amelia", last: "earhart" }
+        compare: type
+        expect: dict
+      - actual: [2, 3]
+        compare: type
+        expect: list
+
+      - actual: '000-00-0000'
+        compare: regex
+        expect: \d{3}-\d{2}-\d{4}
+      - actual: John Q. Public
+        compare: regex
+        expect: \w+ \w\. \w+

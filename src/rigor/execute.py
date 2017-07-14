@@ -17,7 +17,7 @@ def execute(suite):
         sink = passed if result.success else failed
         sink.append(result)
 
-    success = passed and not failed
+    success = bool(passed and not failed)
 
     return SuiteResult(
         suite=suite,

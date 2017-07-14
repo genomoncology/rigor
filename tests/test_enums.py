@@ -11,6 +11,14 @@ def test_equals():
     assert not Comparison.EQUALS.evaluate('1', None)
 
 
+def test_not_equals():
+    assert not Comparison.NOT_EQUALS.evaluate(1, 1)
+    assert not Comparison.NOT_EQUALS.evaluate(None, None)
+    assert not Comparison.NOT_EQUALS.evaluate('hi', 'hi')
+    assert Comparison.NOT_EQUALS.evaluate('1', 1)
+    assert Comparison.NOT_EQUALS.evaluate('1', None)
+
+
 def test_same():
     assert Comparison.SAME.evaluate((1, 3), (1, 3))
     assert Comparison.SAME.evaluate((3, 1), (1, 3))
@@ -91,3 +99,18 @@ def test_less_than_or_equals():
     assert Comparison.LTE.evaluate(1, 2)
     assert Comparison.LTE.evaluate(-1, 1)
     assert not Comparison.LTE.evaluate(3, 1)
+
+
+def test_type():
+    assert Comparison.TYPE.evaluate(1, "int")
+    assert Comparison.TYPE.evaluate(2.0, "float")
+    assert Comparison.TYPE.evaluate("hello", "str")
+    assert Comparison.TYPE.evaluate([1, 2], "list")
+    assert Comparison.TYPE.evaluate(dict(a=1), "dict")
+
+
+def test_regex():
+    assert Comparison.REGEX.evaluate("", ".*")
+    assert Comparison.REGEX.evaluate("2222", "\d+")
+    assert Comparison.REGEX.evaluate("111-33-3333", "\d{3}-\d{2}-\d{4}")
+    assert Comparison.REGEX.evaluate("John Q. Public", "\w+ \w\. \w+")

@@ -34,6 +34,10 @@ from .execute import (
     execute
 )
 
+from .cli import (
+    main
+)
+
 
 __all__ = [
     # collect.py
@@ -62,12 +66,15 @@ __all__ = [
     # state.py
     "Runner",
     "SuiteResult",
+
+    # cli.py
+    "main",
 ]
 
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.0.12'
+__version__ = '0.0.13'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

@@ -1,6 +1,7 @@
 import related
 import jmespath
 import ast
+import re
 
 from mako.template import Template
 
@@ -45,7 +46,13 @@ class Namespace(related.ImmutableDict):
                 raise
 
             try:
+                # eval if rendered value is list, dict, int or float
+                is_list_or_dict = rendered.strip()[0] in ("{", "[")
+                is_number = re.match("^[\d\.]+$", rendered.strip())
+                assert is_list_or_dict or is_number
+
                 value = ast.literal_eval(rendered)
+
             except:
                 value = rendered
 
