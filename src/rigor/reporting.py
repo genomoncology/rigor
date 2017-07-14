@@ -51,6 +51,8 @@ class DocString(object):
     @classmethod
     def create(cls, res, result):
         v = []
+        r = []
+        i = 0
         if result.status == "skipped":
             return cls(
                 value="=== STEP NOT EXECUTED ===",
@@ -64,15 +66,18 @@ class DocString(object):
                 v.append(Validators.create_failing(validation.actual, validation.expect))
                 st = False
             req = related.to_json(json.loads(related.to_json(res.fetch)))
-            if res.fetch.method == "post":
+            if res.fetch.method != "get":
                 ret = related.to_json(json.loads(related.to_json(res.response)))
                 ret = ret + "\nHTTP Response: " + str(res.status)
             else:
-                ret = related.to_json(json.loads(related.to_json(validation.actual)))
+                if i != 0:
+                    r.append(validation.actual)
+                    ret = related.to_json(json.loads(related.to_json(r)))
+            i += 1
 
         if st is True:
             return cls(
-                value=(spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret),
+                value=(spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   ACTUAL RESULT   \n" + spacer + ret),
                 content_type="application/json",
                 line=6
             )
