@@ -53,6 +53,7 @@ class DocString(object):
         v = []
         r = []
         i = 0
+        ret = ""
         if result.status == "skipped":
             return cls(
                 value="=== STEP NOT EXECUTED ===",
@@ -206,8 +207,7 @@ class ReportEngine(object):
     suite_result = related.ChildField(SuiteResult)
 
     def generate(self):
-        print("GENERATING...")
         cucumber = Cucumber.create(self.suite_result)
         fp = open("cucumber.json", "w+")
         fp.write(related.to_json(cucumber))
-        print("DONE!")
+        fp.close()

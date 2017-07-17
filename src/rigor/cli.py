@@ -23,8 +23,8 @@ from . import Suite, ReportEngine
               help='# of concurrent HTTP requests. (default: 20)')
 @click.option('--report', '-r', multiple=True, default=["json"],
               help='Generate report. (e.g. json, term)')
-@click.option('--output', '-o', default="rigor-output",
-              help='Report output folder. (default: rigor-output/)')
+@click.option('--output', '-o', default=".",
+              help='Report output folder. (default: .)')
 def main(directories, domain, include, exclude, prefix, extensions,
          concurrency, report, output):
     # remove preceding . if provided in extension (.rigor => rigor)
