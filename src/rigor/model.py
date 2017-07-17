@@ -4,7 +4,7 @@ from itertools import product
 
 import related
 
-from . import Comparison, Method, Namespace
+from . import Comparison, Method, Namespace, get_logger
 
 
 class Iterator(Namespace):
@@ -166,16 +166,14 @@ class Suite(object):
     def add_case(self, case):
         if case.is_active(self.tags_included, self.tags_excluded):
             self.queued.add(case)
+            get_logger().debug("case queued", case=case.file_path)
         else:
             self.skipped.add(case)
+            get_logger().debug("case skipped", case=case.file_path)
 
     def execute(self):
         from . import execute
         return execute(self)
-
-    def generate_feature_id(self, suite):
-        for failed in suite.failed:
-            id = failed.case.name
 
 
 # utilities

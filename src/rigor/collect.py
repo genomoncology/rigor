@@ -3,14 +3,23 @@ import aiofiles
 import glob
 import os
 
+from . import get_logger
+
 
 def collect(suite):
+    log = get_logger()
+    log.debug("scanning", directories=suite.directories, cwd=os.getcwd())
+
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(async_collect(suite))
     loop.run_until_complete(future)
 
     for case in future.result():
         suite.add_case(case)
+
+    log.info("%s cases queued" % len(suite.queued), queued=list(suite.queued))
+    log.info("%s cases skipped" % len(suite.skipped),
+             skipped=list(suite.skipped))
 
 
 async def async_collect(suite):

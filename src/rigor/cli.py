@@ -4,7 +4,7 @@ import json
 import sys
 import os
 
-from . import Suite, ReportEngine
+from . import Suite, ReportEngine, setup_logging
 
 
 @click.command()
@@ -25,8 +25,16 @@ from . import Suite, ReportEngine
               help='Generate report. (e.g. json, term)')
 @click.option('--output', '-o', default=".",
               help='Report output folder. (default: .)')
+@click.option('--quiet', '-q', is_flag=True,
+              help='Run in quiet mode. (no logging)')
+@click.option('--verbose', '-v', is_flag=True,
+              help='Run in verbose mode. (extra logging)')
 def main(directories, domain, include, exclude, prefix, extensions,
-         concurrency, report, output):
+         concurrency, report, output, quiet, verbose):
+
+    # setup logging
+    setup_logging(quiet=quiet, verbose=verbose)
+
     # remove preceding . if provided in extension (.rigor => rigor)
     extensions = [ext[1:] if ext.startswith(".") else ext
                   for ext in extensions or []]

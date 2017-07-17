@@ -33,6 +33,7 @@ setup(
         "jmespath==0.9.3",
         "Mako==1.0.6",
         "click==6.7",
+        "structlog==17.2.0",
     ],
 
     setup_requires=[

@@ -4,7 +4,7 @@ import time
 import aiohttp
 import related
 
-from . import Case, Namespace, Step, Suite, Functions
+from . import Case, Namespace, Step, Suite, Functions, get_logger
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -193,6 +193,9 @@ class Runner(object):
 
     async def do_fetch(self, fetch):
         # make request and store response
+        get_logger().debug("fetch", method=fetch.method, url=fetch.url,
+                           kwargs=fetch.kwargs)
+
         async with self.session.request(fetch.method, fetch.url,
                                         **fetch.kwargs) as context:
             try:
@@ -201,6 +204,10 @@ class Runner(object):
                 response = Namespace()
 
             status = context.status
+
+            get_logger().debug("response", method=fetch.method, url=fetch.url,
+                               kwargs=fetch.kwargs, status=status)
+
             return response, status
 
     def do_extract(self, step):

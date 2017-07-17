@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from .logging import (
+    setup_logging,
+    get_logger,
+)
+
 from .collect import (
     collect
 )
@@ -43,6 +48,10 @@ from .cli import (
 
 
 __all__ = [
+    # logging.py
+    "setup_logging",
+    "get_logger",
+
     # collect.py
     "collect",
 
