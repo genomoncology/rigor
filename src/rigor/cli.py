@@ -22,18 +22,20 @@ from . import Suite, ReportEngine, setup_logging
 @click.option('--concurrency', '-c', type=int, default=20,
               help='# of concurrent HTTP requests. (default: 20)')
 @click.option('--report', '-r', multiple=True, default=["json"],
-              help='Generate report. (e.g. json, term)')
+              help='Generate report. (e.g. cucumber)')
 @click.option('--output', '-o', default=".",
               help='Report output folder. (default: .)')
 @click.option('--quiet', '-q', is_flag=True,
               help='Run in quiet mode. (no logging)')
 @click.option('--verbose', '-v', is_flag=True,
               help='Run in verbose mode. (extra logging)')
+@click.option('--json', '-j', is_flag=True,
+              help='JSON-style logging.')
 def main(directories, domain, include, exclude, prefix, extensions,
-         concurrency, report, output, quiet, verbose):
+         concurrency, report, output, quiet, verbose, json):
 
     # setup logging
-    setup_logging(quiet=quiet, verbose=verbose)
+    setup_logging(quiet=quiet, verbose=verbose, json=json)
 
     # remove preceding . if provided in extension (.rigor => rigor)
     extensions = [ext[1:] if ext.startswith(".") else ext

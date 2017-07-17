@@ -1,10 +1,12 @@
 import asyncio
+import itertools
 import time
 
 import aiohttp
 import related
 
-from . import Case, Namespace, Step, Suite, Functions, get_logger
+from . import (Case, Namespace, Step, Suite, Functions, Validator, Comparison,
+               get_logger)
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -15,6 +17,7 @@ class ValidationResult(object):
     actual = related.ChildField(object)
     expect = related.ChildField(object)
     success = related.BooleanField()
+    validator = related.ChildField(Validator)
 
 
 @related.immutable
@@ -219,9 +222,9 @@ class Runner(object):
 
         # status check
         expected_status = step.request.status or HTTP_SUCCESS
-        results.append(ValidationResult(actual=status,
-                                        expect=expected_status,
-                                        success=status in expected_status))
+        validator = Validator(actual=status, expect=expected_status,
+                              compare=Comparison.IN)
+        results.append(self.check_validation(validator))
 
         # validators check
         for validator in step.validate or []:
@@ -235,5 +238,5 @@ class Runner(object):
         actual = Namespace.render(validator.actual, self.namespace)
         expect = Namespace.render(validator.expect, self.namespace)
         success = validator.compare.evaluate(actual, expect)
-        return ValidationResult(actual=actual,
-                                expect=expect, success=success)
+        return ValidationResult(actual=actual, expect=expect, success=success,
+                                validator=validator)

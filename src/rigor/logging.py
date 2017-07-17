@@ -6,8 +6,18 @@ from structlog.stdlib import LoggerFactory
 
 LOGGER_NAME = 'rigor'
 
+DEFAULT_PROCESSORS = [
+    structlog.stdlib.filter_by_level,
+    structlog.stdlib.add_logger_name,
+    structlog.stdlib.add_log_level,
+    structlog.stdlib.PositionalArgumentsFormatter(),
+    structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S"),
+    structlog.processors.StackInfoRenderer(),
+    structlog.processors.format_exc_info,
+]
 
-def setup_logging(quiet=False, verbose=False):
+
+def setup_logging(quiet=False, verbose=False, json=False):
     # verbose supersedes quiet
     level = logging.WARNING if quiet else logging.INFO
     level = logging.DEBUG if verbose else level
@@ -17,18 +27,13 @@ def setup_logging(quiet=False, verbose=False):
     root.setLevel(level)
     root.addHandler(logging.StreamHandler(sys.stdout))
 
+    # renderer
+    renderer = structlog.processors.JSONRenderer() if json else \
+        structlog.dev.ConsoleRenderer()
+
     # https://structlog.readthedocs.io/en/stable/development.html
     structlog.configure(
-        processors=[
-            structlog.stdlib.filter_by_level,
-            structlog.stdlib.add_logger_name,
-            structlog.stdlib.add_log_level,
-            structlog.stdlib.PositionalArgumentsFormatter(),
-            structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S"),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.dev.ConsoleRenderer()
-        ],
+        processors=DEFAULT_PROCESSORS + [renderer],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
         wrapper_class=structlog.stdlib.BoundLogger,
