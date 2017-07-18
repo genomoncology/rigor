@@ -140,6 +140,14 @@ class Runner(object):
 
         running_time = time.time() - start_time
 
+        if not success:
+            get_logger().error("scenario failed", case=self.case)
+            pass  # todo: display failed scenario...
+
+        get_logger().debug("scenario complete", case=self.case,
+                           scenario=self.scenario, success=success,
+                           running_time=running_time)
+
         return ScenarioResult(
             uuid=self.uuid,
             suite=self.suite,
@@ -232,6 +240,10 @@ class Runner(object):
 
         # determine success and return
         success = all([result.success for result in results])
+
+        # todo: debug mode... all validation results w/ UUID of the scenario
+        # todo: error mode... only failed validations
+
         return results, success
 
     def check_validation(self, validator):

@@ -8,7 +8,7 @@ from . import get_logger
 
 def collect(suite):
     log = get_logger()
-    log.debug("scanning", directories=suite.directories, cwd=os.getcwd())
+    log.info("collecting tests", directories=suite.directories, cwd=os.getcwd())
 
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(async_collect(suite))
@@ -17,9 +17,8 @@ def collect(suite):
     for case in future.result():
         suite.add_case(case)
 
-    log.info("%s cases queued" % len(suite.queued), queued=list(suite.queued))
-    log.info("%s cases skipped" % len(suite.skipped),
-             skipped=list(suite.skipped))
+    log.info("tests collected", queued=len(suite.queued),
+             skipped=len(suite.skipped))
 
 
 async def async_collect(suite):

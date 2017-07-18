@@ -26,9 +26,9 @@ from . import Suite, ReportEngine, setup_logging
 @click.option('--output', '-o', default=".",
               help='Report output folder. (default: .)')
 @click.option('--quiet', '-q', is_flag=True,
-              help='Run in quiet mode. (no logging)')
+              help='Run in quiet mode. (warning/critical level only)')
 @click.option('--verbose', '-v', is_flag=True,
-              help='Run in verbose mode. (extra logging)')
+              help='Run in verbose mode. (debug level logging)')
 @click.option('--json', '-j', is_flag=True,
               help='JSON-style logging.')
 def main(directories, domain, include, exclude, prefix, extensions,
