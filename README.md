@@ -28,3 +28,8 @@ $ pip install rigor
 $ cd /path/to/directory/containing/tree/of/rigor/yamls/
 $ rigor
 ```
+
+
+HTML Reporting
+--------------
+Rigor returns a response that is cucumber formatted, and supports a
