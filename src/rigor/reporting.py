@@ -2,8 +2,9 @@ import json
 import urllib
 import related
 from itertools import chain
+from datadiff import diff
 
-from . import SuiteResult
+from . import SuiteResult, Comparison
 
 
 @related.immutable
@@ -64,8 +65,10 @@ class DocString(object):
         for validation in res.validations:
             st = True
             if not validation.success:
-                v.append(Validators.create_failing(validation.actual, validation.expect))
-                st = False
+                # v.append(Validators.create_failing(validation.actual, validation.expect))
+                if validation.validator.compare is Comparison.EQUALS:
+                    v.append(diff(validation.actual, validation.expect))
+                    st = False
             req = related.to_json(json.loads(related.to_json(res.fetch)))
             if res.fetch.method != "get":
                 ret = related.to_json(json.loads(related.to_json(res.response)))

@@ -1,6 +1,7 @@
 import asyncio
 import itertools
 import time
+import json
 
 import aiohttp
 import related
@@ -130,19 +131,25 @@ class Runner(object):
         success = True
         start_time = time.time()
         step_results = []
+        f = []
 
         # iterate steps
         async for step_result in self.iter_steps():
             step_results.append(step_result)
             success = step_result.success
             if not success:
+                fail_step = step_result
+                for val in fail_step.validations:
+                    f.append(val)
+
                 break
 
         running_time = time.time() - start_time
 
         if not success:
-            get_logger().error("scenario failed", case=self.case)
-            pass  # todo: display failed scenario...
+            # error logging - display failed scenario
+            # get_logger().error("scenario failed", Feature=self.case.name, Scenario=self.scenario.__name__, Fail_Step=fail_step.step.description, Fail_Validations=f)
+            get_logger().error("scenario failed", Feature=self.case.name, Scenario=self.scenario.__name__)
 
         get_logger().debug("scenario complete", case=self.case,
                            scenario=self.scenario, success=success,
@@ -241,8 +248,22 @@ class Runner(object):
         # determine success and return
         success = all([result.success for result in results])
 
-        # todo: debug mode... all validation results w/ UUID of the scenario
-        # todo: error mode... only failed validations
+        # debug logging - scenario uuid and all validations
+        vals = []
+
+        #figure out how to get these all into one list?
+        for val in results:
+            if val is not None:
+                vals.append(val)
+        get_logger().debug("Scenario Validations", Scenario_UUID=self.uuid, Validations=vals)
+
+        # error logging - only failed validations returned
+        fail_vals = []
+        for val in results:
+            if val.success is False and val is not None:
+                fail_vals.append(val)
+        if fail_vals != []:
+            get_logger().error("Validator(s) failed", Fail_Validations=fail_vals)
 
         return results, success
 
