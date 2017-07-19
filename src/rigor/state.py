@@ -4,7 +4,7 @@ import time
 import aiohttp
 import related
 
-from . import (Case, Namespace, Step, Suite, Functions, Validator, Comparison,
+from . import (Case, Namespace, Step, Suite, Functions, Validator, Comparison, enums,
                get_logger)
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
