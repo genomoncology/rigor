@@ -68,7 +68,10 @@ class DocString(object):
                 # v.append(Validators.create_failing(validation.actual, validation.expect))
                 if validation.validator.compare is Comparison.EQUALS:
                     v.append(diff(validation.actual, validation.expect))
+                    r.append({validation.validator.actual: validation.actual})
                     st = False
+                else:
+                    r.append({validation.validator.actual: validation.actual})
             req = related.to_json(json.loads(related.to_json(res.fetch)))
             if res.fetch.method != "get":
                 ret = related.to_json(json.loads(related.to_json(res.response)))
@@ -90,8 +93,13 @@ class DocString(object):
                 line=6
             )
         else:
+            for dct in r:
+                for key, value in dct.items():
+                    x.update({key: value})
+            ret = related.to_json(json.loads(related.to_json(x)))
+
             return cls(
-                value=spacer + "   RESULT   \n" + spacer + req + "\n\n\n" + spacer + "   RESULT   \n" + spacer + ret +
+                value=spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   ACTUAL RESULT   \n" + spacer + ret +
                       "\n\n\n" + spacer + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
                 content_type="application/json",
                 line=6
