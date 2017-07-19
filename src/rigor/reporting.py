@@ -42,7 +42,6 @@ class Validators(object):
             expect=expect
         )
 
-
 @related.immutable
 class DocString(object):
     value = related.StringField()
@@ -53,6 +52,7 @@ class DocString(object):
     def create(cls, res, result):
         v = []
         r = []
+        x = []
         i = 0
         ret = ""
         if result.status == "skipped":
@@ -75,8 +75,18 @@ class DocString(object):
                 ret = ret + "\nHTTP Response: " + str(res.status)
             else:
                 if i != 0:
-                    r.append(validation.actual)
-                    ret = related.to_json(json.loads(related.to_json(r)))
+                    # r.append(validation.actual)
+                    # ret = related.to_json(json.loads(related.to_json(r)))
+                    # if isinstance(validation.actual, dict or list):
+                    #     d = True
+                    #     r.append(validation.actual)
+                    #     ret = related.to_json(json.loads(related.to_json(r)))
+                    # else:
+                    #     d = False
+                    r.append((validation.validator.actual, validation.actual))
+                    for item in r:
+                        x.append({item[0] : item[1]})
+                    ret = related.to_json(json.loads(related.to_json(x)))
             i += 1
 
         if st is True:

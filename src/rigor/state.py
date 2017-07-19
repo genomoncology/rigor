@@ -233,9 +233,13 @@ class Runner(object):
 
         # status check
         expected_status = step.request.status or HTTP_SUCCESS
-        validator = Validator(actual=status, expect=expected_status,
-                              compare=Comparison.IN)
-        results.append(self.check_validation(validator))
+        validator = Validator(actual="${status}",
+                              expect=expected_status,
+                              compare=enums.Comparison.IN)
+        results.append(ValidationResult(actual=status,
+                                        expect=expected_status,
+                                        success=status in expected_status,
+                                        validator=validator))
 
         # validators check
         for validator in step.validate or []:
