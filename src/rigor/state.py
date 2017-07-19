@@ -1,7 +1,5 @@
 import asyncio
-import itertools
 import time
-import json
 
 import aiohttp
 import related
@@ -141,14 +139,12 @@ class Runner(object):
                 fail_step = step_result
                 for val in fail_step.validations:
                     f.append(val)
-
                 break
 
         running_time = time.time() - start_time
 
         if not success:
             # error logging - display failed scenario
-            # get_logger().error("scenario failed", Feature=self.case.name, Scenario=self.scenario.__name__, Fail_Step=fail_step.step.description, Fail_Validations=f)
             get_logger().error("scenario failed", Feature=self.case.name, Scenario=self.scenario.__name__)
 
         get_logger().debug("scenario complete", case=self.case,
@@ -251,7 +247,7 @@ class Runner(object):
         # debug logging - scenario uuid and all validations
         vals = []
 
-        #figure out how to get these all into one list?
+        # figure out how to get these all into one list?
         for val in results:
             if val is not None:
                 vals.append(val)
