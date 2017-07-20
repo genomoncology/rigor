@@ -77,7 +77,7 @@ class DocString(object):
                 ret = ret + "\nHTTP Response: " + str(res.status)
             else:
                 if i != 0:
-                    r.append({validation.validator.actual: validation.actual})
+                    r.append({str(validation.validator.actual): validation.actual})
             i += 1
 
         if st is True:
