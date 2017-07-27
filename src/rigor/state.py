@@ -163,7 +163,7 @@ class Runner(object):
 
     async def iter_steps(self):
         for step in self.case.steps:
-            await asyncio.sleep(2.0)  # todo: replace...
+            await asyncio.sleep(0.01)  # todo: replace...
 
             for self.iterate in step.iterate.iterate(self.namespace):
                 # create and do fetch

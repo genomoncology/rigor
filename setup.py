@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.0.14',
+    version='0.0.16',
 
     package_dir={
         '': 'src'
@@ -35,6 +35,7 @@ setup(
         "click==6.7",
         "structlog==17.2.0",
         "datadiff==2.0.0",
+        "colorama==0.3.9",
     ],
 
     setup_requires=[
