@@ -96,7 +96,7 @@ steps:
         compare: in
         expect: ["A", "B", "C", "D", "E", "F"]
 
-  - description: Call with the last combo (1B) from previous step.
+  - description: Call with the last combo (1F) from previous step.
 
     request:
         path: /get

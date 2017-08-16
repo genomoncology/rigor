@@ -42,61 +42,38 @@ class Validators(object):
             expect=expect
         )
 
+
 @related.immutable
 class DocString(object):
     value = related.StringField()
-    content_type = related.StringField()
-    line = related.IntegerField()
+    content_type = related.StringField(required=False)
+    line = related.IntegerField(default=6)
 
     @classmethod
-    def create(cls, res, result):
-        v = []
-        r = []
-        x = {}
-        i = 0
-        ret = ""
-        if result.status == "skipped":
-            return cls(
-                value="=== STEP NOT EXECUTED ===",
-                content_type="application/json",
-                line=6
-            )
-        spacer = "====================\n"
-        for validation in res.validations:
-            st = True
-            if not validation.success:
-                v.append(Validators.create_failing(validation.actual, validation.expect))
-                st = False
-                if validation.validator.compare is Comparison.EQUALS and \
-                   type(validation.actual) == dict and type(validation.expect) == dict:
-                    v.append(diff(validation.actual, validation.expect))
-            req = related.to_json(json.loads(related.to_json(res.fetch)))
-            if res.fetch.method != "get":
-                ret = related.to_json(json.loads(related.to_json(res.response)))
-                ret = ret + "\nHTTP Response: " + str(res.status)
-            else:
-                if i != 0:
-                    r.append({str(validation.validator.actual): validation.actual})
-            i += 1
+    def section(cls, title, content, size=20):
+        bar = "=" * size
+        return "\n".join([bar, str.center(title, size), bar, "", content, ""])
 
-        if st is True:
-            for dct in r:
-                for key, value in dct.items():
-                    x.update({key: value})
-            ret = related.to_json(json.loads(related.to_json(x)))
+    @classmethod
+    def create(cls, step_result):
+        # fetch and response
 
-            return cls(
-                value=(spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   ACTUAL RESULT   \n" + spacer + ret),
-                content_type="application/json",
-                line=6
-            )
-        else:
-            return cls(
-                value=spacer + "   REQUEST   \n" + spacer + req + "\n\n\n" + spacer + "   ACTUAL RESULT   \n" + spacer + ret +
-                      "\n\n\n" + spacer + " FAILED VALIDATIONS\n" + spacer + related.to_json(json.loads(related.to_json(v))),
-                content_type="application/json",
-                line=6
-            )
+        fetch = related.to_yaml(step_result.fetch, suppress_empty_values=True)
+        response = related.to_yaml(step_result.response)
+        sections = [cls.section("FETCH", fetch),
+                    cls.section("RESPONSE", response)]
+
+        # failed validations
+
+        fail_val = [validation for validation in step_result.validations
+                    if not validation.success]
+        if fail_val:
+            fail_val = related.to_yaml(fail_val)
+            sections.append(cls.section("FAILED VALIDATIONS", fail_val))
+
+        value = "\n".join(sections)
+
+        return cls(value=value)
 
 
 @related.immutable
@@ -127,18 +104,14 @@ class Step(object):
 
     @classmethod
     def create(cls, step_result, scenario_result):
-        # keyword = step_result.step.iterate.keys()
-        # keyword = keyword[0].title() if keyword else ""
-
-        status_result = StatusResult.create(step_result)
         return cls(
             keyword="",
             line=3,
             name=step_result.step.description,
-            doc_string=DocString.create(step_result, status_result),
+            doc_string=DocString.create(step_result),
             duration=scenario_result.running_time,
             match=Match.create(step_result.step),
-            result=status_result
+            result=StatusResult.create(step_result),
         )
 
 
