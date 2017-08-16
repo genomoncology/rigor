@@ -67,10 +67,9 @@ class DocString(object):
             if not validation.success:
                 v.append(Validators.create_failing(validation.actual, validation.expect))
                 st = False
-                if validation.validator.compare is Comparison.EQUALS:
+                if validation.validator.compare is Comparison.EQUALS and \
+                   type(validation.actual) == dict and type(validation.expect) == dict:
                     v.append(diff(validation.actual, validation.expect))
-                    # r.append({validation.validator.actual: validation.actual})
-                    st = False
             req = related.to_json(json.loads(related.to_json(res.fetch)))
             if res.fetch.method != "get":
                 ret = related.to_json(json.loads(related.to_json(res.response)))
