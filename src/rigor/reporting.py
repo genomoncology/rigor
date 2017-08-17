@@ -2,7 +2,6 @@ import json
 import urllib
 import related
 from itertools import chain
-from datadiff import diff
 
 from . import SuiteResult, Comparison
 
@@ -50,30 +49,21 @@ class DocString(object):
     line = related.IntegerField(default=6)
 
     @classmethod
-    def section(cls, title, content, size=20):
+    def section(cls, title, obj, **kwargs):
+        size = max(20, len(title))
         bar = "=" * size
+        content = related.to_yaml(obj, **kwargs) if obj else "None"
         return "\n".join([bar, str.center(title, size), bar, "", content, ""])
 
     @classmethod
     def create(cls, step_result):
-        # fetch and response
-
-        fetch = related.to_yaml(step_result.fetch, suppress_empty_values=True)
-        response = related.to_yaml(step_result.response)
-        sections = [cls.section("FETCH", fetch),
-                    cls.section("RESPONSE", response)]
-
-        # failed validations
-
-        fail_val = [validation for validation in step_result.validations
-                    if not validation.success]
-        if fail_val:
-            fail_val = related.to_yaml(fail_val)
-            sections.append(cls.section("FAILED VALIDATIONS", fail_val))
-
-        value = "\n".join(sections)
-
-        return cls(value=value)
+        return cls(value="\n".join([
+            cls.section("REQUEST", step_result.fetch),
+            cls.section("RESPONSE", step_result.response),
+            cls.section("EXTRACT", step_result.extract),
+            cls.section("FAILURES", step_result.failed_validations,
+                        suppress_empty_values=False)
+        ]))
 
 
 @related.immutable

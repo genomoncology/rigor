@@ -32,6 +32,6 @@ async def do_suite(loop, suite):
 
                 tasks.append(asyncio.ensure_future(runner.do_run()))
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=False)
 
     return results

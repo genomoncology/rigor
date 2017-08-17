@@ -32,8 +32,13 @@ class StepResult(object):
     success = related.BooleanField()
     fetch = related.ChildField(Fetch, required=False)
     response = related.ChildField(Namespace, required=False)
+    extract = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
     validations = related.SequenceField(ValidationResult, required=False)
+
+    @property
+    def failed_validations(self):
+        return [v for v in self.validations if not v.success]
 
 
 @related.immutable
@@ -177,7 +182,7 @@ class Runner(object):
                 validations, success = self.do_validate(step, status)
 
                 # add step result
-                yield StepResult(step=step, fetch=fetch,
+                yield StepResult(step=step, fetch=fetch, extract=self.extract,
                                  response=self.response, status=status,
                                  validations=validations, success=success)
 
