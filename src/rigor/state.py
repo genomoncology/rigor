@@ -4,8 +4,8 @@ import time
 import aiohttp
 import related
 
-from . import (Case, Namespace, Step, Suite, Functions, Validator, Comparison, enums,
-               get_logger)
+from . import (Case, Namespace, Step, Suite, Functions, Validator, Comparison,
+               enums, get_logger)
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -150,7 +150,8 @@ class Runner(object):
 
         if not success:
             # error logging - display failed scenario
-            get_logger().error("scenario failed", Feature=self.case.name, Scenario=self.scenario.__name__)
+            get_logger().error("scenario failed", Feature=self.case.name,
+                               Scenario=self.scenario.__name__)
 
         get_logger().debug("scenario complete", case=self.case,
                            scenario=self.scenario, success=success,
@@ -168,7 +169,7 @@ class Runner(object):
 
     async def iter_steps(self):
         for step in self.case.steps:
-            await asyncio.sleep(0.01)  # todo: replace...
+            await asyncio.sleep(step.sleep)
 
             for self.iterate in step.iterate.iterate(self.namespace):
                 # create and do fetch
@@ -197,15 +198,21 @@ class Runner(object):
         # construct method
         method = request.method.value.lower()
 
+        # get data
+        data = request.get_data(self.case.dir_path, namespace)
+
         # headers
-        headers = {"content-type": "application/json"}
+        headers = {}
+
+        if isinstance(data, str):
+            headers['Content-Type'] = "application/json"
+
         headers.update(related.to_dict(self.case.headers) or {})
         headers.update(related.to_dict(request.headers) or {})
         headers = Namespace(headers)
 
         # kwargs
-        kwargs = dict(headers=headers, timeout=None,
-                      data=request.get_data(namespace),
+        kwargs = dict(headers=headers, timeout=None, data=data,
                       params=request.get_params(namespace))
 
         return Fetch(method=method, url=url, kwargs=kwargs)
@@ -251,24 +258,14 @@ class Runner(object):
             results.append(self.check_validation(validator))
 
         # determine success and return
-        success = all([result.success for result in results])
-
-        # debug logging - scenario uuid and all validations
-        vals = []
-
-        # figure out how to get these all into one list?
-        for val in results:
-            if val is not None:
-                vals.append(val)
-        get_logger().debug("Scenario Validations", Scenario_UUID=self.uuid, Validations=vals)
-
-        # error logging - only failed validations returned
-        fail_vals = []
-        for val in results:
-            if val.success is False and val is not None:
-                fail_vals.append(val)
-        if fail_vals != []:
-            get_logger().error("Validator(s) failed", Fail_Validations=fail_vals)
+        success = True
+        for validator in results:
+            kw = dict(validator=validator, step=step)
+            if validator.success:
+                get_logger().debug("validator pass", **kw)
+            else:
+                get_logger().error("validator fail", **kw)
+                success = False
 
         return results, success
 

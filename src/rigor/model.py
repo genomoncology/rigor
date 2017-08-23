@@ -1,5 +1,7 @@
 import json
 import os
+import io
+
 from itertools import product
 
 import related
@@ -44,6 +46,8 @@ class Requestor(object):
     headers = related.ChildField(Namespace, required=False)
     params = related.ChildField(Namespace, required=False)
     data = related.ChildField(object, required=False)
+    form = related.ChildField(Namespace, required=False)
+    files = related.ChildField(Namespace, required=False)
     status = related.SequenceField(int, required=False)
 
     def get_params(self, namespace):
@@ -59,7 +63,15 @@ class Requestor(object):
 
         return params
 
-    def get_data(self, namespace):
+    def get_form(self, dir_path, namespace):
+        files = self.files.evaluate(namespace) if self.files else {}
+        files = {k: open(os.path.join(dir_path, v), "rb")
+                 for k, v in files.items()}
+        form = self.form.evaluate(namespace) if self.form else {}
+        form.update(files)
+        return form
+
+    def get_body(self, namespace):
         # flatten data to a string that will include ${expressions} to render
         ds = self.data if isinstance(self.data, str) else json.dumps(self.data)
 
@@ -68,6 +80,11 @@ class Requestor(object):
 
         # dump rendered value to a json string, if not already a string
         return rendered if isinstance(rendered, str) else json.dumps(rendered)
+
+    def get_data(self, dir_path, namespace):
+        body = self.get_body(namespace) if self.data else None
+        form = self.get_form(dir_path, namespace) if self.form else None
+        return body or form
 
 
 @related.immutable
@@ -78,6 +95,7 @@ class Step(object):
     iterate = related.ChildField(Iterator, default=Iterator())
     validate = related.SequenceField(Validator, required=False)
     name = related.StringField(required=False, default=None)
+    sleep = related.FloatField(required=False, default=0.01)
 
 
 @related.immutable
@@ -180,3 +198,10 @@ class Suite(object):
 
 def overlap(l1, l2):
     return set(l1 or []) & set(l2 or [])
+
+
+# dispatch
+
+@related.to_dict.register(io.BufferedReader)
+def _(obj, **kwargs):
+    return "<file: %s>" % obj.name
