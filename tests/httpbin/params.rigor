@@ -17,22 +17,22 @@ steps:
     request:
         path: /get
         params:
-            sent: ${scenario.value}
+            sent: '{scenario.value}'
 
     extract:
-        extracted: ${response['args.sent']}
+        extracted: '{response.args.sent}'
 
     validate:
 
-      - expect: https://httpbin.org/get?sent=${scenario.value}
-        actual: ${response.url}
+      - expect: https://httpbin.org/get?sent={scenario.value}
+        actual: '{response.url}'
 
-      - expect: ${scenario.value}
-        actual: ${response['args.sent']}
+      - expect: '{scenario.value}'
+        actual: '{response.args.sent}'
 
-      - expect: ${scenario.value}
-        actual: ${extracted}            # extract values are top-level in NS
+      - expect: '{scenario.value}'
+        actual: '{extracted}'           # extract values are top-level in NS
 
-      - expect: ${scenario.value}
-        actual: ${extract.extracted}    # extract values under 'extract.' too!
+      - expect: '{scenario.value}'
+        actual: '{extract.extracted}'   # extract values under 'extract.' too!
 

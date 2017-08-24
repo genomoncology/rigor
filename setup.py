@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.0.20',
+    version='0.1.0',
 
     package_dir={
         '': 'src'
@@ -27,11 +27,11 @@ setup(
     include_package_data=True,
 
     install_requires=[
+        "addict==2.1.1",
         "related >= 0.4",
         "aiohttp==2.1.0",
         "aiofiles==0.3.1",
         "jmespath==0.9.3",
-        "Mako==1.0.6",
         "click==6.7",
         "structlog==17.2.0",
         "datadiff==2.0.0",

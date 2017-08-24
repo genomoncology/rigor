@@ -150,8 +150,9 @@ class Runner(object):
 
         if not success:
             # error logging - display failed scenario
-            get_logger().error("scenario failed", Feature=self.case.name,
-                               Scenario=self.scenario.__name__)
+            get_logger().error("scenario failed", feature=self.case.name,
+                               scenario=self.scenario.__name__,
+                               file_path=self.case.file_path)
 
         get_logger().debug("scenario complete", case=self.case,
                            scenario=self.scenario, success=success,
@@ -232,7 +233,8 @@ class Runner(object):
             status = context.status
 
             get_logger().debug("response", method=fetch.method, url=fetch.url,
-                               kwargs=fetch.kwargs, status=status)
+                               kwargs=fetch.kwargs, status=status,
+                               response=response)
 
             return response, status
 

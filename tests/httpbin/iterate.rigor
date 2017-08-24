@@ -16,34 +16,34 @@ steps:
     request:
         path: /get
         params:
-            show_env: ${iterate.show_env}
-            other: ${iterate.other}
+            show_env: '{iterate.show_env}'
+            other: '{iterate.other}'
 
     extract:
-        last_combo: ${str(iterate.show_env) + iterate.other}
+        last_combo: '{iterate.show_env}{iterate.other}'
 
     validate:
-      - actual: ${response['args.show_env']}
+      - actual: '{response.args.show_env}'
         compare: equals
-        expect: ${iterate.show_env}
+        expect: '{iterate.show_env}'
 
-      - actual: ${response['args.other']}
+      - actual: '{response.args.other}'
         compare: equals
-        expect: ${iterate.other}
+        expect: '{iterate.other}'
 
-      - actual: ${iterate.show_env}
+      - actual: '{iterate.show_env}'
         compare: in
         expect: [0, 1]
 
-      - actual: ${iterate.other}
+      - actual: '{iterate.other}'
         compare: in
         expect: AB
 
-      - actual: ${iterate.other}
+      - actual: '{iterate.other}'
         compare: in
         expect: ["A", "B"]
 
-      - actual: ${iterate.other}
+      - actual: '{iterate.other}'
         compare: not in
         expect: CDEF
 
@@ -52,10 +52,10 @@ steps:
     request:
         path: /get
         params:
-            show_env: ${last_combo}
+            show_env: '{last_combo}'
 
     validate:
-      - actual: ${response['args.show_env']}
+      - actual: '{response.args.show_env}'
         compare: equals
         expect: 1B
 
@@ -69,30 +69,30 @@ steps:
     request:
         path: /get
         params:
-            show_env: ${iterate.show_env}
-            other: ${iterate.other}
+            show_env: '{iterate.show_env}'
+            other: '{iterate.other}'
 
     extract:
-        last_combo: ${str(iterate.show_env) + iterate.other}
+        last_combo: '{iterate.show_env}{iterate.other}'
 
     validate:
-      - actual: ${response['args.show_env']}
+      - actual: '{response.args.show_env}'
         compare: equals
-        expect: ${iterate.show_env}
+        expect: '{iterate.show_env}'
 
-      - actual: ${response['args.other']}
+      - actual: '{response.args.other}'
         compare: equals
-        expect: ${iterate.other}
+        expect: '{iterate.other}'
 
-      - actual: ${iterate.show_env}
+      - actual: '{iterate.show_env}'
         compare: in
         expect: [0, 1]
 
-      - actual: ${iterate.other}
+      - actual: '{iterate.other}'
         compare: in
         expect: ABCDEF
 
-      - actual: ${iterate.other}
+      - actual: '{iterate.other}'
         compare: in
         expect: ["A", "B", "C", "D", "E", "F"]
 
@@ -101,9 +101,9 @@ steps:
     request:
         path: /get
         params:
-            show_env: ${last_combo}
+            show_env: '{last_combo}'
 
     validate:
-      - actual: ${response['args.show_env']}
+      - actual: '{response.args.show_env}'
         compare: equals
         expect: 1F

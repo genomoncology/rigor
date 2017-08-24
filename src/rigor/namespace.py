@@ -2,8 +2,9 @@ import related
 import jmespath
 import ast
 import re
+import addict
 
-from mako.template import Template
+from . import get_logger
 
 
 class Namespace(related.ImmutableDict):
@@ -12,13 +13,19 @@ class Namespace(related.ImmutableDict):
         return self.__getitem__(item)
 
     def __getitem__(self, name):
-        return self.get(name) if name in self else jmespath.search(name, self)
+        if name in self:
+            return self.get(name)
+        else:
+            try:
+                return jmespath.search(name, self)
+            except jmespath.exceptions.ParseError:
+                pass
 
     def evaluate(self, namespace, existing=None):
         values = existing or {}
 
         for key, value in self.items():
-            values[key] = self.render(str(value), namespace)
+            values[key] = self.render(value, namespace)
 
         return Namespace(values)
 
@@ -38,12 +45,13 @@ class Namespace(related.ImmutableDict):
     @classmethod
     def render(cls, value, namespace):
         if isinstance(value, str):
-            template = Template(value)
-
             try:
-                rendered = template.render(**namespace)
-            except:
-                raise
+                rendered = value.format(**addict.Dict(namespace))
+            except Exception as error:
+                get_logger().error("render failed", value=value,
+                                   namespace=namespace, error=error)
+                rendered = str(error)
+                # raise
 
             try:
                 # eval if rendered value is list, dict, int or float
@@ -55,6 +63,12 @@ class Namespace(related.ImmutableDict):
 
             except:
                 value = rendered
+
+        elif isinstance(value, dict):
+            items = value.items()
+            value = {}
+            for sub_key, sub_value in items:
+                value[sub_key] = cls.render(sub_value, namespace)
 
         value = cls.wrap(value)
 

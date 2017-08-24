@@ -13,10 +13,10 @@ steps:
 
     validate:
       - actual: https://httpbin.org/get
-        expect: ${response.url}
+        expect: '{response.url}'
       - actual: {}
-        expect: ${response.args}
+        expect: '{response.args}'
       - actual: "*/*"
-        expect: ${response['headers.Accept']}
+        expect: '{response.headers.Accept}'
       - actual: close
-        expect: ${response['headers.Connection']}
+        expect: '{response.headers.Connection}'

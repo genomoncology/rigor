@@ -2,7 +2,7 @@ __name__: same
 data:
   request:
     query: "field:val"
-    uuid: "${__uuid__}"
+    uuid: "{__uuid__}"
     pagination:
       page_num: 10
       page_size: 20

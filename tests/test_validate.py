@@ -14,12 +14,10 @@ JSON_DICT = {
 }
 
 VALIDATION_KWARGS = [
-    dict(expect="${response.url}", actual="https://httpbin.org/get"),
-    # dict(expect="${response.args}", actual={}),
-    dict(expect="${response.origin}", actual="127.0.0.1"),
-    dict(expect="${response['headers.Accept']}", actual="*/*"),
-    dict(expect="${response['headers.Connection']}", actual="close"),
-    # dict(expect="${response.headers}", actual=JSON_DICT['headers']),
+    dict(expect="{response.url}", actual="https://httpbin.org/get"),
+    dict(expect="{response.origin}", actual="127.0.0.1"),
+    dict(expect="{response.headers.Accept}", actual="*/*"),
+    dict(expect="{response.headers.Connection}", actual="close"),
 ]
 
 

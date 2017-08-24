@@ -83,7 +83,7 @@ steps:
 
       - actual: '000-00-0000'
         compare: regex
-        expect: \d{3}-\d{2}-\d{4}
+        expect: \d{{3}}-\d{{2}}-\d{{4}}
       - actual: John Q. Public
         compare: regex
         expect: \w+ \w\. \w+

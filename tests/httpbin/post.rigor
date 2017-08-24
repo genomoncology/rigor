@@ -19,15 +19,15 @@ steps:
               page_size: 10
 
     extract: # httpbin.org puts the original data request under 'json' key
-        page_num: ${int(response['json.request.pagination.page_num'])}
+        page_num: '{response.json.request.pagination.page_num}'
 
     validate:
 
       - expect: "*:*"
-        actual: ${response['json.request.query']}
+        actual: '{response.json.request.query}'
 
       - expect: 2
-        actual: ${page_num}
+        actual: '{page_num}'
 
 
   - description: Post with Form Field
@@ -36,19 +36,19 @@ steps:
         method: POST
         path: /post
         form:
-            page_num: ${page_num}
+            page_num: '{page_num}'
             other_field: something
 
     extract:
-        something_back: ${response['form.other_field']}
+        something_back: '{response.form.other_field}'
 
     validate:
 
       - expect: something
-        actual: ${something_back}
+        actual: '{something_back}'
 
       - expect: 2
-        actual: ${response['form.page_num']}
+        actual: '{response.form.page_num}'
 
 
   - description: Post with File Upload
@@ -59,12 +59,12 @@ steps:
         files:
             file_upload: data/upload.txt
         form:
-            again: ${something_back}
+            again: '{something_back}'
 
     validate:
 
       - expect: something
-        actual: ${response['form.again']}
+        actual: '{response.form.again}'
 
       - expect: hello.
-        actual: ${response['files.file_upload']}
+        actual: '{response.files.file_upload}'

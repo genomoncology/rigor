@@ -19,13 +19,13 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 2
-    assert len(suite.queued) == 8
+    assert len(suite.queued) == 7
 
 
 def test_execute(suite):
     result = suite.execute()
     assert result.success
-    assert len(result.passed) == 8
+    assert len(result.passed) == 7
 
     with tempfile.TemporaryDirectory() as tmpdir:
         print(tmpdir)
@@ -49,10 +49,10 @@ def test_case_get(suite):
     assert step.description == "Get call with no parameters"
     assert step.request.path == "/get"
     assert step.validate == [
-        Validator(expect="${response.url}", actual="https://httpbin.org/get"),
-        Validator(expect="${response.args}", actual=OrderedDict()),
-        Validator(expect="${response['headers.Accept']}", actual="*/*"),
-        Validator(expect="${response['headers.Connection']}", actual="close"),
+        Validator(expect="{response.url}", actual="https://httpbin.org/get"),
+        Validator(expect="{response.args}", actual=OrderedDict()),
+        Validator(expect="{response.headers.Accept}", actual="*/*"),
+        Validator(expect="{response.headers.Connection}", actual="close"),
     ]
 
 
@@ -116,33 +116,15 @@ def test_case_iterate(suite):
     ]
 
 
-def test_case_list_yaml(suite):
-    case = suite.get_case(ROOT_DIR, "list_yaml.rigor")
-    assert len(case.steps) == 1
-    step = case.steps[0]
-    assert step.iterate == dict(data="${list_yaml('./data/example.yaml')}")
-
-    namespace = Runner(case=case).namespace
-    iterate = list(step.iterate.iterate(namespace))
-
-    iter0 = iterate[0]
-    assert isinstance(iter0, dict)
-    assert iter0['data']['request']['query'] == "field:val"
-
-
 def test_case_load_yaml(suite):
     case = suite.get_case(ROOT_DIR, "load_yaml.rigor")
-    assert len(case.scenarios) == 3
+    assert len(case.scenarios) == 2
     assert len(case.steps) == 1
 
     scenario = case.scenarios[0]
-    assert scenario == dict(data="${load_yaml('./data/load_scenario.yml')}",
-                            __name__="same")
-
-    scenario = case.scenarios[1]
     assert scenario.keys() == {"data", "__name__"}
     assert scenario['__name__'] == "same"
 
-    scenario = case.scenarios[2]
+    scenario = case.scenarios[1]
     assert scenario.keys() == {"data", "__name__"}
     assert scenario['__name__'] == "same"

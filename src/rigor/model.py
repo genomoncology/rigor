@@ -72,14 +72,23 @@ class Requestor(object):
         return form
 
     def get_body(self, namespace):
-        # flatten data to a string that will include ${expressions} to render
-        ds = self.data if isinstance(self.data, str) else json.dumps(self.data)
+        get_logger().debug("enter get_body", data_type=type(self.data),
+                           data=self.data)
 
-        # render data string (ds) template
-        rendered = Namespace.render(ds, namespace)
+        body = None
+        if isinstance(self.data, str):
+            body = Namespace.render(self.data, namespace)
+            if isinstance(body, Namespace):
+                body = body.evaluate(namespace)
 
-        # dump rendered value to a json string, if not already a string
-        return rendered if isinstance(rendered, str) else json.dumps(rendered)
+        elif isinstance(self.data, dict):
+            body = Namespace(self.data).evaluate(namespace)
+
+        get_logger().debug("render get_body", body_type=type(body), body=body)
+
+        body = json.dumps(body)
+
+        return body
 
     def get_data(self, dir_path, namespace):
         body = self.get_body(namespace) if self.data else None

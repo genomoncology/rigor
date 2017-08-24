@@ -6,13 +6,10 @@ tags:
 
 scenarios:
 
-  - data: ${load_yaml('./data/load_scenario.yml')}
-    __name__: same
-
   - data:
       request:
         query: "field:val"
-        uuid: "${__uuid__}"
+        uuid: "{__uuid__}"
         pagination:
           page_num: 10
           page_size: 20
@@ -27,21 +24,21 @@ steps:
     request:
         method: POST
         path: /post
-        data: ${scenario.data}
+        data: '{scenario.data}'
 
     extract: # httpbin.org puts the original data request under 'json' key
-        page_num: ${response['json.request.pagination.page_num']}
+        page_num: '{response.json.request.pagination.page_num}'
 
     validate:
 
-      - actual: ${response['json.request.query']}
+      - actual: '{response.json.request.query}'
         expect: "field:val"
 
-      - actual: ${page_num}
+      - actual: '{page_num}'
         expect: 10
 
-      - actual: ${response['json.request.uuid']}
-        expect: "${__uuid__}"
+      - actual: '{response.json.request.uuid}'
+        expect: "{__uuid__}"
 
-      - actual: ${scenario.__name__}
+      - actual: '{scenario.__name__}'
         expect: same
