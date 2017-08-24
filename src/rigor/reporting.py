@@ -59,7 +59,8 @@ class DocString(object):
     def create(cls, step_result):
         return cls(value="\n".join([
             cls.section("REQUEST", step_result.fetch),
-            cls.section("RESPONSE", step_result.response),
+            cls.section("RESPONSE [%s]" % step_result.status,
+                        step_result.response),
             cls.section("EXTRACT", step_result.extract),
             cls.section("FAILURES", step_result.failed_validations,
                         suppress_empty_values=False)
