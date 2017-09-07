@@ -55,10 +55,16 @@ class Namespace(related.ImmutableDict):
                 value = rendered
 
         elif isinstance(value, dict):
-            items = value.items()
-            value = {}
-            for sub_key, sub_value in items:
-                value[sub_key] = cls.render(sub_value, namespace)
+            new_value = {}
+            for sub_key, sub_value in value.items():
+                new_value[sub_key] = cls.render(sub_value, namespace)
+            value = new_value
+
+        elif isinstance(value, list):
+            new_value = []
+            for sub_value in value:
+                new_value.append(cls.render(sub_value, namespace))
+            value = new_value
 
         value = cls.wrap(value)
 

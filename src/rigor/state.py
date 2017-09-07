@@ -135,29 +135,30 @@ class Runner(object):
         success = True
         start_time = time.time()
         step_results = []
-        f = []
 
         # iterate steps
         async for step_result in self.iter_steps():
             step_results.append(step_result)
-            success = step_result.success
-            if not success:
-                fail_step = step_result
-                for val in fail_step.validations:
-                    f.append(val)
-                break
+            success = success and step_result.success
 
         running_time = time.time() - start_time
 
         if not success:
-            # error logging - display failed scenario
-            get_logger().error("scenario failed", feature=self.case.name,
-                               scenario=self.scenario.__name__,
-                               file_path=self.case.file_path)
-
-        get_logger().debug("scenario complete", case=self.case,
-                           scenario=self.scenario, success=success,
-                           running_time=running_time)
+            get_logger().error(
+                "scenario failed",
+                feature=self.case.name,
+                scenario=self.scenario.__name__,
+                file_path=self.case.file_path,
+                num_steps=len(step_results),
+            )
+        else:
+            get_logger().debug(
+                "scenario complete",
+                feature=self.case.name,
+                scenario=self.scenario.__name__,
+                file_path=self.case.file_path,
+                num_steps=len(step_results),
+            )
 
         return ScenarioResult(
             uuid=self.uuid,
@@ -169,11 +170,22 @@ class Runner(object):
             running_time=running_time,
         )
 
+    def should_run_step(self, step, success):
+        condition = step.condition  # todo: evaluation here
+        return success if condition is None else condition
+
     async def iter_steps(self):
+        success = True
+
         for step in self.case.steps:
             await asyncio.sleep(step.sleep)
 
             for self.iterate in step.iterate.iterate(self.namespace):
+
+                # check condition, continue (skip) if not
+                if not(self.should_run_step(step, success)):
+                    continue
+
                 # create and do fetch
                 fetch = self.create_fetch(step.request)
                 self.response, status = await self.do_fetch(fetch)
@@ -185,7 +197,10 @@ class Runner(object):
                 self.extract = self.do_extract(step)
 
                 # validate response
-                validations, success = self.do_validate(step, status)
+                validations, step_success = self.do_validate(step, status)
+
+                # track overall success
+                success = success and step_success
 
                 # add step result
                 yield StepResult(
@@ -196,7 +211,7 @@ class Runner(object):
                     response=self.response,
                     status=status,
                     validations=validations,
-                    success=success,
+                    success=step_success,
                 )
 
     def create_fetch(self, request):

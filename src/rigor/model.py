@@ -103,6 +103,7 @@ class Step(object):
     extract = related.ChildField(Namespace, default=Namespace())
     iterate = related.ChildField(Iterator, default=Iterator())
     validate = related.SequenceField(Validator, required=False)
+    condition = related.BooleanField(required=False, default=None)
     transform = related.StringField(required=False, default=None)
     name = related.StringField(required=False, default=None)
     sleep = related.FloatField(required=False, default=0.01)

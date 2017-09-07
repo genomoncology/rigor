@@ -19,13 +19,12 @@ class Tag(object):
 
 @related.immutable
 class Match(object):
-    location = related.StringField()
+    location = related.StringField(default="?")
 
     @classmethod
     def create(cls, step):
-
         return cls(
-            location="features/step_definitions/steps.rb" + ";1"
+            location="features/step_definitions/steps.rb;1"
         )
 
 
@@ -71,16 +70,12 @@ class DocString(object):
 @related.immutable
 class StatusResult(object):
     status = related.StringField()
-    line = related.IntegerField()
+    line = related.IntegerField(default=4)
 
     @classmethod
-    def create(cls, res):
-        values = {True: "passed", False: "failed"}
-        status = values.get(res.success, "skipped")
-        return cls(
-            status=status,
-            line=4
-        )
+    def create(cls, success):
+        status = {True: "passed", False: "failed"}.get(success, "skipped")
+        return cls(status=status)
 
 
 @related.immutable
@@ -96,15 +91,27 @@ class Step(object):
 
     @classmethod
     def create(cls, step_result, scenario_result):
-        return cls(
-            keyword="",
-            line=3,
-            name=step_result.step.description,
-            doc_string=DocString.create(step_result),
-            duration=scenario_result.running_time,
-            match=Match.create(step_result.step),
-            result=StatusResult.create(step_result),
-        )
+        if step_result is None:
+            return cls(
+                keyword="",
+                line=3,
+                name="Scenario Setup",
+                doc_string=DocString.section("SCENARIO",
+                                             scenario_result.scenario),
+                duration=scenario_result.running_time,
+                match=Match(),
+                result=StatusResult.create(True),
+            )
+        else:
+            return cls(
+                keyword="",
+                line=3,
+                name=step_result.step.description,
+                doc_string=DocString.create(step_result),
+                duration=scenario_result.running_time,
+                match=Match.create(step_result.step),
+                result=StatusResult.create(step_result.success),
+            )
 
 
 @related.immutable
@@ -122,7 +129,10 @@ class Element(object):
         uuid = "%s;%s" % (urllib.parse.quote_plus(scenario_result.case.name),
                           scenario_result.uuid)
 
-        steps = [Step.create(step_result, scenario_result) for step_result in scenario_result.step_results]
+        # scenario step + steps
+        steps = [Step.create(None, scenario_result)] + \
+                [Step.create(step_result, scenario_result)
+                 for step_result in scenario_result.step_results]
 
         return cls(
             keyword="Scenario",

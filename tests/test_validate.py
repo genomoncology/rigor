@@ -30,7 +30,7 @@ def test_namespace_access():
     assert Namespace.render("{headers.Connection}", response) == "close"
 
 
-def test_mako_templates():
+def test_fstring_templates():
     response = Namespace(JSON_DICT)
     runner = Runner(response=response)
 

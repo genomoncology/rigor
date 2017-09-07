@@ -18,7 +18,7 @@ def suite():
 
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
-    assert len(suite.skipped) == 2
+    assert len(suite.skipped) == 3
     assert len(suite.queued) == 7
 
 
@@ -27,11 +27,11 @@ def test_execute(suite):
     assert result.success
     assert len(result.passed) == 7
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        print(tmpdir)
-        engine = ReportEngine(report_types=["json"], output_path=tmpdir,
-                              suite_result=result)
-        engine.generate()
+    # with tempfile.TemporaryDirectory() as tmpdir:
+    #     print(tmpdir)
+    #     engine = ReportEngine(report_types=["json"], output_path=tmpdir,
+    #                           suite_result=result)
+    #     engine.generate()
 
 
 def test_case_get(suite):
@@ -128,3 +128,16 @@ def test_case_load_yaml(suite):
     scenario = case.scenarios[1]
     assert scenario.keys() == {"data", "__name__"}
     assert scenario['__name__'] == "same"
+
+
+def test_case_conditional():
+    directories = [os.path.join(ROOT_DIR, "conditional.rigor")]
+    suite = Suite(directories=directories)
+    assert len(suite.skipped) == 0
+    assert len(suite.queued) == 1
+    result = suite.execute()
+    assert not result.success  # test fails, checking # of steps
+    assert len(result.failed) == 1
+    scenario_result = result.failed[0].failed[0]
+    assert len(scenario_result.step_results) == 2
+

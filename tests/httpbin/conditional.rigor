@@ -1,0 +1,30 @@
+name: Conditional Execution
+format: "1.0"
+domain: https://httpbin.org
+tags:
+    - broken
+
+steps:
+
+  - description: Get call with no parameters
+
+    request:
+        path: /get
+
+    validate:
+      - actual: incorrect -- will throw exception
+        expect: '{response.url}'
+
+
+  - description: This will be skipped due to step 1 failure
+
+    request:
+        path: /get
+
+
+  - description: This will be skipped due to step 1 failure
+
+    condition: true
+
+    request:
+        path: /get
