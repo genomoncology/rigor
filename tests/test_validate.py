@@ -21,13 +21,13 @@ VALIDATION_KWARGS = [
 ]
 
 
-def test_jmespath_access():
+def test_namespace_access():
     response = Namespace(JSON_DICT)
-    assert response['url'] == "https://httpbin.org/get"
-    assert response.args == {}
-    assert response["headers.Accept"] == "*/*"
-    assert response.origin is not None
-    assert response["headers.Connection"] == "close"
+    assert Namespace.render("{url}", response) == "https://httpbin.org/get"
+    assert Namespace.render("{args}", response) == {}
+    assert Namespace.render("{headers.Accept}", response) == "*/*"
+    assert Namespace.render("{origin}", response) is not None
+    assert Namespace.render("{headers.Connection}", response) == "close"
 
 
 def test_mako_templates():

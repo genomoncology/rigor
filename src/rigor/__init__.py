@@ -19,10 +19,6 @@ from .namespace import (
     Namespace,
 )
 
-from .functions import (
-    Functions
-)
-
 from .model import (
     Case,
     Step,
@@ -62,9 +58,6 @@ __all__ = [
 
     # execute.py
     "execute",
-
-    # functions.py
-    "Functions",
 
     # namespace.py
     "Namespace",

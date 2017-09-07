@@ -3,9 +3,10 @@ import time
 
 import aiohttp
 import related
+import jmespath
 
-from . import (Case, Namespace, Step, Suite, Functions, Validator, Comparison,
-               enums, get_logger)
+from . import (Case, Namespace, Step, Suite, Validator, Comparison, enums,
+               get_logger)
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -32,6 +33,7 @@ class StepResult(object):
     success = related.BooleanField()
     fetch = related.ChildField(Fetch, required=False)
     response = related.ChildField(Namespace, required=False)
+    transform = related.ChildField(object, required=False)
     extract = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
     validations = related.SequenceField(ValidationResult, required=False)
@@ -106,6 +108,7 @@ class Runner(object):
     extract = related.ChildField(Namespace, default=Namespace())
     iterate = related.ChildField(Namespace, default=Namespace())
     response = related.ChildField(Namespace, default=Namespace())
+    transform = related.ChildField(Namespace, default=Namespace())
 
     def __attrs_post_init__(self):
         self.scenario = self.scenario.evaluate(self.namespace)
@@ -121,12 +124,10 @@ class Runner(object):
         # add handles to namespaces (overrides extract and iterate!)
         values.update(dict(__uuid__=self.uuid,
                            scenario=self.scenario,
+                           transform=self.transform,
                            extract=self.extract,
                            response=self.response,
                            iterate=self.iterate))
-
-        # add state-aware functions such as list_yaml (overrides all before!)
-        values.update(Functions(self).function_map())
 
         return values
 
@@ -177,6 +178,9 @@ class Runner(object):
                 fetch = self.create_fetch(step.request)
                 self.response, status = await self.do_fetch(fetch)
 
+                # transform response
+                self.transform = self.do_transform(step)
+
                 # extract response
                 self.extract = self.do_extract(step)
 
@@ -184,9 +188,16 @@ class Runner(object):
                 validations, success = self.do_validate(step, status)
 
                 # add step result
-                yield StepResult(step=step, fetch=fetch, extract=self.extract,
-                                 response=self.response, status=status,
-                                 validations=validations, success=success)
+                yield StepResult(
+                    step=step,
+                    fetch=fetch,
+                    transform=self.transform,
+                    extract=self.extract,
+                    response=self.response,
+                    status=status,
+                    validations=validations,
+                    success=success,
+                )
 
     def create_fetch(self, request):
         namespace = self.namespace
@@ -237,6 +248,14 @@ class Runner(object):
                                response=response)
 
             return response, status
+
+    def do_transform(self, step):
+        # make request and store response
+        if step.transform:
+            transform = jmespath.search(step.transform, self.response)
+            get_logger().debug("transform", input=step.transform,
+                               output=transform)
+            return transform
 
     def do_extract(self, step):
         existing = related.to_dict(self.extract) if self.extract else {}

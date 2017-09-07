@@ -1,5 +1,4 @@
 import related
-import jmespath
 import ast
 import re
 import addict
@@ -11,15 +10,6 @@ class Namespace(related.ImmutableDict):
 
     def __getattr__(self, item):
         return self.__getitem__(item)
-
-    def __getitem__(self, name):
-        if name in self:
-            return self.get(name)
-        else:
-            try:
-                return jmespath.search(name, self)
-            except jmespath.exceptions.ParseError:
-                pass
 
     def evaluate(self, namespace, existing=None):
         values = existing or {}

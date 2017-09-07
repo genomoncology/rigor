@@ -4,6 +4,7 @@
 .eggs
 *.egg-info
 .coverage
+cucumber.json
 
 __pycache__
 *.pyc

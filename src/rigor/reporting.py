@@ -61,6 +61,7 @@ class DocString(object):
             cls.section("REQUEST", step_result.fetch),
             cls.section("RESPONSE [%s]" % step_result.status,
                         step_result.response),
+            cls.section("TRANSFORM", step_result.transform),
             cls.section("EXTRACT", step_result.extract),
             cls.section("FAILURES", step_result.failed_validations,
                         suppress_empty_values=False)
