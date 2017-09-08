@@ -115,16 +115,16 @@ class Runner(object):
 
     @property
     def namespace(self):
-        # make iterate namespace top-level
-        values = self.iterate.copy() if self.iterate else {}
+        # make scenario namespace top-level
+        values = self.scenario.copy() if self.scenario else {}
 
-        # make scenario namespace top-level accessors (overrides iterate!)
-        values.update(self.scenario if self.scenario else {})
+        # make iterate namespace top-level accessors (overrides scenario!)
+        values.update(self.iterate if self.iterate else {})
 
-        # make extract namespace top-level accessors (overrides scenario!)
+        # make extract namespace top-level accessors (overrides iterate!)
         values.update(self.extract if self.extract else {})
 
-        # add handles to namespaces (overrides extract and iterate!)
+        # add handles to namespaces (overrides scenario, extract and iterate!)
         values.update(dict(__uuid__=self.uuid,
                            scenario=self.scenario,
                            transform=self.transform,
