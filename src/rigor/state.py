@@ -118,7 +118,10 @@ class Runner(object):
         # make iterate namespace top-level
         values = self.iterate.copy() if self.iterate else {}
 
-        # make extract namespace top-level accessors (overrides iterate!)
+        # make scenario namespace top-level accessors (overrides iterate!)
+        values.update(self.scenario if self.scenario else {})
+
+        # make extract namespace top-level accessors (overrides scenario!)
         values.update(self.extract if self.extract else {})
 
         # add handles to namespaces (overrides extract and iterate!)
@@ -267,10 +270,14 @@ class Runner(object):
     def do_transform(self, step):
         # make request and store response
         if step.transform:
-            transform = jmespath.search(step.transform, self.response)
-            get_logger().debug("transform", input=step.transform,
+            transform = Namespace.render(step.transform, self.namespace)
+            output = jmespath.search(transform, self.response)
+            get_logger().debug("transform",
+                               response=self.response,
+                               original=self.transform,
+                               input=transform,
                                output=transform)
-            return transform
+            return output
 
     def do_extract(self, step):
         existing = related.to_dict(self.extract) if self.extract else {}

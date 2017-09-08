@@ -2,6 +2,7 @@ import related
 import ast
 import re
 import addict
+import string
 
 from . import get_logger
 
@@ -35,13 +36,20 @@ class Namespace(related.ImmutableDict):
     @classmethod
     def render(cls, value, namespace):
         if isinstance(value, str):
+            ns = addict.Dict(namespace)
+
             try:
-                rendered = value.format(**addict.Dict(namespace))
+                value = string.Template(value).substitute(**ns)
+            except ValueError:
+                pass
+
+            try:
+                rendered = value.format(**ns)
             except Exception as error:
                 get_logger().error("render failed", value=value,
                                    namespace=namespace, error=error)
-                rendered = str(error)
-                # raise
+                # rendered = str(error)
+                raise
 
             try:
                 # eval if rendered value is list, dict, int or float

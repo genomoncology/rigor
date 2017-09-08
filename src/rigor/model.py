@@ -130,6 +130,10 @@ class Case(object):
     def prep_scenarios(cls, original, dir_path):
         updated = []
         counter = 1
+
+        if isinstance(original, str):
+            original = parse_feature_table(original)
+
         for scenario in original or [{}]:
             if isinstance(scenario, str):
                 scenario_file_path = os.path.join(dir_path, scenario)
@@ -209,6 +213,27 @@ class Suite(object):
 
 def overlap(l1, l2):
     return set(l1 or []) & set(l2 or [])
+
+
+def clean_split(line, delimiter="|"):
+    items = [value.strip() for value in line.split(delimiter)]
+
+    # trim empty first item
+    if items and not items[0]:
+        items = items[1:]
+
+    # trim empty last item
+    if items and not items[-1]:
+        items = items[:-1]
+
+    # replace empty strings with Nones
+    return [None if item == '' else item for item in items]
+
+
+def parse_feature_table(feature_table):
+    lines = [line.strip() for line in feature_table.strip().splitlines()]
+    header, rows = clean_split(lines[0]), [clean_split(line) for line in lines[1:]]
+    return [Namespace(dict(zip(header, row))) for row in rows]
 
 
 # dispatch
