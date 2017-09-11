@@ -4,9 +4,9 @@ import time
 import aiohttp
 import related
 import jmespath
+import bs4
 
-from . import (Case, Namespace, Step, Suite, Validator, Comparison, enums,
-               get_logger)
+from . import Case, Namespace, Step, Suite, Validator, enums, get_logger
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -254,11 +254,8 @@ class Runner(object):
 
         async with self.session.request(fetch.method, fetch.url,
                                         **fetch.kwargs) as context:
-            try:
-                response = Namespace(await context.json())
-            except:
-                response = Namespace()
 
+            response = await self.get_response(context)
             status = context.status
 
             get_logger().debug("response", method=fetch.method, url=fetch.url,
@@ -266,6 +263,22 @@ class Runner(object):
                                response=response)
 
             return response, status
+
+    async def get_response(self, context):
+        content_type = context.headers.get(aiohttp.hdrs.CONTENT_TYPE, '')
+        content_type = content_type.lower()
+
+        if "text/html" in content_type:
+            html = bs4.BeautifulSoup(await context.text(), 'html.parser')
+            response = Namespace(html=html)
+
+        elif "application/json" in content_type:
+            response = Namespace(await context.json())
+
+        else:
+            response = Namespace()
+
+        return response
 
     def do_transform(self, step):
         # make request and store response
@@ -318,3 +331,10 @@ class Runner(object):
         success = validator.compare.evaluate(actual, expect)
         return ValidationResult(actual=actual, expect=expect, success=success,
                                 validator=validator)
+
+
+# dispatch
+
+@related.to_dict.register(bs4.BeautifulSoup)
+def _(obj, **kwargs):
+    return "<bs4.BeautifulSoup>"

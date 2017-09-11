@@ -1,8 +1,5 @@
 import click
-import related
-import json
 import sys
-import os
 
 from . import Suite, ReportEngine, setup_logging
 

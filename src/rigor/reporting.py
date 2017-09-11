@@ -1,20 +1,13 @@
-import json
 import urllib
 import related
 from itertools import chain
 
-from . import SuiteResult, Comparison
+from . import SuiteResult
 
 
 @related.immutable
 class Tag(object):
     name = related.StringField()
-
-    @classmethod
-    def create(cls, tag):
-            return cls(
-                name=tag,
-            )
 
 
 @related.immutable
@@ -168,7 +161,7 @@ class Feature(object):
             line=1,
             elements=[Element.create(scenario_result) for scenario_result in
                       chain(case_result.passed, case_result.failed)],
-            tags=[Tag.create(tag) for tag in case.tags]
+            tags=[Tag(name=tag) for tag in case.tags]
         )
 
 

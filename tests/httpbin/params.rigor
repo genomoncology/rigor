@@ -9,6 +9,7 @@ scenarios:
   - value: 1
   - value: 2
     __name__: Override!
+  - value: ['a', 'b', 'c']
 
 
 steps:
@@ -23,9 +24,6 @@ steps:
         extracted: '{response.args.sent}'
 
     validate:
-
-      - expect: https://httpbin.org/get?sent={scenario.value}
-        actual: '{response.url}'
 
       - expect: '{scenario.value}'
         actual: '{response.args.sent}'

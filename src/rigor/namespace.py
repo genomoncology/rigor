@@ -36,31 +36,7 @@ class Namespace(related.ImmutableDict):
     @classmethod
     def render(cls, value, namespace):
         if isinstance(value, str):
-            ns = addict.Dict(namespace)
-
-            try:
-                value = string.Template(value).substitute(**ns)
-            except ValueError:
-                pass
-
-            try:
-                rendered = value.format(**ns)
-            except Exception as error:
-                get_logger().error("render failed", value=value,
-                                   namespace=namespace, error=error)
-                # rendered = str(error)
-                raise
-
-            try:
-                # eval if rendered value is list, dict, int or float
-                is_list_or_dict = rendered.strip()[0] in ("{", "[")
-                is_number = re.match("^[\d\.]+$", rendered.strip())
-                assert is_list_or_dict or is_number
-
-                value = ast.literal_eval(rendered)
-
-            except:
-                value = rendered
+            value = cls.render_string(value, namespace)
 
         elif isinstance(value, dict):
             new_value = {}
@@ -77,3 +53,45 @@ class Namespace(related.ImmutableDict):
         value = cls.wrap(value)
 
         return value
+
+    @classmethod
+    def render_string(cls, value, namespace):
+        ns = addict.Dict(namespace)
+
+        # 1st pass: substitute any $attr with the value from the namespace
+        try:
+            substituted = string.Template(value).substitute(**ns)
+            get_logger().debug("substitution success", value=value,
+                               substituted=substituted, namespace=namespace)
+
+        except ValueError as error:
+            substituted = value
+            get_logger().info("substitution failed", value=value,
+                              namespace=namespace, error=error)
+
+        # 2nd pass: python string formatting with namespace
+        try:
+            formatted = substituted.format(**ns)
+            get_logger().debug("render success", substituted=substituted,
+                               formatted=formatted, namespace=namespace)
+
+        except Exception as error:
+            formatted = substituted
+            get_logger().error("render failed", value=value,
+                               namespace=namespace, error=error)
+
+        # 3rd pass, if string repr of a list or dictionary, do literal eval
+        try:
+            is_list_or_dict = formatted.strip()[0] in ("{", "[")
+            is_number = re.match("^[\d\.]+$", formatted.strip())
+            if is_list_or_dict or is_number:
+                evaluated = ast.literal_eval(formatted)
+            else:
+                evaluated = formatted
+
+        except Exception as error:
+            evaluated = formatted
+            get_logger().error("literal eval failed", formatted=formatted,
+                               error=error)
+
+        return evaluated

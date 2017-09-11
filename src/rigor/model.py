@@ -232,7 +232,8 @@ def clean_split(line, delimiter="|"):
 
 def parse_feature_table(feature_table):
     lines = [line.strip() for line in feature_table.strip().splitlines()]
-    header, rows = clean_split(lines[0]), [clean_split(line) for line in lines[1:]]
+    header = clean_split(lines[0])
+    rows = [clean_split(line) for line in lines[1:]]
     return [Namespace(dict(zip(header, row))) for row in rows]
 
 

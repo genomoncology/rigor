@@ -1,11 +1,9 @@
-from rigor import Suite, Method, Namespace, Validator, Runner, ReportEngine
+from rigor import Suite, Namespace, Validator, Runner, ReportEngine
 from collections import OrderedDict
 
 import tempfile
 import pytest
 import os
-import related
-import json
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "httpbin")
 
@@ -19,19 +17,19 @@ def suite():
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
     assert len(suite.skipped) == 3
-    assert len(suite.queued) == 7
+    assert len(suite.queued) == 8
 
 
 def test_execute(suite):
     result = suite.execute()
     assert result.success
-    assert len(result.passed) == 7
+    assert len(result.passed) == 8
 
-    # with tempfile.TemporaryDirectory() as tmpdir:
-    #     print(tmpdir)
-    #     engine = ReportEngine(report_types=["json"], output_path=tmpdir,
-    #                           suite_result=result)
-    #     engine.generate()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        print(tmpdir)
+        engine = ReportEngine(report_types=["json"], output_path=tmpdir,
+                              suite_result=result)
+        engine.generate()
 
 
 def test_case_get(suite):
@@ -65,11 +63,13 @@ def test_case_params(suite):
     assert case.domain == "https://httpbin.org"
     assert case.tags == ["working"]
     assert len(case.steps) == 1
-    assert len(case.scenarios) == 2
+    assert len(case.scenarios) == 3
 
     # check scenarios
     assert case.scenarios[0] == Namespace(value=1, __name__="Scenario #1")
     assert case.scenarios[1] == Namespace(value=2, __name__="Override!")
+    assert case.scenarios[2] == Namespace(value=['a', 'b', 'c'],
+                                          __name__="Scenario #3")
 
 
 def test_case_http_status(suite):
@@ -140,4 +140,3 @@ def test_case_conditional():
     assert len(result.failed) == 1
     scenario_result = result.failed[0].failed[0]
     assert len(scenario_result.step_results) == 2
-

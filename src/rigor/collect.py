@@ -8,7 +8,8 @@ from . import get_logger
 
 def collect(suite):
     log = get_logger()
-    log.info("collecting tests", directories=suite.directories, cwd=os.getcwd())
+    log.info("collecting tests", directories=suite.directories,
+             cwd=os.getcwd())
 
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(async_collect(suite))

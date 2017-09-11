@@ -1,7 +1,6 @@
 import logging
 import sys
 import structlog
-from structlog.stdlib import LoggerFactory
 
 
 LOGGER_NAME = 'rigor'

@@ -38,6 +38,7 @@ from .execute import (
 from .reporting import (
     ReportEngine
 )
+
 from .cli import (
     main
 )
@@ -68,6 +69,9 @@ __all__ = [
     "Suite",
     "Validator",
 
+    # reporting.py
+    "ReportEngine",
+
     # state.py
     "Runner",
     "SuiteResult",
@@ -79,7 +83,7 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"
