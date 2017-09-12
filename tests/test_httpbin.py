@@ -27,8 +27,7 @@ def test_execute(suite):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         print(tmpdir)
-        engine = ReportEngine(report_types=["json"], output_path=tmpdir,
-                              suite_result=result)
+        engine = ReportEngine(output_path=tmpdir, suite_result=result)
         engine.generate()
 
 

@@ -18,8 +18,6 @@ from . import Suite, ReportEngine, setup_logging
               help="Filter cases by file extension. (e.g. rigor)")
 @click.option('--concurrency', '-c', type=int, default=20,
               help='# of concurrent HTTP requests. (default: 20)')
-@click.option('--report', '-r', multiple=True, default=["json"],
-              help='Generate report. (e.g. cucumber)')
 @click.option('--output', '-o', default=".",
               help='Report output folder. (default: .)')
 @click.option('--quiet', '-q', is_flag=True,
@@ -29,7 +27,7 @@ from . import Suite, ReportEngine, setup_logging
 @click.option('--json', '-j', is_flag=True,
               help='JSON-style logging.')
 def main(directories, domain, include, exclude, prefix, extensions,
-         concurrency, report, output, quiet, verbose, json):
+         concurrency, output, quiet, verbose, json):
 
     # setup logging
     setup_logging(quiet=quiet, verbose=verbose, json=json)
@@ -48,8 +46,7 @@ def main(directories, domain, include, exclude, prefix, extensions,
     suite_result = suite.execute()
 
     # construct report engine
-    report_engine = ReportEngine(report_types=report, output_path=output,
-                                 suite_result=suite_result)
+    report_engine = ReportEngine(output_path=output, suite_result=suite_result)
 
     # generate report
     report_engine.generate()

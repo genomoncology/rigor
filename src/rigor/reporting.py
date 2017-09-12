@@ -1,8 +1,9 @@
 import urllib
 import related
+import os
 from itertools import chain
 
-from . import SuiteResult
+from . import SuiteResult, get_logger
 
 
 @related.immutable
@@ -178,12 +179,14 @@ class Cucumber(object):
 
 @related.immutable
 class ReportEngine(object):
-    report_types = related.SequenceField(str)
-    output_path = related.SequenceField(str)
     suite_result = related.ChildField(SuiteResult)
+    output_path = related.StringField(default=".")
+    cucumber_json = related.StringField(default="cucumber.json")
 
     def generate(self):
         cucumber = Cucumber.create(self.suite_result)
-        fp = open("cucumber.json", "w+")
-        fp.write(related.to_json(cucumber))
-        fp.close()
+        path = os.path.join(self.output_path, self.cucumber_json)
+        get_logger().debug("creating report", path=path)
+        file = open(path, "w+")
+        file.write(related.to_json(cucumber))
+        file.close()
