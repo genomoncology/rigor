@@ -51,9 +51,11 @@ def main(directories, domain, include, exclude, prefix, extensions,
     # generate report
     report_engine.generate()
 
-    # report success
-    return 1 if suite_result.failed else 0
-
+    # system error code
+    if suite_result.failed:
+        raise click.ClickException(
+            "%s test(s) failed." % len(suite_result.failed)
+        )
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
