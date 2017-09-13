@@ -12,3 +12,6 @@ include docs/Makefile
 recursive-include docs *.png
 recursive-include docs *.py
 prune docs/_build
+
+# jar file
+recursive-include src *.jar

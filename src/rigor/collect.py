@@ -8,8 +8,7 @@ from . import get_logger
 
 def collect(suite):
     log = get_logger()
-    log.info("collecting tests", directories=suite.directories,
-             cwd=os.getcwd())
+    log.info("collecting tests", paths=suite.paths, cwd=os.getcwd())
 
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(async_collect(suite))
@@ -38,11 +37,11 @@ async def collect_case(suite, file_path):
 
 
 def glob_patterns(suite):
-    for directory in suite.directories or ['.']:
-        if os.path.exists(directory) and os.path.isfile(directory):
-            yield directory
+    for path in suite.paths or ['.']:
+        if os.path.exists(path) and os.path.isfile(path):
+            yield path
 
         for file_prefix in suite.file_prefixes or ['']:
             for extension in suite.extensions or ['rigor']:
                 file_pattern = "%s*.%s" % (file_prefix, extension)
-                yield os.path.join(directory, "**", file_pattern)
+                yield os.path.join(path, "**", file_pattern)

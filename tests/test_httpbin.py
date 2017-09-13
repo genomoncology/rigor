@@ -10,8 +10,8 @@ ROOT_DIR = os.path.join(os.path.dirname(__file__), "httpbin")
 
 @pytest.fixture
 def suite():
-    directories = [ROOT_DIR]
-    return Suite(directories=directories, tags_excluded=["broken"])
+    paths = [ROOT_DIR]
+    return Suite(paths=paths, tags_excluded=["broken"])
 
 
 def test_collect(suite):
@@ -46,10 +46,10 @@ def test_case_get(suite):
     assert step.description == "Get call with no parameters"
     assert step.request.path == "/get"
     assert step.validate == [
-        Validator(expect="{response.url}", actual="https://httpbin.org/get"),
-        Validator(expect="{response.args}", actual=OrderedDict()),
-        Validator(expect="{response.headers.Accept}", actual="*/*"),
-        Validator(expect="{response.headers.Connection}", actual="close"),
+        Validator(actual="{response.args}", expect=OrderedDict()),
+        Validator(actual="{response.headers.Accept}", expect="*/*"),
+        Validator(actual="{response.headers.Connection}", expect="close"),
+        Validator(actual="{response.url}", expect="https://httpbin.org/get"),
     ]
 
 
@@ -130,8 +130,8 @@ def test_case_load_yaml(suite):
 
 
 def test_case_conditional():
-    directories = [os.path.join(ROOT_DIR, "conditional.rigor")]
-    suite = Suite(directories=directories)
+    paths = [os.path.join(ROOT_DIR, "conditional.rigor")]
+    suite = Suite(paths=paths)
     assert len(suite.skipped) == 0
     assert len(suite.queued) == 1
     result = suite.execute()

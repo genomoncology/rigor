@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.1.7',
+    version='0.1.9',
 
     package_dir={
         '': 'src'
@@ -26,6 +26,10 @@ setup(
 
     include_package_data=True,
 
+    package_data={
+        '': ['*.jar'],
+    },
+
     install_requires=[
         "addict==2.1.1",
         "related >= 0.4",
@@ -34,7 +38,6 @@ setup(
         "jmespath==0.9.3",
         "click==6.7",
         "structlog==17.2.0",
-        "datadiff==2.0.0",
         "colorama==0.3.9",
         "beautifulsoup4==4.6.0",
     ],

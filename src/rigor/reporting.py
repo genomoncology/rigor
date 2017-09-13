@@ -1,7 +1,11 @@
 import urllib
 import related
 import os
+import datetime
+import tempfile
+
 from itertools import chain
+from subprocess import DEVNULL, STDOUT, check_call
 
 from . import SuiteResult, get_logger
 
@@ -180,13 +184,57 @@ class Cucumber(object):
 @related.immutable
 class ReportEngine(object):
     suite_result = related.ChildField(SuiteResult)
-    output_path = related.StringField(default=".")
+    output_path = related.StringField(required=False, default=None)
     cucumber_json = related.StringField(default="cucumber.json")
+    with_html = related.BooleanField(default=False)
+
+    JAR_NAME = "cucumber-sandwich.jar"
+    CUKE_DIR = "cucumber-html-reports"
+    CUKE_PATH = os.path.join(CUKE_DIR, CUKE_DIR, "overview-features.html")
 
     def generate(self):
-        cucumber = Cucumber.create(self.suite_result)
-        path = os.path.join(self.output_path, self.cucumber_json)
-        get_logger().debug("creating report", path=path)
-        file = open(path, "w+")
-        file.write(related.to_json(cucumber))
-        file.close()
+        report_path = None
+        output_path = self.output_path or tempfile.mkdtemp()
+        get_logger().debug("generate report", output_path=output_path)
+
+        # generate cucumber json
+        try:
+            cucumber = Cucumber.create(self.suite_result)
+            path = os.path.join(output_path, self.cucumber_json)
+
+            file = open(path, "w+")
+            file.write(related.to_json(cucumber))
+            file.close()
+            get_logger().debug("created cucumber json", path=path)
+
+        except Exception as e:
+            get_logger().error("failed cucumber json", error=str(e))
+
+        # generate html report (if requested)
+        if self.with_html:
+
+            # build cuke sandwich arguments with paths
+            dir_path = os.path.dirname(__file__)
+            jar_path = os.path.join(dir_path, "assets", self.JAR_NAME)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            html_path = os.path.join(output_path, "html-%s" % timestamp)
+
+            args = ["java", "-jar", jar_path,   # java command w/ jar path
+                    "-o", html_path,            # where to place html
+                    "-n",                       # run once, not daemon
+                    "-f", output_path]          # where to find cucumber.json
+
+            try:
+                # call cucumber sandwich
+                check_call(args, stdout=DEVNULL, stderr=STDOUT)
+
+                # check report path
+                report_path = os.path.join(html_path, self.CUKE_PATH)
+                assert os.path.exists(report_path)
+                get_logger().debug("generated html", report_path=report_path)
+
+            except Exception as e:
+                get_logger().error("failed html report", error=str(e))
+
+        # return html path if html generated
+        return report_path

@@ -177,7 +177,7 @@ class Case(object):
 class Suite(object):
     # cli options
     domain = related.StringField(default="http://localhost:8000")
-    directories = related.SequenceField(str, default=None)
+    paths = related.SequenceField(str, default=None)
     file_prefixes = related.SequenceField(str, default=None)
     extensions = related.SequenceField(str, default=["rigor"])
     tags_included = related.SequenceField(str, default=None)
