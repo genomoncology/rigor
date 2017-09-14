@@ -178,58 +178,67 @@ class Cucumber(object):
 class ReportEngine(object):
     suite_result = related.ChildField(SuiteResult)
     output_path = related.StringField(required=False, default=None)
-    cucumber_json = related.StringField(default="cucumber.json")
     with_html = related.BooleanField(default=False)
 
+    CUCUMBER_JSON = "cucumber.json"
     JAR_NAME = "cucumber-sandwich.jar"
     CUKE_DIR = "cucumber-html-reports"
     CUKE_PATH = os.path.join(CUKE_DIR, CUKE_DIR, "overview-features.html")
 
-    def generate(self):
-        report_path = None
-        json_created = False
-        output_path = self.output_path or tempfile.mkdtemp()
-        get_logger().debug("generate report", output_path=output_path)
+    def generate_json(self, output_path):
+        get_logger().debug("generate json", output_path=output_path)
 
-        # generate cucumber json
+        success = False
+
         try:
             cucumber = Cucumber.create(self.suite_result)
-            path = os.path.join(output_path, self.cucumber_json)
+            path = os.path.join(output_path, self.CUCUMBER_JSON)
 
             file = open(path, "w+")
             file.write(related.to_json(cucumber))
             file.close()
             get_logger().debug("created cucumber json", path=path)
-            json_created = True
+            success = True
 
         except Exception as e:  # pragma: no cover
             get_logger().error("failed cucumber json", error=str(e))
 
-        # generate html report (if requested)
-        if json_created and self.with_html:
+        return success
 
-            # build cuke sandwich arguments with paths
-            dir_path = os.path.dirname(__file__)
-            jar_path = os.path.join(dir_path, "assets", self.JAR_NAME)
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-            html_path = os.path.join(output_path, "html-%s" % timestamp)
+    def generate_html(self, output_path):
+        get_logger().debug("generate html", output_path=output_path)
 
-            args = ["java", "-jar", jar_path,   # java command w/ jar path
-                    "-o", html_path,            # where to place html
-                    "-n",                       # run once, not daemon
-                    "-f", output_path]          # where to find cucumber.json
+        dir_path = os.path.dirname(__file__)
+        jar_path = os.path.join(dir_path, "assets", self.JAR_NAME)
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        html_dir_path = os.path.join(output_path, "html-%s" % timestamp)
+        html_report_path = None
 
-            try:
-                # call cucumber sandwich
-                check_call(args, stdout=DEVNULL, stderr=STDOUT)
+        args = ["java", "-jar", jar_path,   # java command w/ jar path
+                "-o", html_dir_path,        # where to place html
+                "-n",                       # run once, not daemon
+                "-f", output_path]          # where to find cucumber.json
 
-                # check report path
-                report_path = os.path.join(html_path, self.CUKE_PATH)
-                assert os.path.exists(report_path)
-                get_logger().debug("generated html", report_path=report_path)
+        try:
+            # call cucumber sandwich
+            check_call(args, stdout=DEVNULL, stderr=STDOUT)
 
-            except Exception as e:  # pragma: no cover
-                get_logger().error("failed html report", error=str(e))
+            # check report path
+            html_report_path = os.path.join(html_dir_path, self.CUKE_PATH)
+            assert os.path.exists(html_report_path)
+            get_logger().debug("generated html",
+                               html_report_path=html_report_path)
 
-        # return html path if html generated
-        return report_path
+        except Exception as e:  # pragma: no cover
+            get_logger().error("failed html report", error=str(e))
+
+        return html_report_path
+
+    def generate(self):
+        output_path = self.output_path or tempfile.mkdtemp()
+
+        json_created = self.generate_json(output_path)
+        do_html = json_created and self.with_html
+        html_report_path = self.generate_html(output_path) if do_html else None
+
+        return html_report_path
