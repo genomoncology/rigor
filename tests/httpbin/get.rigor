@@ -20,3 +20,25 @@ steps:
         actual: '{response.headers.Connection}'
       - expect: https://httpbin.org/get
         actual: '{response.url}'
+
+  - description: Get and validate using transform
+
+    request:
+        path: /get
+        params:
+            one: 1
+            two: 2
+
+    transform: >
+        {{
+            host: headers.Host,
+            keys: reverse(sort(keys(args)))
+        }}
+
+    validate:
+      - actual: '{transform}'
+        expect:
+            host: httpbin.org
+            keys:
+                - two
+                - one

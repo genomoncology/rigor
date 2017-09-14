@@ -66,8 +66,8 @@ class Namespace(related.ImmutableDict):
 
         except Exception as error:
             substituted = value
-            get_logger().info("substitution failed", value=value,
-                              namespace=namespace, error=error)
+            get_logger().debug("substitution failed", value=value,
+                               namespace=namespace, error=error)
 
         # 2nd pass: python string formatting with namespace
         try:
@@ -77,8 +77,8 @@ class Namespace(related.ImmutableDict):
 
         except Exception as error:
             formatted = substituted
-            get_logger().info("render failed", value=value,
-                              namespace=namespace, error=error)
+            get_logger().debug("render failed", value=value,
+                               namespace=namespace, error=error)
 
         # 3rd pass, if string repr of a list or dictionary, do literal eval
         try:
@@ -91,7 +91,7 @@ class Namespace(related.ImmutableDict):
 
         except Exception as error:
             evaluated = formatted
-            get_logger().info("literal eval failed", formatted=formatted,
-                              error=error)
+            get_logger().debug("literal eval failed", formatted=formatted,
+                               error=error)
 
         return evaluated

@@ -1,7 +1,6 @@
 from rigor import Suite, Namespace, Validator, Runner, ReportEngine
 from collections import OrderedDict
 
-import tempfile
 import pytest
 import os
 
@@ -16,7 +15,7 @@ def suite():
 
 def test_collect(suite):
     assert suite.tags_excluded == ["broken"]
-    assert len(suite.skipped) == 3
+    assert len(suite.skipped) == 4
     assert len(suite.queued) == 8
 
 
@@ -25,10 +24,9 @@ def test_execute(suite):
     assert result.success
     assert len(result.passed) == 8
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        print(tmpdir)
-        engine = ReportEngine(output_path=tmpdir, suite_result=result)
-        engine.generate()
+    engine = ReportEngine(suite_result=result, with_html=True)
+    report_path = engine.generate()
+    assert os.path.exists(report_path)
 
 
 def test_case_get(suite):
@@ -39,7 +37,7 @@ def test_case_get(suite):
     assert case.format == "1.0"
     assert case.domain == "https://httpbin.org"
     assert case.tags == ["working"]
-    assert len(case.steps) == 1
+    assert len(case.steps) == 2
 
     # check case steps
     step = case.steps[0]

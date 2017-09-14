@@ -123,10 +123,6 @@ class Case(object):
     uuid = related.UUIDField()
 
     @classmethod
-    def load(cls, file_path):
-        return related.from_yaml(open(file_path), Case, file_path=file_path)
-
-    @classmethod
     def prep_scenarios(cls, original, dir_path):
         updated = []
         counter = 1
@@ -158,9 +154,10 @@ class Case(object):
 
             return related.to_model(Case, as_dict)
 
-        except Exception as exc:
-            print("Load Failed: %s: %s" % (file_path, exc))  # todo: logging
-            return Case(file_path=file_path, is_valid=False)
+        except Exception as e:
+            get_logger().error("Failed to Load Case", file_path=file_path,
+                               error=str(e))
+            return Case(file_path=file_path, is_valid=False, scenarios=[])
 
     def is_active(self, included, excluded):
         has_steps = len(self.steps) > 0

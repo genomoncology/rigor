@@ -31,13 +31,6 @@ class Validators(object):
     actual = related.ChildField(object)
     expect = related.ChildField(object)
 
-    @classmethod
-    def create_failing(cls, actual, expect):
-        return cls(
-            actual=actual,
-            expect=expect
-        )
-
 
 @related.immutable
 class DocString(object):
@@ -194,6 +187,7 @@ class ReportEngine(object):
 
     def generate(self):
         report_path = None
+        json_created = False
         output_path = self.output_path or tempfile.mkdtemp()
         get_logger().debug("generate report", output_path=output_path)
 
@@ -206,12 +200,13 @@ class ReportEngine(object):
             file.write(related.to_json(cucumber))
             file.close()
             get_logger().debug("created cucumber json", path=path)
+            json_created = True
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             get_logger().error("failed cucumber json", error=str(e))
 
         # generate html report (if requested)
-        if self.with_html:
+        if json_created and self.with_html:
 
             # build cuke sandwich arguments with paths
             dir_path = os.path.dirname(__file__)
@@ -233,7 +228,7 @@ class ReportEngine(object):
                 assert os.path.exists(report_path)
                 get_logger().debug("generated html", report_path=report_path)
 
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 get_logger().error("failed html report", error=str(e))
 
         # return html path if html generated
