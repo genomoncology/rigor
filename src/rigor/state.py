@@ -269,7 +269,7 @@ class Runner(object):
         content_type = content_type.lower()
 
         if "text/html" in content_type:
-            html = bs4.BeautifulSoup(await context.text(), 'html.parser')
+            html = OurSoup(await context.text(), 'html.parser')
             response = Namespace(html=html)
 
         elif "application/json" in content_type:
@@ -338,3 +338,9 @@ class Runner(object):
 @related.to_dict.register(bs4.BeautifulSoup)
 def _(obj, **kwargs):
     return "<bs4.BeautifulSoup>"
+
+
+class OurSoup(bs4.BeautifulSoup):
+
+    def __repr__(self, **kwargs):
+        return "[HTML: %s]" % self.title.string if self.title else "<?>"

@@ -188,6 +188,15 @@ class Suite(object):
     def __attrs_post_init__(self):
         from . import collect
         collect(self)
+        get_logger().debug("suite constructed",
+                           domain=self.domain,
+                           paths=self.paths,
+                           file_prefixes=self.file_prefixes,
+                           extensions=self.extensions,
+                           tags_included=self.tags_included,
+                           tags_excluded=self.tags_excluded,
+                           concurrency=self.concurrency,
+                           )
 
     def get_case(self, path, filename=None):
         file_path = os.path.join(path, filename) if filename else path
