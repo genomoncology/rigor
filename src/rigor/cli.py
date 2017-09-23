@@ -1,6 +1,6 @@
 import click
 
-from . import Suite, ReportEngine, setup_logging, get_logger
+from . import Suite, ReportEngine, setup_logging, get_logger, execute
 
 
 @click.command()
@@ -44,7 +44,7 @@ def main(paths, domain, include, exclude, prefix, extensions,
                   concurrency=concurrency)
 
     # execute suite
-    suite_result = suite.execute()
+    suite_result = execute(suite)
 
     # construct report engine
     if output or html:

@@ -185,37 +185,40 @@ class Runner(object):
 
             for self.iterate in step.iterate.iterate(self.namespace):
 
-                # check condition, continue (skip) if not
-                if not(self.should_run_step(step, success)):
-                    continue
+                if self.should_run_step(step, success):
+                    step_result, success = await self.do_step(step, success)
+                    yield step_result
 
-                # create and do fetch
-                fetch = self.create_fetch(step.request)
-                self.response, status = await self.do_fetch(fetch)
+    async def do_step(self, step, success):
+        # create and do fetch
+        fetch = self.create_fetch(step.request)
+        self.response, status = await self.do_fetch(fetch)
 
-                # transform response
-                self.transform = self.do_transform(step)
+        # transform response
+        self.transform = self.do_transform(step)
 
-                # extract response
-                self.extract = self.do_extract(step)
+        # extract response
+        self.extract = self.do_extract(step)
 
-                # validate response
-                validations, step_success = self.do_validate(step, status)
+        # validate response
+        validations, step_success = self.do_validate(step, status)
 
-                # track overall success
-                success = success and step_success
+        # track overall success
+        success = success and step_success
 
-                # add step result
-                yield StepResult(
-                    step=step,
-                    fetch=fetch,
-                    transform=self.transform,
-                    extract=self.extract,
-                    response=self.response,
-                    status=status,
-                    validations=validations,
-                    success=step_success,
-                )
+        # add step result
+        step_result = StepResult(
+            step=step,
+            fetch=fetch,
+            transform=self.transform,
+            extract=self.extract,
+            response=self.response,
+            status=status,
+            validations=validations,
+            success=step_success,
+        )
+
+        return step_result, success
 
     def create_fetch(self, request):
         namespace = self.namespace
@@ -337,10 +340,11 @@ class Runner(object):
 
 @related.to_dict.register(bs4.BeautifulSoup)
 def _(obj, **kwargs):
-    return "<bs4.BeautifulSoup>"
+    return repr(obj)
 
 
 class OurSoup(bs4.BeautifulSoup):
 
     def __repr__(self, **kwargs):
-        return "[HTML: %s]" % self.title.string if self.title else "<?>"
+        content = self.title.string if self.title else self.text[:100]
+        return "[HTML: %s]" % content

@@ -210,10 +210,6 @@ class Suite(object):
             self.skipped.add(case)
             get_logger().debug("case skipped", case=case.file_path)
 
-    def execute(self):
-        from . import execute
-        return execute(self)
-
 
 # utilities
 

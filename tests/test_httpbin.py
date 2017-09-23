@@ -1,4 +1,4 @@
-from rigor import Suite, Namespace, Validator, Runner, ReportEngine
+from rigor import Suite, Namespace, Validator, Runner, ReportEngine, execute
 from collections import OrderedDict
 
 import pytest
@@ -20,7 +20,7 @@ def test_collect(suite):
 
 
 def test_execute(suite):
-    result = suite.execute()
+    result = execute(suite)
     assert result.success
     assert len(result.passed) == 8
 
@@ -132,7 +132,7 @@ def test_case_conditional():
     suite = Suite(paths=paths)
     assert len(suite.skipped) == 0
     assert len(suite.queued) == 1
-    result = suite.execute()
+    result = execute(suite)
     assert not result.success  # test fails, checking # of steps
     assert len(result.failed) == 1
     scenario_result = result.failed[0].failed[0]
