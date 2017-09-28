@@ -1,0 +1,27 @@
+domain: https://httpbin.org
+
+schemas:
+    api: /api/v1/schema?format=openapi
+    curation: /api/v2/schema?format=openapi
+    consult: /api/v2/schema?format=openapi
+    analytics: /api/v2/schema?format=openapi
+
+globals:
+    tokens:
+        guest: GUEST-TOKEN
+
+headers:
+    Authorization: Token {tokens.guest}
+
+
+profiles:
+
+    www:
+        domain: https://www.httpbin.org
+
+        globals:
+            tokens:
+                another: ANOTHER-TOKEN
+
+        headers:
+            User-Agent: Rigor Testing Profile

@@ -1,26 +1,34 @@
-from rigor import Suite, Namespace, Validator, Runner, ReportEngine, execute
+from rigor import Suite, Config, Namespace, Validator, Runner, ReportEngine,\
+    execute
+
 from collections import OrderedDict
 
 import pytest
 import os
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "httpbin")
+paths = [ROOT_DIR]
 
 
 @pytest.fixture
 def suite():
-    paths = [ROOT_DIR]
-    return Suite(paths=paths, tags_excluded=["broken"])
+    return Suite(paths=paths, tags_excluded=["broken", "profile-only"])
+
+
+@pytest.fixture
+def config():
+    return Config.load(paths)
 
 
 def test_collect(suite):
-    assert suite.tags_excluded == ["broken"]
-    assert len(suite.skipped) == 4
+    assert suite.tags_excluded == ["broken", "profile-only"]
+    assert len(suite.skipped) == 5
     assert len(suite.queued) == 8
+    assert suite.profile.name == "__root__"
 
 
-def test_execute(suite):
-    result = execute(suite)
+def test_execute(suite, config):
+    result = execute(suite, config)
     assert result.success
     assert len(result.passed) == 8
 
@@ -42,12 +50,14 @@ def test_case_get(suite):
     # check case steps
     step = case.steps[0]
     assert step.description == "Get call with no parameters"
-    assert step.request.path == "/get"
+    assert step.request.path == "get"
     assert step.validate == [
+        Validator(actual="{response.url}", expect="https://httpbin.org/get"),
         Validator(actual="{response.args}", expect=OrderedDict()),
         Validator(actual="{response.headers.Accept}", expect="*/*"),
         Validator(actual="{response.headers.Connection}", expect="close"),
-        Validator(actual="{response.url}", expect="https://httpbin.org/get"),
+        Validator(actual="{response.headers.Authorization}",
+                  expect="Token GUEST-TOKEN"),
     ]
 
 
@@ -130,10 +140,23 @@ def test_case_load_yaml(suite):
 def test_case_conditional():
     paths = [os.path.join(ROOT_DIR, "conditional.rigor")]
     suite = Suite(paths=paths)
+    config = Config()
     assert len(suite.skipped) == 0
     assert len(suite.queued) == 1
-    result = execute(suite)
+    result = execute(suite, config)
     assert not result.success  # test fails, checking # of steps
     assert len(result.failed) == 1
     scenario_result = result.failed[0].failed[0]
     assert len(scenario_result.step_results) == 2
+
+
+def test_profile_only(config):
+    suite = Suite(paths=paths, tags_included=["profile-only"],
+                  profile=config.get_profile("www"))
+
+    assert len(suite.queued) == 1
+    assert len(suite.skipped) == 12
+    assert suite.profile.name == "www"
+
+    result = execute(suite, config)
+    assert result.success

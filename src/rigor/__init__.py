@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from . import const
+
 from .logging import (
     setup_logging,
     get_logger,
@@ -17,6 +19,11 @@ from .enums import (
 
 from .namespace import (
     Namespace,
+)
+
+from .config import (
+    Config,
+    Profile
 )
 
 from .model import (
@@ -45,6 +52,9 @@ from .cli import (
 
 
 __all__ = [
+    # const.py
+    "const",
+
     # logging.py
     "setup_logging",
     "get_logger",
@@ -62,6 +72,10 @@ __all__ = [
 
     # namespace.py
     "Namespace",
+
+    # config.py
+    "Config",
+    "Profile",
 
     # model.py
     "Case",
@@ -83,7 +97,7 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.1.9'
+__version__ = '0.2.2'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

@@ -1,8 +1,6 @@
 name: Get
-format: "1.0"
-domain: https://httpbin.org
 tags:
-  - working
+  - profile-only
 
 steps:
 
@@ -12,7 +10,7 @@ steps:
         path: get
 
     validate:
-      - expect: https://httpbin.org/get
+      - expect: https://www.httpbin.org/get
         actual: '{response.url}'
       - expect: {}
         actual: '{response.args}'
@@ -30,7 +28,6 @@ steps:
         params:
             one: 1
             two: 2
-            three: 2017-01-01
 
     transform: >
         {{
@@ -41,8 +38,7 @@ steps:
     validate:
       - actual: '{transform}'
         expect:
-            host: httpbin.org
+            host: www.httpbin.org
             keys:
                 - two
-                - three
                 - one

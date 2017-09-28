@@ -5,8 +5,10 @@ import aiohttp
 import related
 import jmespath
 import bs4
+import os
 
-from . import Case, Namespace, Step, Suite, Validator, enums, get_logger
+from . import Case, Namespace, Step, Suite, Validator, Profile
+from . import enums, get_logger, const
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -46,6 +48,7 @@ class StepResult(object):
 @related.immutable
 class ScenarioResult(object):
     suite = related.ChildField(Suite)
+    profile = related.ChildField(Profile)
     case = related.ChildField(Case)
     scenario = related.ChildField(Namespace)
     success = related.BooleanField()
@@ -57,6 +60,7 @@ class ScenarioResult(object):
 @related.immutable
 class CaseResult(object):
     suite = related.ChildField(Suite)
+    profile = related.ChildField(Profile)
     case = related.ChildField(Case)
     passed = related.SequenceField(ScenarioResult, default=[])
     failed = related.SequenceField(ScenarioResult, default=[])
@@ -69,6 +73,7 @@ class CaseResult(object):
 @related.immutable
 class SuiteResult(object):
     suite = related.ChildField(Suite)
+    profile = related.ChildField(Profile)
     passed = related.SequenceField(CaseResult, default=[])
     failed = related.SequenceField(CaseResult, default=[])
 
@@ -77,13 +82,14 @@ class SuiteResult(object):
         return bool(self.passed and not self.failed)
 
     @classmethod
-    def create(cls, suite, scenario_results):
+    def create(cls, suite, profile, scenario_results):
         case_results = {}
 
         for result in scenario_results:
             # todo: handle exceptions...
             case_result = case_results.setdefault(result.case.uuid,
                                                   CaseResult(suite=suite,
+                                                             profile=profile,
                                                              case=result.case))
 
             sink = case_result.passed if result.success else case_result.failed
@@ -94,7 +100,7 @@ class SuiteResult(object):
             sink = passed if case_result.success else failed
             sink.append(case_result)
 
-        return cls(suite=suite, passed=passed, failed=failed)
+        return cls(suite=suite, profile=profile, passed=passed, failed=failed)
 
 
 @related.mutable
@@ -102,6 +108,7 @@ class Runner(object):
     uuid = related.UUIDField()
     session = related.ChildField(aiohttp.ClientSession, required=False)
     suite = related.ChildField(Suite, required=False)
+    profile = related.ChildField(Profile, default=Profile())
     case = related.ChildField(Case, required=False)
 
     scenario = related.ChildField(Namespace, default=Namespace())
@@ -115,8 +122,11 @@ class Runner(object):
 
     @property
     def namespace(self):
-        # make scenario namespace top-level
-        values = self.scenario.copy() if self.scenario else {}
+        # make globals namespace top-level
+        values = self.profile.globals.copy() if self.profile.globals else {}
+
+        # make scenario namespace top-level accessors (overrides globals!)
+        values.update(self.scenario if self.scenario else {})
 
         # make iterate namespace top-level accessors (overrides scenario!)
         values.update(self.iterate if self.iterate else {})
@@ -126,11 +136,13 @@ class Runner(object):
 
         # add handles to namespaces (overrides scenario, extract and iterate!)
         values.update(dict(__uuid__=self.uuid,
+                           globals=self.profile.globals,
                            scenario=self.scenario,
                            transform=self.transform,
                            extract=self.extract,
                            response=self.response,
-                           iterate=self.iterate))
+                           iterate=self.iterate,
+                           env=os.environ))
 
         return values
 
@@ -166,6 +178,7 @@ class Runner(object):
         return ScenarioResult(
             uuid=self.uuid,
             suite=self.suite,
+            profile=self.profile,
             case=self.case,
             scenario=self.scenario,
             success=success,
@@ -223,8 +236,14 @@ class Runner(object):
     def create_fetch(self, request):
         namespace = self.namespace
 
-        # construct url
-        domain = request.domain or self.case.domain or self.suite.domain
+        # url host (request > case > cli > rigor.yml > localhost:8000)
+        domain = request.domain or self.case.domain
+        domain = domain or self.suite.domain or self.suite.profile.domain
+        get_logger().debug("domain", domain=domain, request=request.domain,
+                           case=self.case.domain, suite=self.suite.domain,
+                           profile=self.suite.profile.domain)
+
+        # url path
         path = Namespace.render(request.path, namespace)
         url = "%s/%s" % (domain, path)
 
@@ -238,11 +257,12 @@ class Runner(object):
         headers = {}
 
         if isinstance(data, str):
-            headers['Content-Type'] = "application/json"
+            headers[const.CONTENT_TYPE] = "application/json"
 
+        headers.update(related.to_dict(self.profile.headers) or {})
         headers.update(related.to_dict(self.case.headers) or {})
         headers.update(related.to_dict(request.headers) or {})
-        headers = Namespace(headers)
+        headers = Namespace(headers).evaluate(namespace)
 
         # kwargs
         kwargs = dict(headers=headers, timeout=None, data=data,
@@ -257,7 +277,6 @@ class Runner(object):
 
         async with self.session.request(fetch.method, fetch.url,
                                         **fetch.kwargs) as context:
-
             response = await self.get_response(context)
             status = context.status
 
@@ -268,14 +287,14 @@ class Runner(object):
             return response, status
 
     async def get_response(self, context):
-        content_type = context.headers.get(aiohttp.hdrs.CONTENT_TYPE, '')
+        content_type = context.headers.get(const.CONTENT_TYPE, '')
         content_type = content_type.lower()
 
-        if "text/html" in content_type:
+        if const.TEXT_HTML in content_type:
             html = OurSoup(await context.text(), 'html.parser')
             response = Namespace(html=html)
 
-        elif "application/json" in content_type:
+        elif const.APPLICATION_JSON in content_type:
             response = Namespace(await context.json())
 
         else:
@@ -338,13 +357,8 @@ class Runner(object):
 
 # dispatch
 
-@related.to_dict.register(bs4.BeautifulSoup)
-def _(obj, **kwargs):
-    return repr(obj)
-
-
 class OurSoup(bs4.BeautifulSoup):
-
     def __repr__(self, **kwargs):
-        content = self.title.string if self.title else self.text[:100]
-        return "[HTML: %s]" % content
+        content = self.title.string if self.title else ""
+        content += "\n\n" + self.body.text
+        return content

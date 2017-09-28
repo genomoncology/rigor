@@ -1,0 +1,61 @@
+domain: http://localhost:8000
+
+schemas:
+    v1: /api/v1/schema?format=openapi
+    v2: /api/v2/schema?format=openapi
+
+globals:
+
+    language: Python
+    score: '{env.GLOBAL_SCORE}'
+    pi: 3.14159265359
+
+    tokens:
+        admin: a000000000000000000000000000000000000000
+        staff: a111111111111111111111111111111111111111
+        guest: a222222222222222222222222222222222222222
+
+
+headers:
+
+    Content-Type: application/json
+    Authorization: Token {tokens.guest}
+
+
+profiles:
+
+    local:
+        schemas:
+            v3: /api/v3/schema?format=openapi
+            v4: /api/v4/schema?format=openapi
+
+
+    test:
+        domain: http://test.domain.com
+
+        schemas:
+            v3: /api/v3/schema?format=openapi
+
+        globals:
+            tokens:
+                admin: '{env.TEST_ADMIN_TOKEN}'
+                oauth: '{env.OAUTH_TOKEN}'
+
+        headers:
+
+            Authorization: Bearer {tokens.oauth}
+
+
+    production:
+        domain: http://production.domain.com
+
+        globals:
+            tokens:
+                admin:
+                staff:
+                guest:
+                oauth:
+
+        headers:
+            Authorization:
+

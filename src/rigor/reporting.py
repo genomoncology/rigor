@@ -42,7 +42,10 @@ class DocString(object):
     def section(cls, title, obj, **kwargs):
         size = max(20, len(title))
         bar = "=" * size
-        content = related.to_yaml(obj, **kwargs) if obj else "None"
+        if isinstance(obj, dict) and "html" in obj:
+            content = str(obj["html"])
+        else:
+            content = related.to_yaml(obj, **kwargs) if obj else "None"
         return "\n".join([bar, str.center(title, size), bar, "", content, ""])
 
     @classmethod
@@ -202,6 +205,7 @@ class ReportEngine(object):
 
         except Exception as e:  # pragma: no cover
             get_logger().error("failed cucumber json", error=str(e))
+            # raise e
 
         return success
 

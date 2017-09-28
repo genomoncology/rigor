@@ -1,4 +1,3 @@
-import json
 import os
 import io
 
@@ -6,7 +5,7 @@ from itertools import product
 
 import related
 
-from . import Comparison, Method, Namespace, get_logger
+from . import Comparison, Method, Namespace, Profile, get_logger
 
 
 class Iterator(Namespace):
@@ -86,7 +85,7 @@ class Requestor(object):
 
         get_logger().debug("render get_body", body_type=type(body), body=body)
 
-        body = json.dumps(body)
+        body = related.to_json(body)
 
         return body
 
@@ -173,7 +172,8 @@ class Case(object):
 @related.mutable
 class Suite(object):
     # cli options
-    domain = related.StringField(default="http://localhost:8000")
+    profile = related.ChildField(Profile, default=Profile())
+    domain = related.StringField(required=False)
     paths = related.SequenceField(str, default=None)
     file_prefixes = related.SequenceField(str, default=None)
     extensions = related.SequenceField(str, default=["rigor"])

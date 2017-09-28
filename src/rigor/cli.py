@@ -1,12 +1,13 @@
 import click
 
-from . import Suite, ReportEngine, setup_logging, get_logger, execute
+from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
 
 
 @click.command()
 @click.argument('paths', nargs=-1)
-@click.option('--domain', default="http://localhost:8000",
-              help="Domain name (e.g. http://localhost:8000)")
+@click.option('--profile', default="__root__",
+              help="Profile name (e.g. test)")
+@click.option('--domain', help="Domain name (e.g. http://localhost:8000)")
 @click.option('--include', '-i', multiple=True,
               help="Include tag of cases. (e.g. smoke)")
 @click.option('--exclude', '-e', multiple=True,
@@ -27,8 +28,11 @@ from . import Suite, ReportEngine, setup_logging, get_logger, execute
               help='JSON-style logging.')
 @click.option('--html', '-h', is_flag=True,
               help='Generate HTML report.')
-def main(paths, domain, include, exclude, prefix, extensions,
+def main(paths, profile, domain, include, exclude, prefix, extensions,
          concurrency, output, quiet, verbose, json, html):
+
+    # default paths
+    paths = paths or ["."]
 
     # setup logging
     setup_logging(quiet=quiet, verbose=verbose, json=json)
@@ -37,14 +41,20 @@ def main(paths, domain, include, exclude, prefix, extensions,
     extensions = [ext[1:] if ext.startswith(".") else ext
                   for ext in extensions or []]
 
+    # load config
+    config = Config.load(paths)
+
+    # get profile using name
+    profile = config.get_profile(profile)
+
     # collect suite
-    suite = Suite(paths=paths, domain=domain,
+    suite = Suite(paths=paths, profile=profile, domain=domain,
                   tags_included=include, tags_excluded=exclude,
                   file_prefixes=prefix, extensions=extensions,
                   concurrency=concurrency)
 
     # execute suite
-    suite_result = execute(suite)
+    suite_result = execute(suite, config)
 
     # construct report engine
     if output or html:
