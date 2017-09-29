@@ -41,7 +41,7 @@ class Validator(object):
 class Requestor(object):
     path = related.StringField()
     method = related.ChildField(Method, default=Method.GET)
-    domain = related.StringField(required=False)
+    host = related.StringField(required=False)
     headers = related.ChildField(Namespace, required=False)
     params = related.ChildField(Namespace, required=False)
     data = related.ChildField(object, required=False)
@@ -114,7 +114,7 @@ class Case(object):
     name = related.StringField(required=False, default=None)
     steps = related.SequenceField(Step, default=[])
     format = related.StringField(default="1.0")
-    domain = related.StringField(required=False)
+    host = related.StringField(required=False)
     tags = related.SequenceField(str, required=False)
     headers = related.ChildField(Namespace, required=False)
     file_path = related.StringField(default=None)
@@ -170,18 +170,8 @@ class Case(object):
 
 
 @related.mutable
-class Suite(object):
-    # cli options
-    profile = related.ChildField(Profile, default=Profile())
-    domain = related.StringField(required=False)
+class Suite(Profile):
     paths = related.SequenceField(str, default=None)
-    file_prefixes = related.SequenceField(str, default=None)
-    extensions = related.SequenceField(str, default=["rigor"])
-    tags_included = related.SequenceField(str, default=None)
-    tags_excluded = related.SequenceField(str, default=None)
-    concurrency = related.IntegerField(default=20)
-
-    # collect
     queued = related.MappingField(Case, "file_path", default={})
     skipped = related.MappingField(Case, "file_path", default={})
 
@@ -189,26 +179,39 @@ class Suite(object):
         from . import collect
         collect(self)
         get_logger().debug("suite constructed",
-                           domain=self.domain,
+                           host=self.host,
                            paths=self.paths,
-                           file_prefixes=self.file_prefixes,
+                           prefixes=self.prefixes,
                            extensions=self.extensions,
-                           tags_included=self.tags_included,
-                           tags_excluded=self.tags_excluded,
-                           concurrency=self.concurrency,
-                           )
+                           includes=self.includes,
+                           excludes=self.excludes,
+                           concurrency=self.concurrency)
 
     def get_case(self, path, filename=None):
         file_path = os.path.join(path, filename) if filename else path
         return self.queued.get(file_path) or self.skipped.get(file_path)
 
     def add_case(self, case):
-        if case.is_active(self.tags_included, self.tags_excluded):
+        if case.is_active(self.includes, self.excludes):
             self.queued.add(case)
             get_logger().debug("case queued", case=case.file_path)
         else:
             self.skipped.add(case)
             get_logger().debug("case skipped", case=case.file_path)
+
+    @classmethod
+    def create(cls, paths, profile, **cli):
+        # start kwargs using profile
+        kwargs = profile.as_dict()
+
+        # remove none and empty lists from cli keyword args (0/False is ok)
+        cli = dict([(k, v) for k, v in cli.items() if v not in (None, [])])
+
+        # update kwargs with cli (cli takes higher precedence)
+        kwargs.update(cli)
+
+        # construct Suite
+        return cls(paths=paths, **kwargs)
 
 
 # utilities

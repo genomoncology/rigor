@@ -9,10 +9,27 @@ from . import Namespace, const, get_logger
 @related.immutable
 class Profile(object):
     name = related.StringField(default="__root__")
-    domain = related.StringField(required=False)
+    host = related.StringField(required=False)
     schemas = related.ChildField(Namespace, required=False)
     globals = related.ChildField(Namespace, required=False)
     headers = related.ChildField(Namespace, required=False)
+    prefixes = related.SequenceField(str, default=None)
+    extensions = related.SequenceField(str, default=["rigor"])
+    includes = related.SequenceField(str, default=None)
+    excludes = related.SequenceField(str, default=None)
+    concurrency = related.IntegerField(default=20)
+
+    def __attrs_post_init__(self):
+        # circumvent frozen error due to immutable
+        extensions = [ext[1:] if ext.startswith(".") else ext
+                      for ext in self.extensions or []]
+        object.__setattr__(self, "extensions", extensions)
+
+    def as_dict(self):
+        kwargs = related.to_dict(self)
+        kwargs.pop("profiles", None)
+        kwargs.pop("file_path", None)
+        return kwargs
 
 
 @related.immutable

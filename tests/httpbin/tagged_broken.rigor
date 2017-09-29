@@ -1,6 +1,6 @@
 name: Tagged Broken
 format: "1.0"
-domain: https://httpbin.org
+host: https://httpbin.org
 tags:
   - broken
 

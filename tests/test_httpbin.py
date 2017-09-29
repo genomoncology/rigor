@@ -11,25 +11,25 @@ paths = [ROOT_DIR]
 
 
 @pytest.fixture
-def suite():
-    return Suite(paths=paths, tags_excluded=["broken", "profile-only"])
-
-
-@pytest.fixture
 def config():
     return Config.load(paths)
 
 
+@pytest.fixture
+def suite(config):
+    return Suite.create(paths, config, excludes=["broken", "profile-only"])
+
+
 def test_collect(suite):
-    assert suite.tags_excluded == ["broken", "profile-only"]
+    assert suite.excludes == ["broken", "profile-only"]
     assert len(suite.skipped) == 5
     assert len(suite.queued) == 8
-    assert suite.profile.name == "__root__"
+    assert suite.name == "__root__"
 
 
 def test_execute(suite, config):
-    result = execute(suite, config)
-    assert result.success
+    result = execute(suite)
+    assert result.success, "Failed: %s" % result.failed
     assert len(result.passed) == 8
 
     engine = ReportEngine(suite_result=result, with_html=True)
@@ -43,7 +43,7 @@ def test_case_get(suite):
     # check case root
     assert case.name == "Get"
     assert case.format == "1.0"
-    assert case.domain == "https://httpbin.org"
+    assert case.host == "https://httpbin.org"
     assert case.tags == ["working"]
     assert len(case.steps) == 2
 
@@ -67,7 +67,7 @@ def test_case_params(suite):
     # check case root
     assert case.name == "Params"
     assert case.format == "1.0"
-    assert case.domain == "https://httpbin.org"
+    assert case.host == "https://httpbin.org"
     assert case.tags == ["working"]
     assert len(case.steps) == 1
     assert len(case.scenarios) == 3
@@ -85,7 +85,7 @@ def test_case_http_status(suite):
     # check case root
     assert case.name == "HTTP Status"
     assert case.format == "1.0"
-    assert case.domain == "https://httpbin.org"
+    assert case.host == "https://httpbin.org"
     assert len(case.steps) == 4
     assert len(case.scenarios) == 1  # default empty scenario
 
@@ -137,13 +137,12 @@ def test_case_load_yaml(suite):
     assert scenario['__name__'] == "same"
 
 
-def test_case_conditional():
+def test_case_conditional(config):
     paths = [os.path.join(ROOT_DIR, "conditional.rigor")]
-    suite = Suite(paths=paths)
-    config = Config()
+    suite = Suite.create(paths, config)
     assert len(suite.skipped) == 0
     assert len(suite.queued) == 1
-    result = execute(suite, config)
+    result = execute(suite)
     assert not result.success  # test fails, checking # of steps
     assert len(result.failed) == 1
     scenario_result = result.failed[0].failed[0]
@@ -151,12 +150,12 @@ def test_case_conditional():
 
 
 def test_profile_only(config):
-    suite = Suite(paths=paths, tags_included=["profile-only"],
-                  profile=config.get_profile("www"))
+    profile = config.get_profile("www")
+    suite = Suite.create(paths, profile)
 
     assert len(suite.queued) == 1
     assert len(suite.skipped) == 12
-    assert suite.profile.name == "www"
+    assert suite.name == "www"
 
-    result = execute(suite, config)
+    result = execute(suite)
     assert result.success

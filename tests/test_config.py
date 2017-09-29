@@ -37,7 +37,7 @@ def production(root):
 def test_root_profile(root):
     assert root.name == "__root__"
     assert root.file_path == os.path.join(CONFIG_DIR, "rigor.yml")
-    assert root.domain == "http://localhost:8000"
+    assert root.host == "http://localhost:8000"
 
     # sanity check
     assert len(root.schemas) == 2
@@ -65,8 +65,8 @@ def test_root_profile(root):
 
 
 def test_local_profile(local):
-    # domain
-    assert local.domain == "http://localhost:8000"
+    # host
+    assert local.host == "http://localhost:8000"
 
     # schemas
     assert local.schemas['v1'] == "/api/v1/schema?format=openapi"
@@ -90,8 +90,8 @@ def test_local_profile(local):
 
 
 def test_test_profile(test):
-    # domain
-    assert test.domain == "http://test.domain.com"
+    # host
+    assert test.host == "http://test.host.com"
 
     # schemas
     assert test.schemas['v1'] == "/api/v1/schema?format=openapi"
@@ -115,8 +115,8 @@ def test_test_profile(test):
 
 
 def test_production_profile(production):
-    # domain
-    assert production.domain == "http://production.domain.com"
+    # host
+    assert production.host == "http://production.host.com"
 
     # schemas
     assert production.schemas['v1'] == "/api/v1/schema?format=openapi"

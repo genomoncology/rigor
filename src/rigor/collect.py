@@ -41,7 +41,7 @@ def glob_patterns(suite):
         if os.path.exists(path) and os.path.isfile(path):
             yield path
 
-        for file_prefix in suite.file_prefixes or ['']:
+        for file_prefix in suite.prefixes or ['']:
             for extension in suite.extensions or ['rigor']:
                 file_pattern = "%s*.%s" % (file_prefix, extension)
                 yield os.path.join(path, "**", file_pattern)

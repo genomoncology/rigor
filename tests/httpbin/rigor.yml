@@ -1,4 +1,4 @@
-domain: https://httpbin.org
+host: https://httpbin.org
 
 schemas:
     api: /api/v1/schema?format=openapi
@@ -17,7 +17,7 @@ headers:
 profiles:
 
     www:
-        domain: https://www.httpbin.org
+        host: https://www.httpbin.org
 
         globals:
             tokens:
@@ -25,3 +25,6 @@ profiles:
 
         headers:
             User-Agent: Rigor Testing Profile
+
+        includes:
+            - profile-only

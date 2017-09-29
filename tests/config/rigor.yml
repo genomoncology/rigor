@@ -1,4 +1,4 @@
-domain: http://localhost:8000
+host: http://localhost:8000
 
 schemas:
     v1: /api/v1/schema?format=openapi
@@ -31,7 +31,7 @@ profiles:
 
 
     test:
-        domain: http://test.domain.com
+        host: http://test.host.com
 
         schemas:
             v3: /api/v3/schema?format=openapi
@@ -47,7 +47,7 @@ profiles:
 
 
     production:
-        domain: http://production.domain.com
+        host: http://production.host.com
 
         globals:
             tokens:

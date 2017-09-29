@@ -7,7 +7,7 @@ import jmespath
 import bs4
 import os
 
-from . import Case, Namespace, Step, Suite, Validator, Profile
+from . import Case, Namespace, Step, Suite, Validator
 from . import enums, get_logger, const
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
@@ -48,7 +48,6 @@ class StepResult(object):
 @related.immutable
 class ScenarioResult(object):
     suite = related.ChildField(Suite)
-    profile = related.ChildField(Profile)
     case = related.ChildField(Case)
     scenario = related.ChildField(Namespace)
     success = related.BooleanField()
@@ -60,7 +59,6 @@ class ScenarioResult(object):
 @related.immutable
 class CaseResult(object):
     suite = related.ChildField(Suite)
-    profile = related.ChildField(Profile)
     case = related.ChildField(Case)
     passed = related.SequenceField(ScenarioResult, default=[])
     failed = related.SequenceField(ScenarioResult, default=[])
@@ -73,7 +71,6 @@ class CaseResult(object):
 @related.immutable
 class SuiteResult(object):
     suite = related.ChildField(Suite)
-    profile = related.ChildField(Profile)
     passed = related.SequenceField(CaseResult, default=[])
     failed = related.SequenceField(CaseResult, default=[])
 
@@ -82,14 +79,13 @@ class SuiteResult(object):
         return bool(self.passed and not self.failed)
 
     @classmethod
-    def create(cls, suite, profile, scenario_results):
+    def create(cls, suite, scenario_results):
         case_results = {}
 
         for result in scenario_results:
             # todo: handle exceptions...
             case_result = case_results.setdefault(result.case.uuid,
                                                   CaseResult(suite=suite,
-                                                             profile=profile,
                                                              case=result.case))
 
             sink = case_result.passed if result.success else case_result.failed
@@ -100,7 +96,7 @@ class SuiteResult(object):
             sink = passed if case_result.success else failed
             sink.append(case_result)
 
-        return cls(suite=suite, profile=profile, passed=passed, failed=failed)
+        return cls(suite=suite, passed=passed, failed=failed)
 
 
 @related.mutable
@@ -108,7 +104,6 @@ class Runner(object):
     uuid = related.UUIDField()
     session = related.ChildField(aiohttp.ClientSession, required=False)
     suite = related.ChildField(Suite, required=False)
-    profile = related.ChildField(Profile, default=Profile())
     case = related.ChildField(Case, required=False)
 
     scenario = related.ChildField(Namespace, default=Namespace())
@@ -123,7 +118,8 @@ class Runner(object):
     @property
     def namespace(self):
         # make globals namespace top-level
-        values = self.profile.globals.copy() if self.profile.globals else {}
+        globals = self.suite.globals if self.suite else {}
+        values = (globals or {}).copy()
 
         # make scenario namespace top-level accessors (overrides globals!)
         values.update(self.scenario if self.scenario else {})
@@ -136,7 +132,7 @@ class Runner(object):
 
         # add handles to namespaces (overrides scenario, extract and iterate!)
         values.update(dict(__uuid__=self.uuid,
-                           globals=self.profile.globals,
+                           globals=globals,
                            scenario=self.scenario,
                            transform=self.transform,
                            extract=self.extract,
@@ -178,7 +174,6 @@ class Runner(object):
         return ScenarioResult(
             uuid=self.uuid,
             suite=self.suite,
-            profile=self.profile,
             case=self.case,
             scenario=self.scenario,
             success=success,
@@ -237,15 +232,11 @@ class Runner(object):
         namespace = self.namespace
 
         # url host (request > case > cli > rigor.yml > localhost:8000)
-        domain = request.domain or self.case.domain
-        domain = domain or self.suite.domain or self.suite.profile.domain
-        get_logger().debug("domain", domain=domain, request=request.domain,
-                           case=self.case.domain, suite=self.suite.domain,
-                           profile=self.suite.profile.domain)
+        host = request.host or self.case.host or self.suite.host
 
         # url path
         path = Namespace.render(request.path, namespace)
-        url = "%s/%s" % (domain, path)
+        url = "%s/%s" % (host, path)
 
         # construct method
         method = request.method.value.lower()
@@ -259,7 +250,7 @@ class Runner(object):
         if isinstance(data, str):
             headers[const.CONTENT_TYPE] = "application/json"
 
-        headers.update(related.to_dict(self.profile.headers) or {})
+        headers.update(related.to_dict(self.suite.headers) or {})
         headers.update(related.to_dict(self.case.headers) or {})
         headers.update(related.to_dict(request.headers) or {})
         headers = Namespace(headers).evaluate(namespace)

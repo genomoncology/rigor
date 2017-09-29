@@ -7,12 +7,12 @@ from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
 @click.argument('paths', nargs=-1)
 @click.option('--profile', default="__root__",
               help="Profile name (e.g. test)")
-@click.option('--domain', help="Domain name (e.g. http://localhost:8000)")
-@click.option('--include', '-i', multiple=True,
+@click.option('--host', help="Host name (e.g. http://localhost:8000)")
+@click.option('--includes', '-i', multiple=True,
               help="Include tag of cases. (e.g. smoke)")
-@click.option('--exclude', '-e', multiple=True,
+@click.option('--excludes', '-e', multiple=True,
               help="Exclude tag of cases to run. (e.g. broken)")
-@click.option('--prefix', '-p', multiple=True,
+@click.option('--prefixes', '-p', multiple=True,
               help="Filter cases by file prefix. (e.g. smoke_)")
 @click.option('--extensions', '-e', multiple=True,
               help="Filter cases by file extension. (e.g. rigor)")
@@ -28,8 +28,9 @@ from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
               help='JSON-style logging.')
 @click.option('--html', '-h', is_flag=True,
               help='Generate HTML report.')
-def main(paths, profile, domain, include, exclude, prefix, extensions,
-         concurrency, output, quiet, verbose, json, html):
+def main(paths, profile, output, quiet, verbose, json, html, **cli):
+
+    # cli = host, includes, excludes, prefixes, extensions, concurrency
 
     # default paths
     paths = paths or ["."]
@@ -37,24 +38,14 @@ def main(paths, profile, domain, include, exclude, prefix, extensions,
     # setup logging
     setup_logging(quiet=quiet, verbose=verbose, json=json)
 
-    # remove preceding . if provided in extension (.rigor => rigor)
-    extensions = [ext[1:] if ext.startswith(".") else ext
-                  for ext in extensions or []]
-
-    # load config
-    config = Config.load(paths)
-
-    # get profile using name
-    profile = config.get_profile(profile)
+    # load profile from rigor.yml file (if found)
+    profile = Config.load(paths).get_profile(profile)
 
     # collect suite
-    suite = Suite(paths=paths, profile=profile, domain=domain,
-                  tags_included=include, tags_excluded=exclude,
-                  file_prefixes=prefix, extensions=extensions,
-                  concurrency=concurrency)
+    suite = Suite.create(paths, profile, **cli)
 
     # execute suite
-    suite_result = execute(suite, config)
+    suite_result = execute(suite)
 
     # construct report engine
     if output or html:
