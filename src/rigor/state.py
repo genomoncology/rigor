@@ -1,5 +1,4 @@
 import asyncio
-import time
 
 import aiohttp
 import related
@@ -7,8 +6,8 @@ import jmespath
 import bs4
 import os
 
-from . import Case, Namespace, Step, Suite, Validator
-from . import enums, get_logger, const
+from . import Case, Namespace, Step, Suite, Validator, Timer
+from . import enums, get_logger, const, log_with_success
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -39,6 +38,7 @@ class StepResult(object):
     extract = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
     validations = related.SequenceField(ValidationResult, required=False)
+    duration = related.IntegerField(required=False)
 
     @property
     def failed_validations(self):
@@ -53,7 +53,6 @@ class ScenarioResult(object):
     success = related.BooleanField()
     uuid = related.UUIDField()
     step_results = related.SequenceField(StepResult, default=[])
-    running_time = related.FloatField(required=False)
 
 
 @related.immutable
@@ -143,33 +142,21 @@ class Runner(object):
         return values
 
     async def do_run(self):
-        success = True
-        start_time = time.time()
-        step_results = []
+        with Timer() as timer:
+            success = True
+            step_results = []
 
-        # iterate steps
-        async for step_result in self.iter_steps():
-            step_results.append(step_result)
-            success = success and step_result.success
+            # iterate steps
+            async for step_result in self.iter_steps():
+                step_results.append(step_result)
+                success = success and step_result.success
 
-        running_time = time.time() - start_time
-
-        if not success:
-            get_logger().error(
-                "scenario failed",
-                feature=self.case.name,
-                scenario=self.scenario.__name__,
-                file_path=self.case.file_path,
-                num_steps=len(step_results),
-            )
-        else:
-            get_logger().debug(
-                "scenario complete",
-                feature=self.case.name,
-                scenario=self.scenario.__name__,
-                file_path=self.case.file_path,
-                num_steps=len(step_results),
-            )
+        log_with_success("scenario", success,
+                         feature=self.case.name,
+                         scenario=self.scenario.__name__,
+                         file_path=self.case.file_path,
+                         num_steps=len(step_results),
+                         timer=timer)
 
         return ScenarioResult(
             uuid=self.uuid,
@@ -177,8 +164,7 @@ class Runner(object):
             case=self.case,
             scenario=self.scenario,
             success=success,
-            step_results=step_results,
-            running_time=running_time,
+            step_results=step_results
         )
 
     def should_run_step(self, step, success):
@@ -189,30 +175,31 @@ class Runner(object):
         success = True
 
         for step in self.case.steps:
-            await asyncio.sleep(step.sleep)
-
             for self.iterate in step.iterate.iterate(self.namespace):
-
                 if self.should_run_step(step, success):
                     step_result, success = await self.do_step(step, success)
                     yield step_result
 
     async def do_step(self, step, success):
-        # create and do fetch
-        fetch = self.create_fetch(step.request)
-        self.response, status = await self.do_fetch(fetch)
+        with Timer() as timer:
+            # sleep if any
+            await asyncio.sleep(step.sleep)
 
-        # transform response
-        self.transform = self.do_transform(step)
+            # create and do fetch
+            fetch = self.create_fetch(step.request)
+            self.response, status = await self.do_fetch(fetch)
 
-        # extract response
-        self.extract = self.do_extract(step)
+            # transform response
+            self.transform = self.do_transform(step)
 
-        # validate response
-        validations, step_success = self.do_validate(step, status)
+            # extract response
+            self.extract = self.do_extract(step)
 
-        # track overall success
-        success = success and step_success
+            # validate response
+            validations, step_success = self.do_validate(step, status)
+
+            # track overall success
+            success = success and step_success
 
         # add step result
         step_result = StepResult(
@@ -224,6 +211,7 @@ class Runner(object):
             status=status,
             validations=validations,
             success=step_success,
+            duration=timer.duration,
         )
 
         return step_result, success
@@ -330,11 +318,8 @@ class Runner(object):
         success = True
         for validator in results:
             kw = dict(validator=validator, step=step)
-            if validator.success:
-                get_logger().debug("validator pass", **kw)
-            else:
-                get_logger().error("validator fail", **kw)
-                success = False
+            log_with_success("validator", validator.success, **kw)
+            success = success and validator.success
 
         return results, success
 

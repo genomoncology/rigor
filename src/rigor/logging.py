@@ -42,3 +42,9 @@ def setup_logging(quiet=False, verbose=False, json=False):
 
 def get_logger(*args, **kwargs):
     return structlog.get_logger(LOGGER_NAME, *args, **kwargs)
+
+
+def log_with_success(name, success, **kwargs):
+    method = get_logger().debug if success else get_logger().error
+    msg = "%s %s" % (name, "success" if success else "failed")
+    method(msg, **kwargs)

@@ -50,10 +50,11 @@ class Config(Profile):
         if file_path and os.path.exists(file_path):
             content = open(file_path).read()
             config = cls.loads(content, file_path)
-            get_logger().info("config file found", file_path=file_path)
+            get_logger().info("config file", file_path=file_path)
+            get_logger().debug("config details", **related.to_dict(config))
         else:
             config = cls()
-            get_logger().info("config file not found", paths=paths)
+            get_logger().info("no config file not found", paths=paths)
 
         return config
 

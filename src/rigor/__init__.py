@@ -2,9 +2,14 @@
 
 from . import const
 
+from .metrics import (
+    Timer
+)
+
 from .logging import (
     setup_logging,
     get_logger,
+    log_with_success,
 )
 
 from .collect import (
@@ -55,9 +60,13 @@ __all__ = [
     # const.py
     "const",
 
+    # metrics.py
+    "Timer",
+
     # logging.py
     "setup_logging",
     "get_logger",
+    "log_with_success",
 
     # collect.py
     "collect",

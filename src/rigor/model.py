@@ -205,7 +205,7 @@ class Suite(Profile):
         kwargs = profile.as_dict()
 
         # remove none and empty lists from cli keyword args (0/False is ok)
-        cli = dict([(k, v) for k, v in cli.items() if v not in (None, [])])
+        cli = dict([(k, v) for k, v in cli.items() if v not in (None, [], ())])
 
         # update kwargs with cli (cli takes higher precedence)
         kwargs.update(cli)

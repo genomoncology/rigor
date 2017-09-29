@@ -1,4 +1,4 @@
-from rigor import Config, Namespace
+from rigor import Config, Namespace, Suite
 
 import pytest
 import os
@@ -63,6 +63,12 @@ def test_root_profile(root):
     assert root.headers.get("Authorization") == "Token {tokens.guest}"
     assert root.headers.get("Content-Type") == "application/json"
 
+    # other
+    assert root.extensions == ["rigor"]
+    assert root.includes == []
+    assert root.excludes == ["broken"]
+    assert root.concurrency == 10
+
 
 def test_local_profile(local):
     # host
@@ -87,6 +93,12 @@ def test_local_profile(local):
     # headers
     assert local.headers.get("Authorization") == "Token {tokens.guest}"
     assert local.headers.get("Content-Type") == "application/json"
+
+    # other
+    assert local.extensions == ["rigor"]
+    assert local.includes == []
+    assert local.excludes == ["broken"]
+    assert local.concurrency == 10
 
 
 def test_test_profile(test):
@@ -113,6 +125,12 @@ def test_test_profile(test):
     assert test.headers.get("Authorization") == "Bearer {tokens.oauth}"
     assert test.headers.get("Content-Type") == "application/json"
 
+    # other
+    assert test.extensions == ["rigor"]
+    assert test.includes == []
+    assert test.excludes == ["broken"]
+    assert test.concurrency == 10
+
 
 def test_production_profile(production):
     # host
@@ -137,6 +155,23 @@ def test_production_profile(production):
     # headers
     assert production.headers.get("Authorization") is None
     assert production.headers.get("Content-Type") == "application/json"
+
+    # other
+    assert production.extensions == ["rigor"]
+    assert production.includes == []
+    assert production.excludes == ["broken"]
+    assert production.concurrency == 10
+
+
+def test_suite_create(root):
+    paths = ["."]
+    suite = Suite.create(paths, root, extensions=(), excludes=(), includes=(),
+                         concurrency=None)
+
+    assert suite.extensions == ["rigor"]
+    assert suite.includes == []
+    assert suite.excludes == ["broken"]
+    assert suite.concurrency == 10
 
 
 def test_find_file():

@@ -1,21 +1,25 @@
 import asyncio
 import aiohttp
 
-from . import SuiteResult, Runner
+from . import SuiteResult, Runner, Timer
 from . import get_logger
 
 
 def execute(suite):
-    log = get_logger()
-    log.debug("execute suite start", suite=suite)
+    with Timer() as timer:
+        log = get_logger()
+        log.debug("execute suite start", suite=suite)
 
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(do_suite(loop, suite))
-    loop.run_until_complete(future)
+        loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(do_suite(loop, suite))
+        loop.run_until_complete(future)
 
-    result = SuiteResult.create(suite, future.result())
-    log.info("execute suite complete", passed=len(result.passed),
-             failed=len(result.failed))
+        result = SuiteResult.create(suite, future.result())
+
+    log.info("execute suite complete",
+             passed=len(result.passed),
+             failed=len(result.failed),
+             timer=timer)
 
     return result
 

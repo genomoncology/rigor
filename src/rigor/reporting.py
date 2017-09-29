@@ -64,12 +64,13 @@ class DocString(object):
 @related.immutable
 class StatusResult(object):
     status = related.StringField()
+    duration = related.IntegerField()
     line = related.IntegerField(default=4)
 
     @classmethod
-    def create(cls, success):
+    def create(cls, success, duration):
         status = {True: "passed", False: "failed"}.get(success, "skipped")
-        return cls(status=status)
+        return cls(status=status, duration=duration)
 
 
 @related.immutable
@@ -79,7 +80,6 @@ class Step(object):
     line = related.IntegerField()
     match = related.ChildField(Match)
     name = related.StringField()
-    duration = related.FloatField()
     doc_string = related.ChildField(DocString, required=False, default=None)
     result = related.ChildField(StatusResult, required=False, default=None)
 
@@ -92,9 +92,8 @@ class Step(object):
                 name="Scenario Setup",
                 doc_string=DocString.section("SCENARIO",
                                              scenario_result.scenario),
-                duration=scenario_result.running_time,
                 match=Match(),
-                result=StatusResult.create(True),
+                result=StatusResult.create(True, 0)
             )
         else:
             return cls(
@@ -102,9 +101,9 @@ class Step(object):
                 line=3,
                 name=step_result.step.description,
                 doc_string=DocString.create(step_result),
-                duration=scenario_result.running_time,
                 match=Match.create(step_result.step),
-                result=StatusResult.create(step_result.success),
+                result=StatusResult.create(step_result.success,
+                                           step_result.duration),
             )
 
 

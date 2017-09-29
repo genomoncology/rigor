@@ -21,6 +21,10 @@ headers:
     Content-Type: application/json
     Authorization: Token {tokens.guest}
 
+excludes:
+    - broken
+
+concurrency: 10
 
 profiles:
 

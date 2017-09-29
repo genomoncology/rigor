@@ -28,7 +28,7 @@ def enter_shell(suite):
                                                  scenario=self.scenario,
                                                  success=success,
                                                  step_results=step_results,
-                                                 running_time=running_time)
+                                                 duration=duration)
 
                 print("Scenario Complete: %s" % success)
                 scenario_results.append(scenario_result)

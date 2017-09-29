@@ -16,7 +16,7 @@ from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
               help="Filter cases by file prefix. (e.g. smoke_)")
 @click.option('--extensions', '-e', multiple=True,
               help="Filter cases by file extension. (e.g. rigor)")
-@click.option('--concurrency', '-c', type=int, default=20,
+@click.option('--concurrency', '-c', type=int, default=None,
               help='# of concurrent HTTP requests. (default: 20)')
 @click.option('--output', '-o', default=None,
               help='Report output folder.')
@@ -29,19 +29,20 @@ from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
 @click.option('--html', '-h', is_flag=True,
               help='Generate HTML report.')
 def main(paths, profile, output, quiet, verbose, json, html, **cli):
-
-    # cli = host, includes, excludes, prefixes, extensions, concurrency
-
     # default paths
     paths = paths or ["."]
 
     # setup logging
     setup_logging(quiet=quiet, verbose=verbose, json=json)
 
+    # cli = host, includes, excludes, prefixes, extensions, concurrency
+    get_logger().debug("cli options", **cli)
+
     # load profile from rigor.yml file (if found)
     profile = Config.load(paths).get_profile(profile)
+    get_logger().debug("profile", profile=profile)
 
-    # collect suite
+    # create/collect suite
     suite = Suite.create(paths, profile, **cli)
 
     # execute suite
