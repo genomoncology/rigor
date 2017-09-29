@@ -27,7 +27,7 @@ class Fetch(object):
 @related.mutable
 class StepResult(object):
     step = related.ChildField(Step)
-    success = related.BooleanField()
+    success = related.BooleanField(default=True)
     fetch = related.ChildField(Fetch, required=False)
     response = related.ChildField(Namespace, required=False)
     transform = related.ChildField(object, required=False)
@@ -141,39 +141,6 @@ class State(ScenarioResult, Timer):
         condition = step.condition  # todo: evaluation here
         return self.success if condition is None else condition
 
-    def create_fetch(self, request):
-        namespace = self.namespace
-
-        # url host (request > case > cli > rigor.yml > localhost:8000)
-        host = request.host or self.case.host or self.suite.host
-
-        # url path
-        path = Namespace.render(request.path, namespace)
-        url = "%s/%s" % (host, path)
-
-        # construct method
-        method = request.method.value.lower()
-
-        # get data
-        data = request.get_data(self.case.dir_path, namespace)
-
-        # headers
-        headers = {}
-
-        if isinstance(data, str):
-            headers[const.CONTENT_TYPE] = "application/json"
-
-        headers.update(related.to_dict(self.suite.headers) or {})
-        headers.update(related.to_dict(self.case.headers) or {})
-        headers.update(related.to_dict(request.headers) or {})
-        headers = Namespace(headers).evaluate(namespace)
-
-        # kwargs
-        kwargs = dict(headers=headers, timeout=None, data=data,
-                      params=request.get_params(namespace))
-
-        return Fetch(method=method, url=url, kwargs=kwargs)
-
     def do_transform(self, step):
         # make request and store response
         if step.transform:
@@ -233,7 +200,7 @@ class State(ScenarioResult, Timer):
                          scenario=self.scenario.__name__,
                          file_path=self.case.file_path,
                          num_steps=len(self.step_results),
-                         timer=self.duration)
+                         timer=self.get_duration())
 
         return ScenarioResult(
             uuid=self.uuid,
@@ -247,6 +214,62 @@ class State(ScenarioResult, Timer):
 
 @related.mutable
 class StepState(StepResult, Timer):
+    state = related.ChildField(State, required=False)
+
+    @property
+    def namespace(self):
+        return self.state.namespace
+
+    @property
+    def request(self):
+        return self.step.request
+
+    @property
+    def suite(self):
+        return self.state.suite
+
+    @property
+    def case(self):
+        return self.state.case
+
+    @property
+    def host(self):
+        # url host (request > case > cli > rigor.yml > localhost:8000)
+        return self.request.host or self.case.host or self.suite.host
+
+    @property
+    def url(self):
+        path = Namespace.render(self.request.path, self.namespace)
+        return "%s/%s" % (self.host, path)
+
+    @property
+    def method(self):
+        return self.request.method.value.lower()
+
+    def get_data(self):
+        return self.request.get_data(self.case.dir_path, self.namespace)
+
+    def get_headers(self, data):
+        headers = {}
+
+        if isinstance(data, str):
+            headers[const.CONTENT_TYPE] = "application/json"
+
+        headers.update(related.to_dict(self.suite.headers) or {})
+        headers.update(related.to_dict(self.case.headers) or {})
+        headers.update(related.to_dict(self.request.headers) or {})
+
+        return Namespace(headers).evaluate(self.namespace)
+
+    def get_fetch_kwargs(self):
+        data = self.get_data()
+        headers = self.get_headers(data)
+        params = self.request.get_params(self.namespace)
+        return dict(headers=headers, data=data, params=params, timeout=None)
+
+    def get_fetch(self):
+        return Fetch(method=self.method, url=self.url,
+                     kwargs=self.get_fetch_kwargs())
 
     def result(self):
         return StepResult(
@@ -258,5 +281,5 @@ class StepState(StepResult, Timer):
             extract=self.extract,
             status=self.status,
             validations=self.validations,
-            duration=self.duration
+            duration=self.get_duration(),
         )

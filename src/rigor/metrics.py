@@ -14,6 +14,5 @@ class Timer(object):
         self.end = time.time()
         self.interval = self.end - self.start
 
-    @property
-    def duration(self):
+    def get_duration(self):
         return int(getattr(self, "interval", -1) * 1000000000)

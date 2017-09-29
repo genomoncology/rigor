@@ -45,7 +45,7 @@ from .session import (
 from .state import (
     State,
     SuiteResult,
-    StepResult,  # todo: remove????????????
+    StepState,
 )
 
 from .execute import (
@@ -105,7 +105,7 @@ __all__ = [
 
     # state.py
     "State",
-    "StepResult",  # todo: remove????????? session => end_step => instead???
+    "StepState",
     "SuiteResult",
 
     # cli.py

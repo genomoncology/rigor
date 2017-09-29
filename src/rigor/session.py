@@ -3,7 +3,7 @@ import related
 import bs4
 
 from aiohttp import TCPConnector, ClientSession
-from . import Suite, Namespace, const, get_logger, Timer
+from . import Suite, Namespace, const, get_logger
 
 
 @related.immutable
@@ -49,7 +49,9 @@ class AsyncSession(Session):
     def run(self):
         future = asyncio.ensure_future(self.run_suite())
         self.loop.run_until_complete(future)
-        return future.result()
+        results = future.result()
+        self.http.close()
+        return results
 
     async def run_suite(self):
         tasks = []
@@ -61,6 +63,7 @@ class AsyncSession(Session):
 
     async def run_case_scenario(self, case, scenario):
         from . import State
+
         with State(session=self, case=case, scenario=scenario) as state:
             async for step_result in self.iter_steps(state):
                 state.add_step(step_result)
@@ -73,14 +76,14 @@ class AsyncSession(Session):
                     yield await self.do_step(state, step)
 
     async def do_step(self, state, step):
-        from . import StepResult
+        from . import StepState
 
-        with Timer() as timer:
+        with StepState(step=step, state=state) as step_state:
             # sleep if any
-            state.session.sleep(step.sleep)
+            await asyncio.sleep(step.sleep)
 
-            # create and do fetch
-            fetch = state.create_fetch(step.request)
+            # do fetch
+            fetch = step_state.get_fetch()
             state.response, status = await self.do_fetch(fetch)
 
             # transform response
@@ -95,20 +98,19 @@ class AsyncSession(Session):
             # track overall success
             state.success = state.success and step_success
 
-        return StepResult(
-            step=step,
-            fetch=fetch,
-            transform=state.transform,
-            extract=state.extract,
-            response=state.response,
-            status=status,
-            validations=validations,
-            success=step_success,
-            duration=timer.duration,
-        )
+        return step_state.result()
 
-    async def sleep(self, sleep):
-        await asyncio.sleep(sleep)
+        # return StepResult(
+        #     step=step,
+        #     fetch=fetch,
+        #     transform=state.transform,
+        #     extract=state.extract,
+        #     response=state.response,
+        #     status=status,
+        #     validations=validations,
+        #     success=step_success,
+        #     duration=timer.duration,
+        # )
 
     async def do_fetch(self, fetch):
         get_logger().debug("fetch request", **related.to_dict(fetch))
