@@ -1,12 +1,7 @@
-from . logging import get_logger
-
 import time
 
 
 class Timer(object):
-
-    def __init__(self):
-        self.interval = -1
 
     def __repr__(self):
         return "%.3fs" % self.interval if self.interval >= 0 else "N/A"
@@ -21,4 +16,4 @@ class Timer(object):
 
     @property
     def duration(self):
-        return int(self.interval * 1000000000)
+        return int(getattr(self, "interval", -1) * 1000000000)

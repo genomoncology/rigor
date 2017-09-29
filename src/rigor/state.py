@@ -1,12 +1,8 @@
-import asyncio
-
-import aiohttp
 import related
 import jmespath
-import bs4
 import os
 
-from . import Case, Namespace, Step, Suite, Validator, Timer
+from . import Case, Namespace, Step, Suite, Validator, Timer, Session
 from . import enums, get_logger, const, log_with_success
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
@@ -28,7 +24,7 @@ class Fetch(object):
     kwargs = related.ChildField(dict)
 
 
-@related.immutable
+@related.mutable
 class StepResult(object):
     step = related.ChildField(Step)
     success = related.BooleanField()
@@ -45,14 +41,14 @@ class StepResult(object):
         return [v for v in self.validations if not v.success]
 
 
-@related.immutable
+@related.mutable
 class ScenarioResult(object):
-    suite = related.ChildField(Suite)
-    case = related.ChildField(Case)
-    scenario = related.ChildField(Namespace)
-    success = related.BooleanField()
     uuid = related.UUIDField()
+    case = related.ChildField(Case, required=None)
+    scenario = related.ChildField(Namespace, required=None)
+    success = related.BooleanField(default=True)
     step_results = related.SequenceField(StepResult, default=[])
+    suite = related.ChildField(Suite, required=False)
 
 
 @related.immutable
@@ -79,19 +75,19 @@ class SuiteResult(object):
 
     @classmethod
     def create(cls, suite, scenario_results):
-        case_results = {}
+        cache = {}
 
         for result in scenario_results:
-            # todo: handle exceptions...
-            case_result = case_results.setdefault(result.case.uuid,
-                                                  CaseResult(suite=suite,
-                                                             case=result.case))
+            case_result = cache.setdefault(
+                result.case.uuid,
+                CaseResult(suite=suite, case=result.case)
+            )
 
             sink = case_result.passed if result.success else case_result.failed
             sink.append(result)
 
         passed, failed = [], []
-        for case_result in case_results.values():
+        for case_result in cache.values():
             sink = passed if case_result.success else failed
             sink.append(case_result)
 
@@ -99,26 +95,26 @@ class SuiteResult(object):
 
 
 @related.mutable
-class Runner(object):
-    uuid = related.UUIDField()
-    session = related.ChildField(aiohttp.ClientSession, required=False)
-    suite = related.ChildField(Suite, required=False)
-    case = related.ChildField(Case, required=False)
-
-    scenario = related.ChildField(Namespace, default=Namespace())
+class State(ScenarioResult, Timer):
+    session = related.ChildField(Session, required=False)
+    globals = related.ChildField(Namespace, default=Namespace())
     extract = related.ChildField(Namespace, default=Namespace())
     iterate = related.ChildField(Namespace, default=Namespace())
     response = related.ChildField(Namespace, default=Namespace())
     transform = related.ChildField(Namespace, default=Namespace())
 
     def __attrs_post_init__(self):
-        self.scenario = self.scenario.evaluate(self.namespace)
+        self.suite = self.session.suite if self.session else None
+        self.globals = Namespace(self.suite.globals if self.suite else {})
+        if self.scenario:
+            self.scenario = self.scenario.evaluate(self.namespace)
+        else:
+            self.scenario = Namespace({})
 
     @property
     def namespace(self):
         # make globals namespace top-level
-        globals = self.suite.globals if self.suite else {}
-        values = (globals or {}).copy()
+        values = self.globals.copy()
 
         # make scenario namespace top-level accessors (overrides globals!)
         values.update(self.scenario if self.scenario else {})
@@ -131,7 +127,7 @@ class Runner(object):
 
         # add handles to namespaces (overrides scenario, extract and iterate!)
         values.update(dict(__uuid__=self.uuid,
-                           globals=globals,
+                           globals=self.globals,
                            scenario=self.scenario,
                            transform=self.transform,
                            extract=self.extract,
@@ -141,80 +137,9 @@ class Runner(object):
 
         return values
 
-    async def do_run(self):
-        with Timer() as timer:
-            success = True
-            step_results = []
-
-            # iterate steps
-            async for step_result in self.iter_steps():
-                step_results.append(step_result)
-                success = success and step_result.success
-
-        log_with_success("scenario", success,
-                         feature=self.case.name,
-                         scenario=self.scenario.__name__,
-                         file_path=self.case.file_path,
-                         num_steps=len(step_results),
-                         timer=timer)
-
-        return ScenarioResult(
-            uuid=self.uuid,
-            suite=self.suite,
-            case=self.case,
-            scenario=self.scenario,
-            success=success,
-            step_results=step_results
-        )
-
-    def should_run_step(self, step, success):
+    def should_run_step(self, step):
         condition = step.condition  # todo: evaluation here
-        return success if condition is None else condition
-
-    async def iter_steps(self):
-        success = True
-
-        for step in self.case.steps:
-            for self.iterate in step.iterate.iterate(self.namespace):
-                if self.should_run_step(step, success):
-                    step_result, success = await self.do_step(step, success)
-                    yield step_result
-
-    async def do_step(self, step, success):
-        with Timer() as timer:
-            # sleep if any
-            await asyncio.sleep(step.sleep)
-
-            # create and do fetch
-            fetch = self.create_fetch(step.request)
-            self.response, status = await self.do_fetch(fetch)
-
-            # transform response
-            self.transform = self.do_transform(step)
-
-            # extract response
-            self.extract = self.do_extract(step)
-
-            # validate response
-            validations, step_success = self.do_validate(step, status)
-
-            # track overall success
-            success = success and step_success
-
-        # add step result
-        step_result = StepResult(
-            step=step,
-            fetch=fetch,
-            transform=self.transform,
-            extract=self.extract,
-            response=self.response,
-            status=status,
-            validations=validations,
-            success=step_success,
-            duration=timer.duration,
-        )
-
-        return step_result, success
+        return self.success if condition is None else condition
 
     def create_fetch(self, request):
         namespace = self.namespace
@@ -248,38 +173,6 @@ class Runner(object):
                       params=request.get_params(namespace))
 
         return Fetch(method=method, url=url, kwargs=kwargs)
-
-    async def do_fetch(self, fetch):
-        # make request and store response
-        get_logger().debug("fetch", method=fetch.method, url=fetch.url,
-                           kwargs=fetch.kwargs)
-
-        async with self.session.request(fetch.method, fetch.url,
-                                        **fetch.kwargs) as context:
-            response = await self.get_response(context)
-            status = context.status
-
-            get_logger().debug("response", method=fetch.method, url=fetch.url,
-                               kwargs=fetch.kwargs, status=status,
-                               response=response)
-
-            return response, status
-
-    async def get_response(self, context):
-        content_type = context.headers.get(const.CONTENT_TYPE, '')
-        content_type = content_type.lower()
-
-        if const.TEXT_HTML in content_type:
-            html = OurSoup(await context.text(), 'html.parser')
-            response = Namespace(html=html)
-
-        elif const.APPLICATION_JSON in content_type:
-            response = Namespace(await context.json())
-
-        else:
-            response = Namespace()
-
-        return response
 
     def do_transform(self, step):
         # make request and store response
@@ -330,11 +223,40 @@ class Runner(object):
         return ValidationResult(actual=actual, expect=expect, success=success,
                                 validator=validator)
 
+    def add_step(self, step_result):
+        self.step_results.append(step_result)
+        self.success = self.success and step_result.success
 
-# dispatch
+    def result(self):
+        log_with_success("scenario", self.success,
+                         feature=self.case.name,
+                         scenario=self.scenario.__name__,
+                         file_path=self.case.file_path,
+                         num_steps=len(self.step_results),
+                         timer=self.duration)
 
-class OurSoup(bs4.BeautifulSoup):
-    def __repr__(self, **kwargs):
-        content = self.title.string if self.title else ""
-        content += "\n\n" + self.body.text
-        return content
+        return ScenarioResult(
+            uuid=self.uuid,
+            suite=self.suite,
+            case=self.case,
+            scenario=self.scenario,
+            success=self.success,
+            step_results=self.step_results
+        )
+
+
+@related.mutable
+class StepState(StepResult, Timer):
+
+    def result(self):
+        return StepResult(
+            step=self.step,
+            success=self.success,
+            fetch=self.fetch,
+            response=self.response,
+            transform=self.transform,
+            extract=self.extract,
+            status=self.status,
+            validations=self.validations,
+            duration=self.duration
+        )

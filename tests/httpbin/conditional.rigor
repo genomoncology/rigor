@@ -22,7 +22,7 @@ steps:
         path: /get
 
 
-  - description: This will be skipped due to step 1 failure
+  - description: This will NOT be skipped due to step 1 failure
 
     condition: true
 

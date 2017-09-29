@@ -2,14 +2,14 @@
 
 from . import const
 
-from .metrics import (
-    Timer
-)
-
 from .logging import (
     setup_logging,
     get_logger,
     log_with_success,
+)
+
+from .metrics import (
+    Timer
 )
 
 from .collect import (
@@ -38,9 +38,14 @@ from .model import (
     Validator,
 )
 
+from .session import (
+    Session
+)
+
 from .state import (
-    Runner,
+    State,
     SuiteResult,
+    StepResult,  # todo: remove????????????
 )
 
 from .execute import (
@@ -60,13 +65,13 @@ __all__ = [
     # const.py
     "const",
 
-    # metrics.py
-    "Timer",
-
     # logging.py
     "setup_logging",
     "get_logger",
     "log_with_success",
+
+    # metrics.py
+    "Timer",
 
     # collect.py
     "collect",
@@ -92,11 +97,15 @@ __all__ = [
     "Suite",
     "Validator",
 
+    # session.py
+    "Session",
+
     # reporting.py
     "ReportEngine",
 
     # state.py
-    "Runner",
+    "State",
+    "StepResult",  # todo: remove????????? session => end_step => instead???
     "SuiteResult",
 
     # cli.py

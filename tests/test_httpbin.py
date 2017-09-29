@@ -1,4 +1,4 @@
-from rigor import Suite, Config, Namespace, Validator, Runner, ReportEngine,\
+from rigor import Suite, Config, Namespace, Validator, State, ReportEngine,\
     execute
 
 from collections import OrderedDict
@@ -100,7 +100,7 @@ def test_case_iterate(suite):
     case = suite.get_case(ROOT_DIR, "iterate.rigor")
     assert len(case.steps) == 4
     step = case.steps[0]
-    namespace = Runner(case=case).namespace
+    namespace = State(case=case).namespace
 
     assert list(step.iterate.iterate(namespace)) == [
         dict(show_env=0, other="A"),

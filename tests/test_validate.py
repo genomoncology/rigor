@@ -1,4 +1,4 @@
-from rigor import Runner, Namespace, Validator
+from rigor import State, Namespace, Validator
 
 
 JSON_DICT = {
@@ -32,7 +32,7 @@ def test_namespace_access():
 
 def test_fstring_templates():
     response = Namespace(JSON_DICT)
-    runner = Runner(response=response)
+    runner = State(response=response)
 
     for kwargs in VALIDATION_KWARGS:
         validator = Validator(**kwargs)
