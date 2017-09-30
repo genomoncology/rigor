@@ -247,7 +247,10 @@ class StepState(StepResult, Timer):
         return self.request.method.value.lower()
 
     def get_data(self):
-        return self.request.get_data(self.case.dir_path, self.namespace)
+        return self.request.get_data(self.namespace)
+
+    def get_files(self):
+        return self.request.get_files(self.case.dir_path, self.namespace)
 
     def get_headers(self, data):
         headers = {}
@@ -261,15 +264,35 @@ class StepState(StepResult, Timer):
 
         return Namespace(headers).evaluate(self.namespace)
 
-    def get_fetch_kwargs(self):
-        data = self.get_data()
-        headers = self.get_headers(data)
-        params = self.request.get_params(self.namespace)
-        return dict(headers=headers, data=data, params=params, timeout=None)
-
     def get_fetch(self):
-        return Fetch(method=self.method, url=self.url,
-                     kwargs=self.get_fetch_kwargs())
+        if self.fetch is None:
+            data = self.get_data()
+            headers = self.get_headers(data)
+            params = self.request.get_params(self.namespace)
+            files = self.get_files()
+            kw = dict(headers=headers, data=data, params=params, files=files)
+            self.fetch = Fetch(method=self.method, url=self.url, kwargs=kw)
+
+        return self.fetch
+
+    def process_response(self, response, status):
+        state = self.state
+
+        # capture response
+        self.response = state.response = response
+        self.status = status
+
+        # transform response
+        self.transform = state.transform = state.do_transform(self.step)
+
+        # extract response
+        self.extract = state.extract = state.do_extract(self.step)
+
+        # validate response
+        self.validations, self.success = state.do_validate(self.step, status)
+
+        # track overall success
+        state.success = state.success and self.success
 
     def result(self):
         return StepResult(

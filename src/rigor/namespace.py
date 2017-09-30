@@ -10,7 +10,10 @@ from . import get_logger
 class Namespace(related.ImmutableDict):
 
     def __getattr__(self, item):
-        return self.__getitem__(item)
+        try:
+            return self.__getitem__(item)
+        except KeyError:
+            return super(Namespace, self).__getattr__(item)
 
     def evaluate(self, namespace, existing=None):
         values = existing or {}

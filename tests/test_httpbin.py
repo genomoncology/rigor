@@ -20,6 +20,12 @@ def suite(config):
     return Suite.create(paths, config, excludes=["broken", "profile-only"])
 
 
+@pytest.fixture
+def sync_suite(config):
+    return Suite.create(paths, config, excludes=["broken", "profile-only"],
+                        concurrency=0)
+
+
 def test_collect(suite):
     assert suite.excludes == ["broken", "profile-only"]
     assert len(suite.skipped) == 5
@@ -27,7 +33,7 @@ def test_collect(suite):
     assert suite.name == "__root__"
 
 
-def test_execute(suite, config):
+def test_execute(suite):
     result = execute(suite)
     assert result.success, "Failed: %s" % result.failed
     assert len(result.passed) == 8
@@ -35,6 +41,12 @@ def test_execute(suite, config):
     engine = ReportEngine(suite_result=result, with_html=True)
     report_path = engine.generate()
     assert os.path.exists(report_path)
+
+
+def test_execute_sync(sync_suite):
+    result = execute(sync_suite)
+    assert result.success, "Failed: %s" % result.failed
+    assert len(result.passed) == 8
 
 
 def test_case_get(suite):

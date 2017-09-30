@@ -1,6 +1,8 @@
 import asyncio
+import requests
 import related
 import bs4
+import time
 
 from aiohttp import TCPConnector, ClientSession
 from . import Suite, Namespace, const, get_logger
@@ -28,16 +30,71 @@ class Session(object):
                 yield case, scenario
 
     def run(self):
-        pass
-        # for case in suite.queued.values():
-        #     for scenario in case.scenarios:
-        #         session.add_task(Runner(session=self,
-        #                                 suite=suite,
-        #                                 case=case,
-        #                                 scenario=scenario))
-        #
-        # results = session.collect()
-        # return results
+        return self.run_suite()
+
+    def run_suite(self):
+        results = []
+        for case, scenario in self.case_scenarios():
+            results.append(self.run_case_scenario(case, scenario))
+        return results
+
+    def run_case_scenario(self, case, scenario):
+        from . import State
+
+        with State(session=self, case=case, scenario=scenario) as state:
+            for step_result in self.iter_steps(state):
+                state.add_step(step_result)
+            return state.result()
+
+    def iter_steps(self, state):
+        for step in state.case.steps:
+            for state.iterate in step.iterate.iterate(state.namespace):
+                if state.should_run_step(step):
+                    yield self.do_step(state, step)
+
+    def do_step(self, state, step):
+        from . import StepState
+
+        with StepState(step=step, state=state) as step_state:
+            # sleep if any
+            time.sleep(step.sleep)
+
+            # do fetch
+            (response, status) = self.do_fetch(step_state)
+
+            # process response
+            step_state.process_response(response, status)
+
+        return step_state.result()
+
+    def do_fetch(self, step_state):
+        fetch = step_state.get_fetch()
+        get_logger().debug("fetch request", **related.to_dict(fetch))
+
+        context = requests.request(fetch.method, fetch.url, **fetch.kwargs)
+        response = self.get_response(context)
+        status = context.status_code
+
+        get_logger().debug("fetch response", response=response, status=status,
+                           **related.to_dict(fetch))
+
+        return response, status
+
+    def get_response(self, context):
+        content_type = context.headers.get(const.CONTENT_TYPE, '')
+        content_type = content_type.lower()
+
+        if const.TEXT_HTML in content_type:
+            html = OurSoup(context.content, 'html.parser')
+            response = Namespace(html=html)
+
+        elif const.APPLICATION_JSON in content_type:
+            response = Namespace(context.json())
+
+        else:
+            response = Namespace()
+
+        return response
 
 
 @related.immutable
@@ -83,37 +140,24 @@ class AsyncSession(Session):
             await asyncio.sleep(step.sleep)
 
             # do fetch
-            fetch = step_state.get_fetch()
-            state.response, status = await self.do_fetch(fetch)
+            (response, status) = await self.do_fetch(step_state)
 
-            # transform response
-            state.transform = state.do_transform(step)
-
-            # extract response
-            state.extract = state.do_extract(step)
-
-            # validate response
-            validations, step_success = state.do_validate(step, status)
-
-            # track overall success
-            state.success = state.success and step_success
+            # process response
+            step_state.process_response(response, status)
 
         return step_state.result()
 
-        # return StepResult(
-        #     step=step,
-        #     fetch=fetch,
-        #     transform=state.transform,
-        #     extract=state.extract,
-        #     response=state.response,
-        #     status=status,
-        #     validations=validations,
-        #     success=step_success,
-        #     duration=timer.duration,
-        # )
-
-    async def do_fetch(self, fetch):
+    async def do_fetch(self, step_state):
+        fetch = step_state.get_fetch()
         get_logger().debug("fetch request", **related.to_dict(fetch))
+
+        # aiohttp is different from requests in handling files
+        # http://aiohttp.readthedocs.io/en/stable/client.html
+        # http://docs.python-requests.org/en/master/user/quickstart
+        data = fetch.kwargs.get("data", None)
+        files = fetch.kwargs.pop("files", None)
+        if isinstance(data, dict) and isinstance(files, dict):
+            data.update(files)
 
         async with self.http.request(fetch.method, fetch.url,
                                      **fetch.kwargs) as context:

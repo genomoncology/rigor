@@ -62,13 +62,14 @@ class Requestor(object):
 
         return params
 
-    def get_form(self, dir_path, namespace):
+    def get_form(self, namespace):
+        return self.form.evaluate(namespace) if self.form else {}
+
+    def get_files(self, dir_path, namespace):
         files = self.files.evaluate(namespace) if self.files else {}
         files = {k: open(os.path.join(dir_path, v), "rb")
                  for k, v in files.items()}
-        form = self.form.evaluate(namespace) if self.form else {}
-        form.update(files)
-        return form
+        return files
 
     def get_body(self, namespace):
         get_logger().debug("enter get_body", data_type=type(self.data),
@@ -89,9 +90,9 @@ class Requestor(object):
 
         return body
 
-    def get_data(self, dir_path, namespace):
+    def get_data(self, namespace):
         body = self.get_body(namespace) if self.data else None
-        form = self.get_form(dir_path, namespace) if self.form else None
+        form = self.get_form(namespace) if self.form else None
         return body or form
 
 
