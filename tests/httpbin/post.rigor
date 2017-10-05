@@ -4,6 +4,10 @@ host: https://httpbin.org
 tags:
   - working
 
+scenarios: |
+  | page_num | page_size | three     |
+  | 2        | 10        | [1, 2, 3] |
+
 steps:
 
   - description: Post with Data Payload
@@ -15,12 +19,22 @@ steps:
           request:
             query: "*:*"
             pagination:
-              page_num: 2
-              page_size: 10
+              page_num: '{scenario.page_num}'
+              page_size: '{page_size}'
             date: 2017-01-01
+            nested:
+            - a:
+              - a_a: []
+                a_b:
+                a_c: '{three}'
+              b:
+              - b_a: []
+                b_b:
+                b_c: '{three}'
 
     extract: # httpbin.org puts the original data request under 'json' key
         page_num: '{response.json.request.pagination.page_num}'
+        page_size: '{response.json.request.pagination.page_size}'
 
     validate:
 
@@ -29,6 +43,12 @@ steps:
 
       - expect: 2
         actual: '{page_num}'
+
+      - expect: 10
+        actual: '{page_size}'
+
+      - expect: [1, 2, 3]
+        actual: '{response.json.request.nested[0].a[0].a_c}'
 
 
   - description: Post with Form Field

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from . import const
+from . import const, utils
 
 from .logging import (
     setup_logging,
@@ -64,6 +64,7 @@ from .cli import (
 __all__ = [
     # const.py
     "const",
+    "utils",
 
     # logging.py
     "setup_logging",
@@ -115,7 +116,7 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.3.0'
+__version__ = '0.3.3'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

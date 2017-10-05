@@ -5,7 +5,7 @@ import bs4
 import time
 
 from aiohttp import TCPConnector, ClientSession
-from . import Suite, Namespace, const, get_logger
+from . import Suite, const, get_logger
 
 
 @related.immutable
@@ -86,13 +86,13 @@ class Session(object):
 
         if const.TEXT_HTML in content_type:
             html = OurSoup(context.content, 'html.parser')
-            response = Namespace(html=html)
+            response = html
 
         elif const.APPLICATION_JSON in content_type:
-            response = Namespace(context.json())
+            response = context.json()
 
         else:
-            response = Namespace()
+            response = None
 
         return response
 
@@ -175,13 +175,13 @@ class AsyncSession(Session):
 
         if const.TEXT_HTML in content_type:
             html = OurSoup(await context.text(), 'html.parser')
-            response = Namespace(html=html)
+            response = html
 
         elif const.APPLICATION_JSON in content_type:
-            response = Namespace(await context.json())
+            response = await context.json()
 
         else:
-            response = Namespace()
+            response = None
 
         return response
 
@@ -191,3 +191,8 @@ class OurSoup(bs4.BeautifulSoup):
         content = self.title.string if self.title else ""
         content += "\n\n" + self.body.text
         return content
+
+
+@related.to_dict.register(OurSoup)
+def _(obj, **kwargs):
+    return str(obj)

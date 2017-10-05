@@ -1,9 +1,8 @@
 import related
 import os
-import collections
 import copy
 
-from . import Namespace, const, get_logger
+from . import Namespace, const, get_logger, utils
 
 
 @related.immutable
@@ -93,7 +92,7 @@ class Config(Profile):
         # iterate and construct profile sub-dictionaries with root info
         for name, profile in profiles.items():
             from_root_profile = copy.deepcopy(vals)
-            profile = nested_update(from_root_profile, profile)
+            profile = utils.nested_update(from_root_profile, profile)
             eval_update_ns(profile, env_ns)
             profiles[name] = profile
 
@@ -107,14 +106,3 @@ class Config(Profile):
 
 def eval_update_ns(profile, env_ns, field="globals"):
     profile[field] = Namespace(profile.get(field, {})).evaluate(env_ns)
-
-
-# https://stackoverflow.com/a/3233356
-def nested_update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.Mapping):
-            r = nested_update(d.get(k, {}), v)
-            d[k] = r
-        else:
-            d[k] = u[k]
-    return d

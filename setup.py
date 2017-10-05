@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.3.0',
+    version='0.3.3',
 
     package_dir={
         '': 'src'
@@ -40,6 +40,7 @@ setup(
         "structlog==17.2.0",
         "colorama==0.3.9",
         "beautifulsoup4==4.6.0",
+        "requests==2.11.1",
     ],
 
     setup_requires=[

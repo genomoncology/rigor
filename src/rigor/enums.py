@@ -127,6 +127,41 @@ class Comparison(enum.Enum):
     def is_regex(self, actual, expect):
         return bool(search(expect, actual))
 
+    # length
+
+    LENGTH = "length"
+
+    def is_length(self, actual, expect):
+        return len(actual) == expect
+
+    # subset
+
+    SUBSET = "subset"
+
+    def is_subset(self, actual, expect):
+        return set(actual).issubset(expect)
+
+    # not subset
+
+    NOT_SUBSET = "not subset"
+
+    def is_not_subset(self, actual, expect):
+        return not self.is_subset(actual, expect)
+
+    # superset
+
+    SUPERSET = "superset"
+
+    def is_superset(self, actual, expect):
+        return set(actual).issuperset(expect)
+
+    # not superset
+
+    NOT_SUPERSET = "not superset"
+
+    def is_not_superset(self, actual, expect):
+        return not self.is_superset(actual, expect)
+
     # evaluate
 
     def evaluate(self, actual, expected):

@@ -56,16 +56,14 @@ class Namespace(related.ImmutableDict):
         new_value = []
         for sub_value in value:
             new_value.append(cls.render(sub_value, namespace))
-        value = new_value
-        return value
+        return new_value
 
     @classmethod
     def render_dict(cls, value, namespace):
         new_value = {}
         for sub_key, sub_value in value.items():
             new_value[sub_key] = cls.render(sub_value, namespace)
-        value = new_value
-        return value
+        return new_value
 
     @classmethod
     def render_string(cls, value, namespace):
@@ -112,16 +110,22 @@ class Namespace(related.ImmutableDict):
 
     @classmethod
     def do_evaluate(cls, formatted):
+        evaluated = formatted
+
         try:
-            is_list_or_dict = formatted.strip()[0] in ("{", "[")
-            is_number = re.match("^[\d\.]+$", formatted.strip())
-            if is_list_or_dict or is_number:
-                evaluated = ast.literal_eval(formatted)
-            else:
-                evaluated = formatted
+            stripped = formatted.strip()
+            first_last = stripped[0], stripped[-1]
+
+            # if is a list, set, dict, or embedded string
+            is_lit = first_last in [("{", "}"), ("[", "]"), ("'", "'")]
+
+            # https://stackoverflow.com/a/15814655
+            is_lit = is_lit or re.match("^-?[0-9]\d*(\.\d+)?$", stripped)
+
+            if is_lit:
+                evaluated = ast.literal_eval(stripped)
 
         except Exception as error:
-            evaluated = formatted
             get_logger().debug("literal eval failed", formatted=formatted,
                                error=error)
         return evaluated

@@ -5,10 +5,17 @@ from itertools import product
 
 import related
 
-from . import Comparison, Method, Namespace, Profile, get_logger
+from . import Method, Namespace, Profile, get_logger, utils
 
 
 class Iterator(Namespace):
+
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], str) and not kwargs:
+            data = utils.parse_into_dicts_of_rows(args[0])
+            super(Iterator, self).__init__(**data)
+        else:
+            super(Iterator, self).__init__(*args, **kwargs)
 
     def iterate(self, namespace):
         if len(self):
@@ -18,8 +25,7 @@ class Iterator(Namespace):
             method = dict(zip=zip, product=product).get(method_key, zip)
 
             # evaluate values in namespace
-            values = [self.render(value, namespace)
-                      for value in d.values()]
+            values = [self.render(value, namespace) for value in d.values()]
 
             # *values => assumes all values are iterable and thus can zipped.
             for zipped_values in method(*values):
@@ -34,7 +40,7 @@ class Iterator(Namespace):
 class Validator(object):
     actual = related.ChildField(object)
     expect = related.ChildField(object)
-    compare = related.ChildField(Comparison, default=Comparison.EQUALS)
+    compare = related.StringField(default="equals")
 
 
 @related.immutable
@@ -128,7 +134,7 @@ class Case(object):
         counter = 1
 
         if isinstance(original, str):
-            original = parse_feature_table(original)
+            original = utils.parse_into_rows_of_dicts(original)
 
         for scenario in original or [{}]:
             if isinstance(scenario, str):
@@ -136,7 +142,8 @@ class Case(object):
                 scenario = related.from_yaml(open(scenario_file_path),
                                              object_pairs_hook=dict)
 
-            scenario.setdefault("__name__", "Scenario #%s" % counter)
+            name = scenario.get("__name__") or "Scenario #%s" % counter
+            scenario["__name__"] = name
             counter += 1
             updated.append(scenario)
 
@@ -155,14 +162,15 @@ class Case(object):
             return related.to_model(Case, as_dict)
 
         except Exception as e:
+            # raise e
             get_logger().error("Failed to Load Case", file_path=file_path,
                                error=str(e))
             return Case(file_path=file_path, is_valid=False, scenarios=[])
 
     def is_active(self, included, excluded):
         has_steps = len(self.steps) > 0
-        is_included = not included or overlap(included, self.tags)
-        is_excluded = excluded and overlap(excluded, self.tags)
+        is_included = not included or utils.overlap(included, self.tags)
+        is_excluded = excluded and utils.overlap(excluded, self.tags)
         return self.is_valid and has_steps and is_included and not is_excluded
 
     @property
@@ -213,34 +221,6 @@ class Suite(Profile):
 
         # construct Suite
         return cls(paths=paths, **kwargs)
-
-
-# utilities
-
-def overlap(l1, l2):
-    return set(l1 or []) & set(l2 or [])
-
-
-def clean_split(line, delimiter="|"):
-    items = [value.strip() for value in line.split(delimiter)]
-
-    # trim empty first item
-    if items and not items[0]:
-        items = items[1:]
-
-    # trim empty last item
-    if items and not items[-1]:
-        items = items[:-1]
-
-    # replace empty strings with Nones
-    return [None if item == '' else item for item in items]
-
-
-def parse_feature_table(feature_table):
-    lines = [line.strip() for line in feature_table.strip().splitlines()]
-    header = clean_split(lines[0])
-    rows = [clean_split(line) for line in lines[1:]]
-    return [Namespace(dict(zip(header, row))) for row in rows]
 
 
 # dispatch

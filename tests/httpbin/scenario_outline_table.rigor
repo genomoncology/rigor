@@ -1,0 +1,33 @@
+name: Feature Tables and HTML with Beautiful Soup
+format: "1.0"
+host: https://en.wikipedia.org/wiki
+
+scenarios: |
+  | name                    | reference               | born | initials        |
+  | Ada Lovelace            | Ada_Lovelace            | 1815 | ['L', 'A']      |
+  | Betty Holberton         | Betty_Holberton         | 1917 | ['B', 'H']      |
+  | Dorothy Vaughan         | Dorothy_Vaughan         | 1910 | ['D', 'V']      |
+  | Frances E. Allen        | Frances_E._Allen        | 1932 | ['F', 'E', 'A'] |
+  | Grace Hopper            | Grace_Hopper            | 1906 | ['G', 'H']      |
+  | Jean E. Sammet          | Jean_E._Sammet          | 1928 | ['J', 'E', 'S'] |
+  | Katherine Johnson       | Katherine_Johnson       | 1918 | ['K', 'J']      |
+  | Mary Jackson (engineer) | Mary_Jackson_(engineer) | 1921 | ['M', 'J']      |
+
+steps:
+
+  - description: Request Wikipedia page via reference URL and check title
+
+    request:
+        path: '{reference}'
+
+    validate:
+
+      - expect: '{scenario.name} - Wikipedia'
+        actual: '{response.html.title.string}'
+      - expect: list
+        compare: type
+        actual: '{scenario.initials}'
+      - expect: int
+        compare: type
+        actual: '{scenario.born}'
+

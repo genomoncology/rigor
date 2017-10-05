@@ -2,6 +2,9 @@ name: Comparisons
 format: "1.0"
 host: https://httpbin.org
 
+scenarios:
+    - compare: equals
+
 steps:
 
   - description: Do a get just to do the comparison validations.
@@ -16,6 +19,9 @@ steps:
       - actual: '2'
         compare: equals
         expect: 2
+      - actual: 1
+        compare: '{scenario.compare}'
+        expect: 1
 
       - actual: [1, 2]
         compare: same
@@ -87,3 +93,25 @@ steps:
       - actual: John Q. Public
         compare: regex
         expect: \w+ \w\. \w+
+
+      - actual: [2, 3]
+        compare: length
+        expect: 2
+      - actual: []
+        compare: length
+        expect: 0
+      - actual: 'hello'
+        compare: length
+        expect: 5
+      - actual: [2]
+        compare: subset
+        expect: [2, 3]
+      - actual: [1, 2, 3]
+        compare: not subset
+        expect: [2, 3]
+      - actual: [1, 2, 3]
+        compare: superset
+        expect: [2, 3]
+      - actual: [2, 3]
+        compare: not superset
+        expect: [1, 2, 3]

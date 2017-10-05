@@ -3,7 +3,7 @@ import jmespath
 import os
 
 from . import Case, Namespace, Step, Suite, Validator, Timer, Session
-from . import enums, get_logger, const, log_with_success
+from . import enums, get_logger, const, log_with_success, utils
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
@@ -29,7 +29,7 @@ class StepResult(object):
     step = related.ChildField(Step)
     success = related.BooleanField(default=True)
     fetch = related.ChildField(Fetch, required=False)
-    response = related.ChildField(Namespace, required=False)
+    response = related.ChildField(object, required=False)
     transform = related.ChildField(object, required=False)
     extract = related.ChildField(Namespace, required=False)
     status = related.IntegerField(required=False)
@@ -183,10 +183,22 @@ class State(ScenarioResult, Timer):
 
         return results, success
 
+    def is_feature_table(self, s):
+        return isinstance(s, str) and s.strip().startswith("|") and "\n" in s
+
     def check_validation(self, validator):
-        actual = Namespace.render(validator.actual, self.namespace)
-        expect = Namespace.render(validator.expect, self.namespace)
-        success = validator.compare.evaluate(actual, expect)
+        actual, expect = validator.actual, validator.expect
+
+        if self.is_feature_table(expect):
+            expect = utils.parse_into_rows_of_dicts(expect)
+
+        actual = Namespace.render(actual, self.namespace)
+        expect = Namespace.render(expect, self.namespace)
+
+        compare = Namespace.render(validator.compare, self.namespace)
+        compare = related.to_model(enums.Comparison, compare)
+        success = compare.evaluate(actual, expect)
+
         return ValidationResult(actual=actual, expect=expect, success=success,
                                 validator=validator)
 

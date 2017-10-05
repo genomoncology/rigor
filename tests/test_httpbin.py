@@ -29,14 +29,14 @@ def sync_suite(config):
 def test_collect(suite):
     assert suite.excludes == ["broken", "profile-only"]
     assert len(suite.skipped) == 5
-    assert len(suite.queued) == 8
+    assert len(suite.queued) == 10
     assert suite.name == "__root__"
 
 
 def test_execute(suite):
     result = execute(suite)
     assert result.success, "Failed: %s" % result.failed
-    assert len(result.passed) == 8
+    assert len(result.passed) == 10
 
     engine = ReportEngine(suite_result=result, with_html=True)
     report_path = engine.generate()
@@ -46,7 +46,7 @@ def test_execute(suite):
 def test_execute_sync(sync_suite):
     result = execute(sync_suite)
     assert result.success, "Failed: %s" % result.failed
-    assert len(result.passed) == 8
+    assert len(result.passed) == 10
 
 
 def test_case_get(suite):
@@ -166,7 +166,7 @@ def test_profile_only(config):
     suite = Suite.create(paths, profile)
 
     assert len(suite.queued) == 1
-    assert len(suite.skipped) == 12
+    assert len(suite.skipped) == 14
     assert suite.name == "www"
 
     result = execute(suite)
