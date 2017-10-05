@@ -22,6 +22,24 @@ class Fetch(object):
     url = related.StringField()
     method = related.StringField()
     kwargs = related.ChildField(dict)
+    is_form = related.BooleanField()
+
+    def get_kwargs(self, is_aiohttp):
+        kw = self.kwargs.copy()
+        data = kw.get("data", None)
+
+        # aiohttp is different from requests in handling files
+        # http://aiohttp.readthedocs.io/en/stable/client.html
+        # http://docs.python-requests.org/en/master/user/quickstart
+        files = kw.pop("files", None) if is_aiohttp else None
+
+        if self.is_form:
+            if isinstance(data, dict) and isinstance(files, dict):
+                data.update(files)
+        else:
+            kw['data'] = related.to_json(data)
+
+        return kw
 
 
 @related.mutable
@@ -264,11 +282,12 @@ class StepState(StepResult, Timer):
     def get_files(self):
         return self.request.get_files(self.case.dir_path, self.namespace)
 
-    def get_headers(self, data):
+    def get_headers(self, content_type=None):
         headers = {}
 
-        if isinstance(data, str):
-            headers[const.CONTENT_TYPE] = "application/json"
+        # right now
+        if content_type:
+            headers[const.CONTENT_TYPE] = content_type
 
         headers.update(related.to_dict(self.suite.headers) or {})
         headers.update(related.to_dict(self.case.headers) or {})
@@ -278,12 +297,17 @@ class StepState(StepResult, Timer):
 
     def get_fetch(self):
         if self.fetch is None:
-            data = self.get_data()
-            headers = self.get_headers(data)
+            data, is_form = self.get_data()
+
+            # libraries (requests, aiohttp) take care of CT for forms
+            content_type = None if is_form else "application/json"
+            headers = self.get_headers(content_type)
+
             params = self.request.get_params(self.namespace)
             files = self.get_files()
             kw = dict(headers=headers, data=data, params=params, files=files)
-            self.fetch = Fetch(method=self.method, url=self.url, kwargs=kw)
+            self.fetch = Fetch(method=self.method, url=self.url, kwargs=kw,
+                               is_form=is_form)
 
         return self.fetch
 

@@ -71,7 +71,8 @@ class Session(object):
         fetch = step_state.get_fetch()
         get_logger().debug("fetch request", **related.to_dict(fetch))
 
-        context = requests.request(fetch.method, fetch.url, **fetch.kwargs)
+        kw = fetch.get_kwargs(is_aiohttp=False)
+        context = requests.request(fetch.method, fetch.url, **kw)
         response = self.get_response(context)
         status = context.status_code
 
@@ -151,16 +152,8 @@ class AsyncSession(Session):
         fetch = step_state.get_fetch()
         get_logger().debug("fetch request", **related.to_dict(fetch))
 
-        # aiohttp is different from requests in handling files
-        # http://aiohttp.readthedocs.io/en/stable/client.html
-        # http://docs.python-requests.org/en/master/user/quickstart
-        data = fetch.kwargs.get("data", None)
-        files = fetch.kwargs.pop("files", None)
-        if isinstance(data, dict) and isinstance(files, dict):
-            data.update(files)
-
-        async with self.http.request(fetch.method, fetch.url,
-                                     **fetch.kwargs) as context:
+        kw = fetch.get_kwargs(is_aiohttp=True)
+        async with self.http.request(fetch.method, fetch.url, **kw) as context:
             response = await self.get_response(context)
             status = context.status
 
