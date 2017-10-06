@@ -167,6 +167,21 @@ class Comparison(enum.Enum):
     def is_not_superset(self, actual, expect):
         return not self.is_superset(actual, expect)
 
+    # is_keyset
+
+    KEYSET = "keyset"
+
+    def is_keyset(self, actual, expect):
+        keyset = list(actual.keys()) if hasattr(actual, "keys") else []
+        return self.is_same(keyset, expect)
+
+    # not keyset
+
+    NOT_KEYSET = "not keyset"
+
+    def is_not_keyset(self, actual, expect):
+        return not self.is_keyset(actual, expect)
+
     # evaluate
 
     def evaluate(self, actual, expected):

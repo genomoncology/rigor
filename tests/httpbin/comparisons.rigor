@@ -118,3 +118,25 @@ steps:
       - actual: [2, 3]
         compare: not superset
         expect: [1, 2, 3]
+
+      - actual:
+            first_name: John
+            last_name: Doe
+            middle_name: Qunicy
+            age: 99
+        compare: keyset
+        expect:
+            - age
+            - first_name
+            - last_name
+            - middle_name
+      - actual:
+            first_name: John
+            last_name: Doe
+            middle_name: Qunicy
+        compare: not keyset
+        expect:
+            - age
+            - first_name
+            - last_name
+            - middle_name
