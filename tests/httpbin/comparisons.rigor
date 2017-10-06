@@ -26,6 +26,9 @@ steps:
       - actual: [1, 2]
         compare: same
         expect: [2, 1]
+      - actual: [1, 2, 3]
+        compare: not same
+        expect: [2, 1]
 
       - actual: 2
         compare: not equals

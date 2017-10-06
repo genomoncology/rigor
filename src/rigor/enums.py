@@ -49,6 +49,11 @@ class Comparison(enum.Enum):
             same = same and all([item in actual for item in expect])
         return same
 
+    NOT_SAME = "not same"
+
+    def is_not_same(self, actual, expect):
+        return not self.is_same(actual, expect)
+
     # lists
 
     CONTAINS = "contains"
