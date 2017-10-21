@@ -153,9 +153,18 @@ class AsyncSession(Session):
         get_logger().debug("fetch request", **related.to_dict(fetch))
 
         kw = fetch.get_kwargs(is_aiohttp=True)
-        async with self.http.request(fetch.method, fetch.url, **kw) as context:
-            response = await self.get_response(context)
-            status = context.status
+
+        try:
+            method, url = fetch.method, fetch.url
+            async with self.http.request(method, url, **kw) as context:
+                response = await self.get_response(context)
+                status = context.status
+
+        except Exception as e:  # pragma: no cover
+            get_logger().error("do_fetch exception", error=e,
+                               **related.to_dict(fetch))
+            response = "Error"
+            status = "Error"
 
         get_logger().debug("fetch response", response=response, status=status,
                            **related.to_dict(fetch))

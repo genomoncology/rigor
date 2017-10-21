@@ -1,0 +1,13 @@
+name: Invalid File with Broken Configuration
+host: https://httpbin.org
+
+steps:
+
+  - description: Invalid Paramters (List instead of Dictionary)
+
+    request:
+        path: get
+        params:
+            - one: 1
+            - two: 2
+            - three: 2017-01-01

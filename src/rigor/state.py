@@ -39,6 +39,9 @@ class Fetch(object):
         else:
             kw['data'] = related.to_json(data)
 
+        # unlimited timeout if not specified
+        kw.setdefault("timeout", None)
+
         return kw
 
 
