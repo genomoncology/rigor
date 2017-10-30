@@ -32,7 +32,7 @@ setup(
 
     install_requires=[
         "addict==2.1.1",
-        "related >= 0.5.1",
+        "related >= 0.5.2",
         "aiohttp==2.1.0",
         "aiofiles==0.3.1",
         "jmespath==0.9.3",
@@ -41,6 +41,7 @@ setup(
         "colorama==0.3.9",
         "beautifulsoup4==4.6.0",
         "requests==2.11.1",
+        "hyperlink==17.3.1",
     ],
 
     setup_requires=[

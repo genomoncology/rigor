@@ -1,0 +1,13 @@
+name: Example tests that are not actually run.
+
+steps:
+
+  - description: Get list of pets
+
+    request:
+        path: pets
+
+  - description: Get specific pet 1
+
+    request:
+        path: pets/1
