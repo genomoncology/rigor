@@ -2,8 +2,6 @@ import related
 import enum
 import hyperlink
 
-from . import get_logger
-
 
 @enum.unique
 class Scheme(enum.Enum):
@@ -25,7 +23,6 @@ class DataType(enum.Enum):
 
 class MIMEType(str):
     pass
-
 
 
 @related.mutable
@@ -56,7 +53,7 @@ class Info(object):
 @related.mutable
 class Definition(object):
     key = related.StringField(required=True)
-    type = related.ChildField(DataType)
+    type = related.ChildField(DataType, required=False)
     required = related.SequenceField(str, required=False)
     allOf = related.SequenceField(object, required=False)
     anyOf = related.SequenceField(object, required=False)
@@ -112,7 +109,7 @@ class Swagger(object):
     info = related.ChildField(Info, required=True)
     paths = related.MappingField(Path, "path", required=True)
 
-    host = related.RegexField("^[^{}/ :\\\\]+(?::\\d+)?$", required=False)
+    host = related.StringField(required=False)
     basePath = related.StringField(required=False)
     schemes = related.SequenceField(Scheme, required=False)
     consumes = related.SequenceField(MIMEType, required=False)
@@ -127,13 +124,8 @@ class Swagger(object):
 
     @classmethod
     def loads(cls, content):
-        try:
-            as_dict = related.from_yaml(content, object_pairs_hook=dict)
-            return related.to_model(cls, as_dict)
-
-        except Exception as e:
-            get_logger().error("Failed to Load Swagger", error=str(e))
-            raise
+        as_dict = related.from_yaml(content, object_pairs_hook=dict)
+        return related.to_model(cls, as_dict)
 
     def resolve(self, url):
         """ Resolve to Path object based on the URL path provided. """
@@ -141,6 +133,7 @@ class Swagger(object):
 
     def populate_lookup(self):
         """ Populate the lookup nested dictionary with paths. """
+        # todo: use basePath to ensure mapping is correct?
         self._lookup = {}
         for path_url, path_obj in self.paths.items():
             nested = self.descend_lookup(path_url)
@@ -167,6 +160,16 @@ class Swagger(object):
     def is_var(s):
         """ Determines if follows path variable format of {pk}. """
         return isinstance(s, str) and s.startswith("{") and s.endswith("}")
+
+    @classmethod
+    def gather_schemas(cls, suite):
+        from . import utils
+        schemas = []
+        for name, path in suite.schemas.items():
+            json = utils.download_json_with_headers(suite, path)
+            schema = related.to_model(cls, json)
+            schemas.append(schema)
+        return schemas
 
 
 # constants

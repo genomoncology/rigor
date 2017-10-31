@@ -125,8 +125,11 @@ class State(ScenarioResult, Timer):
     transform = related.ChildField(Namespace, default=Namespace())
 
     def __attrs_post_init__(self):
-        self.suite = self.session.suite if self.session else None
+        if self.suite is None:
+            self.suite = self.session.suite if self.session else None
+
         self.globals = Namespace(self.suite.globals if self.suite else {})
+
         if self.scenario:
             self.scenario = self.scenario.evaluate(self.namespace)
         else:
@@ -293,7 +296,10 @@ class StepState(StepResult, Timer):
             headers[const.CONTENT_TYPE] = content_type
 
         headers.update(related.to_dict(self.suite.headers) or {})
-        headers.update(related.to_dict(self.case.headers) or {})
+
+        if self.case:
+            headers.update(related.to_dict(self.case.headers) or {})
+
         headers.update(related.to_dict(self.request.headers) or {})
 
         return Namespace(headers).evaluate(self.namespace)

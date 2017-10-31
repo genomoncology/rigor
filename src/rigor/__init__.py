@@ -33,6 +33,7 @@ from .config import (
 
 from .model import (
     Case,
+    Requestor,
     Step,
     Suite,
     Validator,
@@ -54,6 +55,10 @@ from .execute import (
 
 from .reporting import (
     ReportEngine
+)
+
+from .swagger import (
+    Swagger
 )
 
 from .cli import (
@@ -94,6 +99,7 @@ __all__ = [
 
     # model.py
     "Case",
+    "Requestor",
     "Step",
     "Suite",
     "Validator",
@@ -108,6 +114,9 @@ __all__ = [
     "State",
     "StepState",
     "SuiteResult",
+
+    # swagger.py
+    "Swagger",
 
     # cli.py
     "main",

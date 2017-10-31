@@ -63,3 +63,22 @@ def parse_into_dicts_of_rows(text_table):
     for col_num in range(len(header)):
         d[header[col_num]] = [row[col_num] for row in rows]
     return d
+
+
+def download_json_with_headers(suite, path):
+    """ Download using a suite profile (such as headers). """
+    from . import Requestor, StepState, Step, State, Case
+    import requests
+
+    # a little bit painful, but ensures headers are full evaluated w/ globals
+    request = Requestor(host=suite.host, path=path)
+    state = State(suite=suite, case=Case(scenarios=[], file_path="."))
+    step = Step(request=request, description="Download: %s" % path)
+    step_state = StepState(state=state, step=step)
+    fetch = step_state.get_fetch()
+    kw = fetch.get_kwargs(is_aiohttp=False)
+    context = requests.request(fetch.method, fetch.url, **kw)
+
+    # hard failure during development.
+    assert context.status_code == 200, "%s => %s" % (fetch.url, context)
+    return context.json()
