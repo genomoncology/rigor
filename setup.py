@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.3.7',
+    version='0.4.0',
 
     package_dir={
         '': 'src'
@@ -42,6 +42,7 @@ setup(
         "beautifulsoup4==4.6.0",
         "requests==2.11.1",
         "hyperlink==17.3.1",
+        "xlwt==1.3.0",
     ],
 
     setup_requires=[

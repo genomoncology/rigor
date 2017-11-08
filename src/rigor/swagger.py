@@ -102,6 +102,10 @@ class Path(object):
     post = related.ChildField(Operation, required=False)
     put = related.ChildField(Operation, required=False)
 
+    @property
+    def methods(self):
+        return [method for method in METHODS if getattr(self, method)]
+
 
 @related.mutable
 class Swagger(object):
@@ -144,16 +148,26 @@ class Swagger(object):
         as_tuple = self.path_as_tuple(url)
         sub_lookup = self._lookup
         for item in as_tuple:
+            # if in resolve mode, and VAR is only option, return var
             if try_var and (item not in sub_lookup) and (VAR in sub_lookup):
                 sub_lookup = sub_lookup.get(VAR)
+
+            # if build mode or item exists, return that.
             else:
                 sub_lookup = sub_lookup.setdefault(item, {})
+
         return sub_lookup
 
     @classmethod
     def path_as_tuple(cls, url):
         """ Convert URL path into a set of tuples replacing variables. """
+
+        # remove leading and trailing blanks
         items = hyperlink.URL.from_text(url).path
+        items = items[1:] if items and not items[0] else items
+        items = items[:-1] if items and not items[-1] else items
+
+        # replace variables with VAR indicator for resolve
         return tuple([VAR if cls.is_var(item) else item for item in items])
 
     @staticmethod
@@ -176,3 +190,4 @@ class Swagger(object):
 
 VAR = "$var"  # indicates a variable in a path (e.g. id in /pets/{id})
 OBJ = "$obj"  # indicates a path sitting at this branch (e.g. /pets)
+METHODS = ["get", "post", "put", "patch", "delete", "head", "options"]

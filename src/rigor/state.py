@@ -42,6 +42,10 @@ class Fetch(object):
         # unlimited timeout if not specified
         kw.setdefault("timeout", None)
 
+        # add verify = False for requests
+        if not is_aiohttp:
+            kw['verify'] = False
+
         return kw
 
 

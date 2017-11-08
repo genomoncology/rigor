@@ -1,4 +1,4 @@
-host: https://raw.githubusercontent.com/OAI/OpenAPI-Specification
+host: https://raw.githubusercontent.com
 
 schemas:
-    v2-simple: master/examples/v2.0/json/petstore-simple.json
+    v2-simple: OAI/OpenAPI-Specification/master/examples/v2.0/json/petstore-simple.json

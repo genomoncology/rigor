@@ -58,7 +58,12 @@ from .reporting import (
 )
 
 from .swagger import (
+    Path,
     Swagger
+)
+
+from .coverage import (
+    CoverageReport
 )
 
 from .cli import (
@@ -116,7 +121,11 @@ __all__ = [
     "SuiteResult",
 
     # swagger.py
+    "Path",
     "Swagger",
+
+    # coverage.py
+    "CoverageReport",
 
     # cli.py
     "main",
@@ -125,7 +134,7 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.3.7'
+__version__ = '0.4.0'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

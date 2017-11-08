@@ -16,7 +16,7 @@ class Profile(object):
     extensions = related.SequenceField(str, default=["rigor"])
     includes = related.SequenceField(str, default=None)
     excludes = related.SequenceField(str, default=None)
-    concurrency = related.IntegerField(default=20)
+    concurrency = related.IntegerField(default=5)
 
     def __attrs_post_init__(self):
         # circumvent frozen error due to immutable

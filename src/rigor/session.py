@@ -7,6 +7,9 @@ import time
 from aiohttp import TCPConnector, ClientSession
 from . import Suite, const, get_logger
 
+# disable warning
+requests.packages.urllib3.disable_warnings()
+
 
 @related.immutable
 class Session(object):
@@ -16,7 +19,8 @@ class Session(object):
     def create(suite):
         if suite.concurrency > 0:
             loop = asyncio.get_event_loop()
-            connector = TCPConnector(limit_per_host=suite.concurrency)
+            connector = TCPConnector(limit_per_host=suite.concurrency,
+                                     verify_ssl=False)
             http = ClientSession(loop=loop, connector=connector)
             return AsyncSession(suite=suite, http=http, loop=loop,
                                 connector=connector)
@@ -35,7 +39,9 @@ class Session(object):
     def run_suite(self):
         results = []
         for case, scenario in self.case_scenarios():
-            results.append(self.run_case_scenario(case, scenario))
+            scenario_result = self.run_case_scenario(case, scenario)
+            results.append(scenario_result)
+
         return results
 
     def run_case_scenario(self, case, scenario):

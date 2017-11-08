@@ -87,12 +87,13 @@ class Step(object):
     @classmethod
     def create(cls, step_result, scenario_result):
         if step_result is None:
+            output = related.to_dict(scenario_result.scenario)
+            output['__file__'] = scenario_result.case.file_path
             return cls(
                 keyword="",
                 line=3,
                 name="Scenario Setup",
-                doc_string=DocString.section("SCENARIO",
-                                             scenario_result.scenario),
+                doc_string=DocString.section("SCENARIO", output),
                 match=Match(),
                 result=StatusResult.create(True, 0)
             )

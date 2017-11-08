@@ -1,6 +1,7 @@
 import click
 
-from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
+from . import Suite, Config, ReportEngine, CoverageReport
+from . import setup_logging, get_logger, execute
 
 
 @click.command()
@@ -17,7 +18,7 @@ from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
 @click.option('--extensions', '-e', multiple=True,
               help="Filter cases by file extension. (e.g. rigor)")
 @click.option('--concurrency', '-c', type=int, default=None,
-              help='# of concurrent HTTP requests. (default: 20)')
+              help='# of concurrent HTTP requests. (default: 5)')
 @click.option('--output', '-o', default=None,
               help='Report output folder.')
 @click.option('--quiet', '-q', is_flag=True,
@@ -28,7 +29,9 @@ from . import Suite, Config, ReportEngine, setup_logging, get_logger, execute
               help='JSON-style logging.')
 @click.option('--html', '-h', is_flag=True,
               help='Generate HTML report.')
-def main(paths, profile, output, quiet, verbose, json, html, **cli):
+@click.option('--coverage', '-g', is_flag=True,
+              help='Generate Coverage report.')
+def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
     # default paths
     paths = paths or ["."]
 
@@ -48,6 +51,20 @@ def main(paths, profile, output, quiet, verbose, json, html, **cli):
     # execute suite
     suite_result = execute(suite)
 
+    # generate reports
+    generate_reports(suite_result, html, output, coverage)
+
+    # system error code
+    if suite_result.failed or not suite_result.passed:
+        raise click.ClickException(
+            "%s test(s) failed. %s test(s) passed." % (
+                len(suite_result.failed),
+                len(suite_result.passed)
+            )
+        )
+
+
+def generate_reports(suite_result, html, output, coverage):
     # construct report engine
     if output or html:
         report_engine = ReportEngine(output_path=output,
@@ -60,14 +77,13 @@ def main(paths, profile, output, quiet, verbose, json, html, **cli):
             click.launch(report_path)
             get_logger().info("launching browser", report_path=report_path)
 
-    # system error code
-    if suite_result.failed or not suite_result.passed:
-        raise click.ClickException(
-            "%s test(s) failed. %s test(s) passed." % (
-                len(suite_result.failed),
-                len(suite_result.passed)
-            )
-        )
+    # coverage
+    if coverage:
+        coverage_report = CoverageReport.create(suite_result)
+        report_path = coverage_report.generate(output)
+        if report_path:
+            click.launch(report_path)
+            get_logger().info("launching excel", report_path=report_path)
 
 
 if __name__ == '__main__':
