@@ -170,7 +170,7 @@ class AsyncSession(Session):
             get_logger().error("do_fetch exception", error=e,
                                **related.to_dict(fetch))
             response = "Error"
-            status = "Error"
+            status = 500
 
         get_logger().debug("fetch response", response=response, status=status,
                            **related.to_dict(fetch))
