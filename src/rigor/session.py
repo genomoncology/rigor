@@ -196,9 +196,9 @@ class AsyncSession(Session):
 
 class OurSoup(bs4.BeautifulSoup):
     def __repr__(self, **kwargs):
-        content = self.title.string if self.title else ""
-        content += "\n\n" + self.body.text
-        return content
+        title = self.title.string if self.title else ""
+        body = self.body.text if self.body else ""
+        return "{}\n\n{}".format(title, body)
 
 
 @related.to_dict.register(OurSoup)
