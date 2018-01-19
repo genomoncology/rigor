@@ -3,7 +3,7 @@
 #----------
 
 test:
-	python setup.py test
+	pipenv run python setup.py test
 
 test-all: clean
 	tox

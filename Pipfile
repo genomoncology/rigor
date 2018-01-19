@@ -1,0 +1,34 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+
+[dev-packages]
+
+pytest = "*"
+coverage = "*"
+pytest-cov = "*"
+"pytest-flake8" = "*"
+pytest-mccabe = "*"
+"pytest-pep8" = "*"
+pytest-pythonpath = "*"
+pytest-sugar = "*"
+tox = "*"
+pipenv = "*"
+
+
+[packages]
+
+addict = "==2.1.1"
+related = ">= 0.5.2"
+aiohttp = "==2.1.0"
+aiofiles = "==0.3.1"
+jmespath = "==0.9.3"
+click = "==6.7"
+structlog = "==17.2.0"
+colorama = "==0.3.9"
+"beautifulsoup4" = "==4.6.0"
+requests = "==2.11.1"
+hyperlink = "==17.3.1"
+xlwt = "==1.3.0"
