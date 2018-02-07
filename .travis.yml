@@ -15,7 +15,7 @@ matrix:
 
 
 install:
-  - pip install tox
+  - pip install tox pipenv
 
 
 script:
