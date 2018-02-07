@@ -1,0 +1,20 @@
+name: Example tests that will return 4xx (and fail)
+
+steps:
+
+  - description: Get list of pets
+
+    request:
+        path: pets
+        status:
+          - 400
+          - 404
+
+  - description: Get specific pet 1
+
+    request:
+        path: pets/1
+        params:
+          some: value
+        status:
+          - 200

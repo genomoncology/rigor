@@ -1,6 +1,7 @@
 from rigor import Config, Suite, Swagger, execute, CoverageReport
 import pytest
 import os.path
+import os
 
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "petstore")
@@ -39,7 +40,7 @@ def report(result):
 def test_config_ok_in_suite(suite):
     assert suite.host == HOST
     assert suite.schemas['v2-simple'] == SCHEMA
-    assert len(suite.queued) == 1
+    assert len(suite.queued) == 2
 
 
 def test_schema_ok(schema):
@@ -57,6 +58,13 @@ def test_report_for_detail(report):
     path_report = report.get_method_report("/pets/1", "get")
     assert path_report.url == "/pets/{id}"
     assert path_report.case_counts.passed == 1
+    assert path_report.case_counts.failed == 1
     assert path_report.scenario_counts.passed == 1
+    assert path_report.scenario_counts.failed == 1
     assert path_report.step_counts.passed == 1
-    assert len(path_report.counts) == 3
+    assert path_report.step_counts.failed == 1
+    assert len(path_report.counts) == 4
+
+    output_path = report.generate(None)
+    assert "coverage" in output_path
+    assert output_path.endswith(".xls")

@@ -47,14 +47,14 @@ def to_nested_dict(nested_cols, value):
 def parse_into_rows_of_dicts(text_table):
     header, rows = parse_into_header_rows(text_table)
     header = [column.split("/") for column in header]
-    l = []
+    result = []
     for row in rows:
         d = {}
         for (nested_cols, value) in zip(header, row):
             nested_update(d, to_nested_dict(nested_cols, value))
 
-        l.append(d)
-    return l
+        result.append(d)
+    return result
 
 
 def parse_into_dicts_of_rows(text_table):

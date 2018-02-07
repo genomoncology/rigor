@@ -1,0 +1,35 @@
+sudo: false
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+language: python
+
+
+matrix:
+  include:
+    - python: "3.6"
+      env: TOXENV=py36
+    - python: "3.6"
+      env: TOXENV=flake8
+
+
+install:
+  - pip install tox
+
+
+script:
+  - tox
+
+
+before_install:
+  - pip install codecov
+
+
+after_success:
+  - tox -e coverage-report
+  - codecov
+
+
+notifications:
+  email: false

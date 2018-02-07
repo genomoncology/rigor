@@ -129,11 +129,11 @@ class CoverageReport(object):
             for scenario_result in case_result.passed:
                 yield scenario_result, True, True
             for scenario_result in case_result.failed:
-                yield scenario_result, False, True
+                yield scenario_result, False, True  # pragma: no cover
 
         for case_result in self.suite_result.failed:
             for scenario_result in case_result.passed:
-                yield scenario_result, True, False
+                yield scenario_result, True, False  # pragma: no cover
             for scenario_result in case_result.failed:
                 yield scenario_result, False, False
 
