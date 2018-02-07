@@ -1,4 +1,4 @@
-include LICENSE *.md
+include LICENSE *.md Pipfile*
 
 # Don't package GitHub-specific files.
 exclude .travis.yml
