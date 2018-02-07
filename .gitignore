@@ -12,3 +12,4 @@ htmlcov
 *.egg
 dist
 build
+.pytest_cache

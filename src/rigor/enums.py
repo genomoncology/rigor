@@ -188,5 +188,5 @@ class Comparison(enum.Enum):
         method = getattr(self, "is_%s" % self.value.replace(" ", "_"))
         try:
             return method(actual, expected)
-        except:
+        except Exception:
             return False
