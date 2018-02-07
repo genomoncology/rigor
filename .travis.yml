@@ -15,7 +15,7 @@ matrix:
 
 
 install:
-  - pip install tox pipenv
+  - pip install tox
 
 
 script:
@@ -23,7 +23,7 @@ script:
 
 
 before_install:
-  - pip install codecov
+  - pip install codecov pipenv
 
 
 after_success:
