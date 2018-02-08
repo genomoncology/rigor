@@ -1,14 +1,13 @@
-<img src='./.images/logo.png' width='140' align="left" />
-<a href='https://codecov.io/github/genomoncology/rigor/'><img src='https://codecov.io/github/genomoncology/rigor/branch/master/graph/badge.svg' align="right" /></a>
-<a href='https://travis-ci.org/genomoncology/rigor'><img src='https://img.shields.io/travis/genomoncology/rigor.svg' align="right" /></a>
-<a href='https://pypi.python.org/pypi/rigor'><img src='https://img.shields.io/pypi/v/rigor.svg' align="right" /></a>
-
-<br/><br/>
-
 `Rigor` is a Domain Specific Language (DSL) and Command Line Interface (CLI)
 for making HTTP requests, extracting data, and validating responses. The main
 intent of Rigor is to be an HTTP-based API (e.g. REST) Testing Framework for
 automated functional or integration testing.
+
+<a href='https://codecov.io/github/genomoncology/rigor/'><img src='https://codecov.io/github/genomoncology/rigor/branch/master/graph/badge.svg' align="right" /></a>
+<a href='https://travis-ci.org/genomoncology/rigor'><img src='https://img.shields.io/travis/genomoncology/rigor.svg' align="right" /></a>
+<a href='https://pypi.python.org/pypi/rigor'><img src='https://img.shields.io/pypi/v/rigor.svg' align="right" /></a>
+
+<br/>
 
 
 # Requirements
@@ -111,6 +110,7 @@ Copyright (c) 2017 [Ian Maurer], [Genomoncology LLC]
 [requests]: http://docs.python-requests.org/en/master/
 [structlog]: http://www.structlog.org/en/stable/
 [tests/]: ./tests/
-
-[list]: ./.images/low.png
-[detail]: ./.images/low.png
+[list]: ./.images/list.png
+[detail]: ./.images/detail.png
+[Genomoncology LLC]: http://genomoncology.com
+[Ian Maurer]: https://github.com/imaurer

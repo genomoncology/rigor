@@ -17,7 +17,7 @@ with open('CHANGELOG.md') as history_file:
 
 setuptools.setup(
     name="rigor",
-    version='0.4.2',
+    version='0.4.3',
 
     package_dir={
         '': 'src'
