@@ -132,7 +132,9 @@ class State(ScenarioResult, Timer):
         if self.suite is None:
             self.suite = self.session.suite if self.session else None
 
-        self.globals = Namespace(self.suite.globals if self.suite else {})
+        globals = self.suite.globals if self.suite else {}
+        globals = globals or {}
+        self.globals = Namespace(globals)
 
         if self.scenario:
             self.scenario = self.scenario.evaluate(self.namespace)
