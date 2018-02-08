@@ -34,6 +34,10 @@ Install using `pip3`...
 * Syntax highlighted console or JSON-based logging using [structlog].
 * Profiles for switching between different environments and settings.
 * Tags and CLI options for selectively executing subsets of the test suite.
+* Scenario Outlines (i.e. Tables) for cases with numerous scenarios.
+* Beautiful Soup parsing for extraction from HTML data.
+* Proper error code ($?) on suite success (0) or failure (!0)
+* Case-scenario unique identifier (__uuid__) for managing session and race conditions.
 
 
 # Command Line Interface (CLI) Options
@@ -80,6 +84,50 @@ Install using `pip3`...
 ![detail]
 
 
+# Object Model
+
+* suite: set of cases that gets built dynamically based on cli arguments.
+* case: set of scenarios and steps in a .rigor file.
+* scenario: namespace for 1 run of case steps.
+* step: request with response extract, validate, etc.
+* iterate: repeats an individual step by iterating through iterable.
+* request: http call (get, post, etc.) to path with parameters, data, or uploads
+* extract: extract nested data from a response into a variable available to following steps.
+* validate: check an actual value against an expected value using a comparator.
+* transform: using [jmespath] to shape a JSON response into a specific format.
+
+![objects]
+
+
+# Comparators
+
+Comparators are used by the validation phase of each step to check whether
+an actual value is returning as expected. See the [comparisons.rigor] example
+for more details.
+
+* equals
+* not equals
+* same
+* not same
+* greater than
+* less than
+* greater than or equals
+* less than or equals
+* type
+* in
+* not in
+* regex
+* subset
+* not subset
+* length
+* superset
+* not superset
+* keyset
+* not keyset
+* contains
+* not contains
+
+
 # Related Projects
 
 * [Tavern] is an extremely similar project that was released a little too late for us to use.
@@ -90,7 +138,7 @@ Install using `pip3`...
 
 # More Examples
 
-More examples can be found by reviewing the [tests/] folder of this project.
+More examples can be found by reviewing the [tests/httpbin/] folder of this project.
 
 
 # License
@@ -109,8 +157,11 @@ Copyright (c) 2017 [Ian Maurer], [Genomoncology LLC]
 [jmespath.py]: https://github.com/jmespath/jmespath.py
 [requests]: http://docs.python-requests.org/en/master/
 [structlog]: http://www.structlog.org/en/stable/
-[tests/]: ./tests/
+[tests/httpbin/]: ./tests/httpbin
+[comparisons.rigor]: ./tests/httpbin/comparisons.rigor
 [list]: ./.images/list.png
 [detail]: ./.images/detail.png
+[objects]: ./.images/objects.png
 [Genomoncology LLC]: http://genomoncology.com
 [Ian Maurer]: https://github.com/imaurer
+[jmespath]: jmespath.org
