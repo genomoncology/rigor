@@ -19,7 +19,7 @@ class Namespace(related.ImmutableDict):
         values = existing or {}
 
         for key, value in self.items():
-            values[key] = self.render(value, namespace)
+            values[self.render(key, namespace)] = self.render(value, namespace)
 
         return Namespace(values)
 
@@ -62,6 +62,7 @@ class Namespace(related.ImmutableDict):
     def render_dict(cls, value, namespace):
         new_value = {}
         for sub_key, sub_value in value.items():
+            sub_key = cls.render(sub_key, namespace)
             new_value[sub_key] = cls.render(sub_value, namespace)
         return new_value
 

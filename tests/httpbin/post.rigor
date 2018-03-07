@@ -5,8 +5,8 @@ tags:
   - working
 
 scenarios: |
-  | page_num | page_size | three     |
-  | 2        | 10        | [1, 2, 3] |
+  | page_num | page_size | three     | key_name |
+  | 2        | 10        | [1, 2, 3] | hello    |
 
 steps:
 
@@ -106,6 +106,9 @@ steps:
                 "page_size": "{page_size}"
               },
               "date": "2017-01-01",
+              "meta": {
+                "{key_name}": "world"
+              },
               "nested": [
                 {
                   "a": [
@@ -148,3 +151,6 @@ steps:
 
       - expect: [1, 2, 3]
         actual: '{response.json.request.nested[0].a[0].a_c}'
+
+      - expect: { "hello": "world" }
+        actual: '{response.json.request.meta}'
