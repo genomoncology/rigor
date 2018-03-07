@@ -90,3 +90,61 @@ steps:
 
       - expect: hello.
         actual: '{response.files.file_upload}'
+
+
+  - description: Post with JSON Data Payload
+
+    request:
+        method: POST
+        path: /post
+        data: >
+          {
+            "request": {
+              "query": "*:*",
+              "pagination": {
+                "page_num": "{scenario.page_num}",
+                "page_size": "{page_size}"
+              },
+              "date": "2017-01-01",
+              "nested": [
+                {
+                  "a": [
+                    {
+                      "a_a": [
+
+                      ],
+                      "a_b": null,
+                      "a_c": "{three}"
+                    }
+                  ],
+                  "b": [
+                    {
+                      "b_a": [
+
+                      ],
+                      "b_b": null,
+                      "b_c": "{three}"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+
+    extract: # httpbin.org puts the original data request under 'json' key
+        page_num: '{response.json.request.pagination.page_num}'
+        page_size: '{response.json.request.pagination.page_size}'
+
+    validate:
+
+      - expect: "*:*"
+        actual: '{response.json.request.query}'
+
+      - expect: 2
+        actual: '{page_num}'
+
+      - expect: 10
+        actual: '{page_size}'
+
+      - expect: [1, 2, 3]
+        actual: '{response.json.request.nested[0].a[0].a_c}'

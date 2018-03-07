@@ -1,5 +1,6 @@
 import os
 import io
+import json
 
 from itertools import product
 
@@ -83,9 +84,15 @@ class Requestor(object):
 
         body = None
         if isinstance(self.data, str):
-            body = Namespace.render(self.data, namespace)
-            if isinstance(body, Namespace):
-                body = body.evaluate(namespace)
+            try:
+                # if valid JSON, convert to dictionary and evaluate
+                body = Namespace(json.loads(self.data)).evaluate(namespace)
+
+            except json.decoder.JSONDecodeError:
+                # else, treat like a string that might contain a variable.
+                body = Namespace.render(self.data, namespace)
+                if isinstance(body, Namespace):
+                    body = body.evaluate(namespace)
 
         elif isinstance(self.data, dict):
             body = Namespace(self.data).evaluate(namespace)
