@@ -58,7 +58,10 @@ setup(
     entry_points={
         'console_scripts': [
             'rigor=rigor.cli:main',
-        ]
+        ],
+        'pytest11': [
+            'rigor=rigor.pytest_plugin',
+        ],
     },
 
     classifiers=[
@@ -68,5 +71,6 @@ setup(
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Framework :: Pytest',
     ],
 )
