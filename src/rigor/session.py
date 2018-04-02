@@ -111,11 +111,19 @@ class AsyncSession(Session):
     http = related.ChildField(object)
 
     def run(self):
+        # run and get results
         future = asyncio.ensure_future(self.run_suite())
         self.loop.run_until_complete(future)
         results = future.result()
-        self.http.close()
+
+        # close http
+        future = asyncio.ensure_future(self.close_http())
+        self.loop.run_until_complete(future)
+
         return results
+
+    async def close_http(self):
+        await self.http.close()
 
     async def run_suite(self):
         tasks = []

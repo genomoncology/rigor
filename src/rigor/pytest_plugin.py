@@ -1,4 +1,4 @@
-from . import setup_logging, get_logger, Case, Session, Suite, reporting
+from . import setup_logging, Case, Session, Suite, reporting
 
 import pytest
 

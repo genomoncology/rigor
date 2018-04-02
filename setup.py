@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.4.4',
+    version='0.5.0',
 
     package_dir={
         '': 'src'
@@ -33,7 +33,7 @@ setup(
     install_requires=[
         "addict==2.1.1",
         "related >= 0.5.2",
-        "aiohttp==2.1.0",
+        "aiohttp==3.1.0",
         "aiofiles==0.3.1",
         "jmespath==0.9.3",
         "click==6.7",
@@ -59,9 +59,11 @@ setup(
         'console_scripts': [
             'rigor=rigor.cli:main',
         ],
-        'pytest11': [
-            'rigor=rigor.pytest_plugin',
-        ],
+
+        # todo: break into separate project pytest-rigor
+        # 'pytest11': [
+        #     'rigor=rigor.pytest_plugin',
+        # ],
     },
 
     classifiers=[
