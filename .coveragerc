@@ -1,5 +1,7 @@
 [run]
-omit = src/rigor/cli.py
+omit =
+    src/rigor/cli.py
+    src/rigor/pytest_plugin.py
 
 [report]
 exclude_lines =
