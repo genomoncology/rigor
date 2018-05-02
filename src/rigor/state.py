@@ -257,6 +257,7 @@ class State(ScenarioResult, Timer):
 @related.mutable
 class StepState(StepResult, Timer):
     state = related.ChildField(State, required=False)
+    retry = related.IntegerField(required=False, default=0)
 
     @property
     def namespace(self):
@@ -357,3 +358,7 @@ class StepState(StepResult, Timer):
             validations=self.validations,
             duration=self.get_duration(),
         )
+
+    @property
+    def sleep(self):
+        return self.step.sleep + (self.retry * self.state.suite.sleep)

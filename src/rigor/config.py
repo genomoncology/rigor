@@ -17,6 +17,8 @@ class Profile(object):
     includes = related.SequenceField(str, default=None)
     excludes = related.SequenceField(str, default=None)
     concurrency = related.IntegerField(default=5)
+    retries = related.IntegerField(default=0)
+    sleep = related.IntegerField(default=60)
 
     def __attrs_post_init__(self):
         # circumvent frozen error due to immutable

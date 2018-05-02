@@ -120,6 +120,9 @@ class Step(object):
     name = related.StringField(required=False, default=None)
     sleep = related.FloatField(required=False, default=0.01)
 
+    def is_get(self):
+        return self.request and self.request.method == Method.GET
+
 
 @related.immutable
 class Case(object):
