@@ -31,6 +31,10 @@ from . import setup_logging, get_logger, execute
               help='Generate HTML report.')
 @click.option('--coverage', '-g', is_flag=True,
               help='Generate Coverage report.')
+@click.option('--retries', '-r', type=int, default=0,
+              help='# of retries for GET calls only. (default: 0)')
+@click.option('--sleep', '-s', type=int, default=60,
+              help='Retry sleep (seconds multiplied by retry). (default: 60)')
 def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
     # default paths
     paths = paths or ["."]

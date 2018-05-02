@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.5.0',
+    version='0.5.1',
 
     package_dir={
         '': 'src'
