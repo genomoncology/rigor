@@ -220,6 +220,9 @@ class AsyncSession(Session):
         elif const.APPLICATION_JSON in content_type:
             response = await context.json()
 
+        elif const.TEXT_PLAIN in content_type:
+            response = await context.text()   # pragma: no cover
+
         else:
             response = None
 

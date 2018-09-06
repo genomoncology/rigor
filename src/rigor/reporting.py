@@ -42,11 +42,13 @@ class DocString(object):
     def section(cls, title, obj, **kwargs):
         size = max(20, len(title))
         bar = "=" * size
-        # if isinstance(obj, dict) and "html" in obj:
-        #     content = str(obj["html"])
-        # else:
-        #     content = related.to_yaml(obj, **kwargs) if obj else "None"
-        content = related.to_yaml(obj, **kwargs) if obj else "None"
+        if isinstance(obj, str):
+            content = obj  # pragma: no cover
+        elif obj:
+            content = related.to_yaml(obj, **kwargs)
+        else:
+            content = "None"
+
         return "\n".join([bar, str.center(title, size), bar, "", content, ""])
 
     @classmethod
