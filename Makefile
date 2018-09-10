@@ -39,6 +39,11 @@ clean-test:
 # publish
 #----------
 
+pex:
+	pip wheel . -w ./build/mac-wheels
+	pex --python=python3.6 -f ./build/mac-wheels rigor -e rigor.cli:main -o ./build/rigor -v --disable-cache
+
+
 publish:
 	pipenv run python setup.py sdist
 	pipenv run python setup.py bdist_wheel --universal

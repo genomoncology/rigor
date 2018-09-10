@@ -73,8 +73,8 @@ class Session(object):
         for retry in range(retries + 1):
             with StepState(step=step, state=state, retry=retry) as step_state:
                 # sleep if any
-                get_logger().info("do_step", sleep=step_state.sleep,
-                                  retry=retry)
+                get_logger().debug("do_step", sleep=step_state.sleep,
+                                   retry=retry)
                 time.sleep(step_state.sleep)
 
                 # do fetch
@@ -171,8 +171,8 @@ class AsyncSession(Session):
         for retry in range(retries + 1):
             with StepState(step=step, state=state, retry=retry) as step_state:
                 # sleep if any
-                get_logger().info("do_step", sleep=step_state.sleep,
-                                  retry=retry)
+                get_logger().debug("do_step", sleep=step_state.sleep,
+                                   retry=retry)
                 await asyncio.sleep(step_state.sleep)
 
                 # do fetch
