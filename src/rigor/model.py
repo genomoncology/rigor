@@ -159,11 +159,23 @@ class Case(object):
         return updated
 
     @classmethod
+    def strip_comments(cls, content):
+        no_comments_content = ''
+        for line in content.splitlines(True):
+            split_on_comment = line.split('#')
+            line_content_before_comment = split_on_comment[0]
+            stripped_before_comment = line_content_before_comment.strip()
+            if stripped_before_comment is not '' or line.strip() is '':  # if non-empty line or original empty line
+                no_comments_content += line_content_before_comment
+                no_comments_content += '\n' if len(split_on_comment) > 1 else ''
+        return no_comments_content
+
+    @classmethod
     def loads(cls, content, file_path=None):
         try:
+            content = cls.strip_comments(content)
             as_dict = related.from_yaml(content, file_path=file_path,
                                         object_pairs_hook=dict)
-
             scenarios = as_dict.get("scenarios", [])
             dir_path = os.path.dirname(file_path)
             as_dict['scenarios'] = cls.prep_scenarios(scenarios, dir_path)
