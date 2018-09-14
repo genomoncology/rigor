@@ -165,9 +165,10 @@ class Case(object):
             split_on_comment = line.split('#')
             line_content_before_comment = split_on_comment[0]
             stripped_before_comment = line_content_before_comment.strip()
-            if stripped_before_comment is not '' or line.strip() is '':  # if non-empty line or original empty line
+            if stripped_before_comment is not '' or line.strip() is '':
                 no_comments_content += line_content_before_comment
-                no_comments_content += '\n' if len(split_on_comment) > 1 else ''
+                if len(split_on_comment) > 1:
+                    no_comments_content += '\n'
         return no_comments_content
 
     @classmethod
