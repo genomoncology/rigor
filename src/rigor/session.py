@@ -59,7 +59,7 @@ class Session(object):
                     yield self.do_step(state, step)
 
     def get_retries(self, state, step):
-        if step.is_get():
+        if step.is_retryable():
             return state.suite.retries
         else:
             return 0
@@ -73,18 +73,18 @@ class Session(object):
         for retry in range(retries + 1):
             with StepState(step=step, state=state, retry=retry) as step_state:
                 # sleep if any
-                get_logger().debug("do_step", sleep=step_state.sleep,
+                logger = get_logger().info if retry else get_logger().debug
+                logger("do_step", sleep=step_state.sleep,
                                    retry=retry)
                 time.sleep(step_state.sleep)
 
                 # do fetch
                 (response, status) = self.do_fetch(step_state)
 
-                # process response
-                step_state.process_response(response, status)
-
             if step_state.success:
                 break
+        # process response
+        step_state.process_response(response, status)
 
         return step_state.result()
 
@@ -171,7 +171,8 @@ class AsyncSession(Session):
         for retry in range(retries + 1):
             with StepState(step=step, state=state, retry=retry) as step_state:
                 # sleep if any
-                get_logger().debug("do_step", sleep=step_state.sleep,
+                logger = get_logger().info if retry else get_logger().debug
+                logger("do_step", sleep=step_state.sleep,
                                    retry=retry)
                 await asyncio.sleep(step_state.sleep)
 

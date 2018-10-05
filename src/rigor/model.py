@@ -119,6 +119,10 @@ class Step(object):
     transform = related.StringField(required=False, default=None)
     name = related.StringField(required=False, default=None)
     sleep = related.FloatField(required=False, default=0.01)
+    retryable = related.BooleanField(required=False, default=False)
+
+    def is_retryable(self):
+        return self.is_get() or self.retryable
 
     def is_get(self):
         return self.request and self.request.method == Method.GET
