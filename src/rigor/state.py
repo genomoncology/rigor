@@ -343,8 +343,9 @@ class StepState(StepResult, Timer):
         # validate response
         self.validations, self.success = state.do_validate(self.step, status)
 
+    def process_success(self):
         # track overall success
-        state.success = state.success and self.success
+        self.state.success = self.state.success and self.success
 
     def result(self):
         return StepResult(

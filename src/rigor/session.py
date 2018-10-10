@@ -80,10 +80,13 @@ class Session(object):
                 # do fetch
                 (response, status) = self.do_fetch(step_state)
 
+                # process response
+                step_state.process_response(response, status)
+
             if step_state.success:
                 break
-        # process response
-        step_state.process_response(response, status)
+
+        step_state.process_success()
 
         return step_state.result()
 
@@ -182,6 +185,8 @@ class AsyncSession(Session):
 
             if step_state.success:
                 break
+
+        step_state.process_success()
 
         return step_state.result()
 
