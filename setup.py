@@ -14,7 +14,7 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.5.3',
+    version='0.5.8',
 
     package_dir={
         '': 'src'
@@ -40,7 +40,7 @@ setup(
         "structlog==17.2.0",
         "colorama==0.3.9",
         "beautifulsoup4==4.6.0",
-        "requests==2.11.1",
+        "requests>=2.20.0"
         "hyperlink==17.3.1",
         "xlwt==1.3.0",
     ],
@@ -59,11 +59,6 @@ setup(
         'console_scripts': [
             'rigor=rigor.cli:main',
         ],
-
-        # todo: break into separate project pytest-rigor
-        # 'pytest11': [
-        #     'rigor=rigor.pytest_plugin',
-        # ],
     },
 
     classifiers=[
