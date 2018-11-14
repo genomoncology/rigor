@@ -14,7 +14,8 @@ with open('dev-requirements.txt') as dev_requirements_file:
 
 setup(
     name="rigor",
-    version='0.5.8',
+    version='0.5.9',
+    url="https://github.com/genomoncology/rigor",
 
     package_dir={
         '': 'src'
@@ -54,6 +55,7 @@ setup(
     keywords='',
     description="rigor",
     long_description="%s\n\n%s" % (readme, history),
+    long_description_content_type='text/markdown',
 
     entry_points={
         'console_scripts': [
