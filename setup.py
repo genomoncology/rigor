@@ -40,7 +40,7 @@ setup(
         "structlog==17.2.0",
         "colorama==0.3.9",
         "beautifulsoup4==4.6.0",
-        "requests>=2.20.0"
+        "requests>=2.20.0",
         "hyperlink==17.3.1",
         "xlwt==1.3.0",
     ],
