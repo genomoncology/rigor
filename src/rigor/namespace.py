@@ -121,7 +121,7 @@ class Namespace(related.ImmutableDict):
             is_lit = first_last in [("{", "}"), ("[", "]"), ("'", "'")]
 
             # https://stackoverflow.com/a/15814655
-            is_lit = is_lit or re.match("^-?[0-9]\d*(\.\d+)?$", stripped)
+            is_lit = is_lit or re.match(r"^-?[0-9]\d*(\.\d+)?$", stripped)
 
             if is_lit:
                 evaluated = ast.literal_eval(stripped)

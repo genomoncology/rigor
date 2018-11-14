@@ -110,7 +110,7 @@ def test_type():
 
 
 def test_regex():
-    assert Comparison.REGEX.evaluate("", ".*")
-    assert Comparison.REGEX.evaluate("2222", "\d+")
-    assert Comparison.REGEX.evaluate("111-33-3333", "\d{3}-\d{2}-\d{4}")
-    assert Comparison.REGEX.evaluate("John Q. Public", "\w+ \w\. \w+")
+    assert Comparison.REGEX.evaluate("", r".*")
+    assert Comparison.REGEX.evaluate("2222", r"\d+")
+    assert Comparison.REGEX.evaluate("111-33-3333", r"\d{3}-\d{2}-\d{4}")
+    assert Comparison.REGEX.evaluate("John Q. Public", r"\w+ \w\. \w+")
