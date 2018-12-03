@@ -1,6 +1,7 @@
 name: Feature Tables and HTML with Beautiful Soup
 format: "1.0"
 host: https://en.wikipedia.org/wiki
+semaphore: iterable
 
 steps:
 

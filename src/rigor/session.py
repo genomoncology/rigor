@@ -7,6 +7,8 @@ import time
 from aiohttp import TCPConnector, ClientSession
 from . import Suite, const, get_logger
 
+sem = asyncio.Semaphore()
+
 # disable warning
 requests.packages.urllib3.disable_warnings()
 
@@ -153,10 +155,13 @@ class AsyncSession(Session):
     async def run_case_scenario(self, case, scenario):
         from . import State
 
-        with State(session=self, case=case, scenario=scenario) as state:
-            async for step_result in self.iter_steps(state):
-                state.add_step(step_result)
-            return state.result()
+        # Allows only 1 scenario run at a time with same semaphore name
+        async with self.suite.semaphores[case.semaphore]:
+            with State(session=self, case=case, scenario=scenario) as state:
+                async for step_result in self.iter_steps(state):
+                    state.add_step(step_result)
+                scenario_result = state.result()
+                return scenario_result
 
     async def iter_steps(self, state):
         for step in state.case.steps:
