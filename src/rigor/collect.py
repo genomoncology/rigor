@@ -14,7 +14,7 @@ def collect(suite):
     future = asyncio.ensure_future(async_collect(suite))
     loop.run_until_complete(future)
 
-    suite.semaphores[None] = asyncio.Semaphore(10)
+    suite.semaphores[None] = asyncio.Semaphore(suite.concurrency)
     for case in future.result():
         suite.add_case(case)
 

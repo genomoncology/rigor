@@ -210,7 +210,7 @@ class Suite(Profile):
     paths = related.SequenceField(str, default=None)
     queued = related.MappingField(Case, "file_path", default={})
     skipped = related.MappingField(Case, "file_path", default={})
-    semaphores = related.MappingField(Semaphore, "semaphore", default={})
+    semaphores = related.MappingField(Semaphore, "semaphore", default={None: Semaphore(10)})
 
     def __attrs_post_init__(self):
         from . import collect
