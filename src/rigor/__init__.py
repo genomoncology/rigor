@@ -134,7 +134,7 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = 'ian@genomoncology.com'
-__version__ = '0.5.9'
+__version__ = '0.5.10'
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"
