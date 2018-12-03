@@ -155,7 +155,8 @@ class AsyncSession(Session):
     async def run_case_scenario(self, case, scenario):
         from . import State
 
-        async with self.suite.semaphores[case.semaphore]: # Allows only 1 scenario run at a time with same semaphore name
+        # Allows only 1 scenario run at a time with same semaphore name
+        async with self.suite.semaphores[case.semaphore]:
             with State(session=self, case=case, scenario=scenario) as state:
                 async for step_result in self.iter_steps(state):
                     state.add_step(step_result)
