@@ -1,7 +1,7 @@
 import os
 import io
 import json
-from asyncio import Semaphore
+from asyncio import Lock
 
 from itertools import product
 
@@ -137,7 +137,7 @@ class Case(object):
     format = related.StringField(default="1.0")
     host = related.StringField(required=False)
     tags = related.SequenceField(str, required=False)
-    semaphore = related.StringField(required=False, default=None)
+    lock = related.StringField(required=False, default=None)
     headers = related.ChildField(Namespace, required=False)
     file_path = related.StringField(default=None)
     is_valid = related.BooleanField(default=True)
@@ -210,7 +210,7 @@ class Suite(Profile):
     paths = related.SequenceField(str, default=None)
     queued = related.MappingField(Case, "file_path", default={})
     skipped = related.MappingField(Case, "file_path", default={})
-    semaphores = related.MappingField(Semaphore, "semaphore", default={})
+    locks = related.MappingField(Lock, "locks", default={})
 
     def __attrs_post_init__(self):
         from . import collect
@@ -231,8 +231,8 @@ class Suite(Profile):
     def add_case(self, case):
         if case.is_active(self.includes, self.excludes):
             self.queued.add(case)
-            if case.semaphore not in self.semaphores.keys():
-                self.semaphores[case.semaphore] = Semaphore()
+            if case.lock not in self.locks.keys():
+                self.locks[case.lock] = Lock()
             get_logger().debug("case queued", case=case.file_path)
         else:
             self.skipped.add(case)

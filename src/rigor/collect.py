@@ -14,12 +14,13 @@ def collect(suite):
     future = asyncio.ensure_future(async_collect(suite))
     loop.run_until_complete(future)
 
-    suite.semaphores[None] = asyncio.Semaphore(suite.concurrency)
+    suite.locks[None] = None
     for case in future.result():
         suite.add_case(case)
 
     log.info("tests collected", queued=len(suite.queued),
-             skipped=len(suite.skipped))
+             skipped=len(suite.skipped), concurrency=suite.concurrency,
+             num_locks=len(suite.locks.keys()))
 
 
 async def async_collect(suite):

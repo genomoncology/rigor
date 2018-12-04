@@ -111,7 +111,7 @@ def test_case_http_status(suite):
 def test_case_iterate(suite):
     case = suite.get_case(ROOT_DIR, "iterate.rigor")
     assert len(case.steps) == 4
-    assert 'iterable' in suite.semaphores.keys()
+    assert 'iterable' in suite.locks.keys()
 
     step = case.steps[0]
     namespace = State(case=case).namespace
