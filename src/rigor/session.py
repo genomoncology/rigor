@@ -38,12 +38,22 @@ class Session(object):
     def run(self):
         return self.run_suite()
 
+    def run_failed(self, failed):
+        return self.run_failed_cases_again(failed)
+
     def run_suite(self):
         results = []
         for case, scenario in self.case_scenarios():
             scenario_result = self.run_case_scenario(case, scenario)
             results.append(scenario_result)
 
+        return results
+
+    def run_failed_cases_again(self, failed):
+        results = []
+        for case, scenario in failed:
+            scenario_result = self.run_case_scenario(case, scenario)
+            results.append(scenario_result)
         return results
 
     def run_case_scenario(self, case, scenario):
@@ -141,12 +151,31 @@ class AsyncSession(Session):
 
         return results
 
+    def run_failed(self, failed):
+        future = asyncio.ensure_future(self.run_failed_cases_again(failed))
+        self.loop.run_until_complete(future)
+        results = future.result()
+
+        # close http
+        future = asyncio.ensure_future(self.close_http())
+        self.loop.run_until_complete(future)
+
+        return results
+
     async def close_http(self):
         await self.http.close()
 
     async def run_suite(self):
         tasks = []
         for case, scenario in self.case_scenarios():
+            tasks.append(asyncio.ensure_future(
+                self.run_case_scenario(case, scenario)
+            ))
+        return await asyncio.gather(*tasks, return_exceptions=False)
+
+    async def run_failed_cases_again(self, failed):
+        tasks = []
+        for case, scenario in failed:
             tasks.append(asyncio.ensure_future(
                 self.run_case_scenario(case, scenario)
             ))

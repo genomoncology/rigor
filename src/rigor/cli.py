@@ -35,7 +35,9 @@ from . import setup_logging, get_logger, execute
               help='# of retries for GET calls only. (default: 0)')
 @click.option('--sleep', '-s', type=int, default=60,
               help='Retry sleep (seconds multiplied by retry). (default: 60)')
-def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
+@click.option('--retry_failed', '-f', is_flag=True,
+              help='Retries all failed scenarios at the end.')
+def main(paths, profile, output, quiet, verbose, json, html, coverage, retry_failed, **cli):
     # default paths
     paths = paths or ["."]
 
@@ -50,7 +52,7 @@ def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
     get_logger().debug("profile", profile=profile)
 
     # create/collect suite
-    suite = Suite.create(paths, profile, **cli)
+    suite = Suite.create(paths, profile, retry_failed, **cli)
 
     # execute suite
     suite_result = execute(suite)

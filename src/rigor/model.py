@@ -239,9 +239,11 @@ class Suite(Profile):
             get_logger().debug("case skipped", case=case.file_path)
 
     @classmethod
-    def create(cls, paths, profile, **cli):
+    def create(cls, paths, profile, retry_failed, **cli):
         # start kwargs using profile
         kwargs = profile.as_dict()
+
+        kwargs['retry_failed'] = retry_failed
 
         # remove none and empty lists from cli keyword args (0/False is ok)
         cli = dict([(k, v) for k, v in cli.items() if v not in (None, [], ())])

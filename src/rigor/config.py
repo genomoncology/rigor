@@ -19,6 +19,7 @@ class Profile(object):
     concurrency = related.IntegerField(default=5)
     retries = related.IntegerField(default=0)
     sleep = related.IntegerField(default=60)
+    retry_failed = related.BooleanField(default=False, required=False)
 
     def __attrs_post_init__(self):
         # circumvent frozen error due to immutable
