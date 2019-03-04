@@ -16,6 +16,7 @@ def execute(suite):
             for result in scenario_results
             if not result.success
         ]
+
         if len(failed_results) > 0 and suite.retry_failed:
             log.info("retrying failed scenarios", failed=len(failed_results))
             retry_session = Session.create(suite)
