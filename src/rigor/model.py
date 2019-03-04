@@ -223,7 +223,7 @@ class Suite(Profile):
                            includes=self.includes,
                            excludes=self.excludes,
                            concurrency=self.concurrency,
-                           retry_failed=self.retry_failed,)
+                           retry_failed=self.retry_failed)
 
     def get_case(self, path, filename=None):
         file_path = os.path.join(path, filename) if filename else path
