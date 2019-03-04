@@ -18,7 +18,7 @@ def execute(suite):
             retry_scenario_results = retry_session.run_failed(failed_results)
             scenario_results = [result for result in scenario_results if result.success]
 
-        all_results = list(scenario_results) + list(retry_scenario_results)
+        all_results = scenario_results + retry_scenario_results
 
         suite_result = SuiteResult.create(suite, all_results)
 
