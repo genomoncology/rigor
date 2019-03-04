@@ -222,7 +222,8 @@ class Suite(Profile):
                            extensions=self.extensions,
                            includes=self.includes,
                            excludes=self.excludes,
-                           concurrency=self.concurrency)
+                           concurrency=self.concurrency,
+                           retry_failed=self.retry_failed,)
 
     def get_case(self, path, filename=None):
         file_path = os.path.join(path, filename) if filename else path
@@ -239,11 +240,9 @@ class Suite(Profile):
             get_logger().debug("case skipped", case=case.file_path)
 
     @classmethod
-    def create(cls, paths, profile, retry_failed=False, **cli):
+    def create(cls, paths, profile, **cli):
         # start kwargs using profile
         kwargs = profile.as_dict()
-
-        kwargs['retry_failed'] = retry_failed
 
         # remove none and empty lists from cli keyword args (0/False is ok)
         cli = dict([(k, v) for k, v in cli.items() if v not in (None, [], ())])

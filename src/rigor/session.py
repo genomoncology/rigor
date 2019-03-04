@@ -35,25 +35,17 @@ class Session(object):
             for scenario in case.scenarios:
                 yield case, scenario
 
-    def run(self):
-        return self.run_suite()
+    def run(self, case_scenarios=None):
+        return self.run_suite(case_scenarios)
 
-    def run_failed(self, failed):
-        return self.run_failed_cases_again(failed)
-
-    def run_suite(self):
+    def run_suite(self, case_scenarios=None):
         results = []
-        for case, scenario in self.case_scenarios():
+        if case_scenarios is None:
+            case_scenarios = self.case_scenarios()
+        for case, scenario in case_scenarios:
             scenario_result = self.run_case_scenario(case, scenario)
             results.append(scenario_result)
 
-        return results
-
-    def run_failed_cases_again(self, failed):
-        results = []
-        for case, scenario in failed:
-            scenario_result = self.run_case_scenario(case, scenario)
-            results.append(scenario_result)
         return results
 
     def run_case_scenario(self, case, scenario):
@@ -139,20 +131,9 @@ class AsyncSession(Session):
     connector = related.ChildField(TCPConnector)
     http = related.ChildField(object)
 
-    def run(self):
+    def run(self, case_scenarios=None):
         # run and get results
-        future = asyncio.ensure_future(self.run_suite())
-        self.loop.run_until_complete(future)
-        results = future.result()
-
-        # close http
-        future = asyncio.ensure_future(self.close_http())
-        self.loop.run_until_complete(future)
-
-        return results
-
-    def run_failed(self, failed):
-        future = asyncio.ensure_future(self.run_failed_cases_again(failed))
+        future = asyncio.ensure_future(self.run_suite(case_scenarios))
         self.loop.run_until_complete(future)
         results = future.result()
 
@@ -165,17 +146,11 @@ class AsyncSession(Session):
     async def close_http(self):
         await self.http.close()
 
-    async def run_suite(self):
+    async def run_suite(self, case_scenarios=None):
         tasks = []
-        for case, scenario in self.case_scenarios():
-            tasks.append(asyncio.ensure_future(
-                self.run_case_scenario(case, scenario)
-            ))
-        return await asyncio.gather(*tasks, return_exceptions=False)
-
-    async def run_failed_cases_again(self, failed):
-        tasks = []
-        for case, scenario in failed:
+        if case_scenarios is None:
+            case_scenarios = self.case_scenarios()
+        for case, scenario in case_scenarios:
             tasks.append(asyncio.ensure_future(
                 self.run_case_scenario(case, scenario)
             ))
