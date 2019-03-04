@@ -239,7 +239,7 @@ class Suite(Profile):
             get_logger().debug("case skipped", case=case.file_path)
 
     @classmethod
-    def create(cls, paths, profile, retry_failed, **cli):
+    def create(cls, paths, profile, retry_failed=False, **cli):
         # start kwargs using profile
         kwargs = profile.as_dict()
 

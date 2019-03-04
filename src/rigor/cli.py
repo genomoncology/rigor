@@ -37,7 +37,8 @@ from . import setup_logging, get_logger, execute
               help='Retry sleep (seconds multiplied by retry). (default: 60)')
 @click.option('--retry_failed', '-f', is_flag=True,
               help='Retries all failed scenarios at the end.')
-def main(paths, profile, output, quiet, verbose, json, html, coverage, retry_failed, **cli):
+def main(paths, profile, output, quiet, verbose,
+         json, html, coverage, retry_failed, **cli):
     # default paths
     paths = paths or ["."]
 
