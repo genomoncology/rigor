@@ -102,8 +102,9 @@ class CoverageReport(object):
                 params = step_result.fetch.kwargs.get("params")
                 method_report = self.get_method_report(url, method)
                 if method_report:
-                    method_report.add(case_pass, scenario_pass, step_pass,
-                                      params)
+                    method_report.add(
+                        case_pass, scenario_pass, step_pass, params
+                    )
 
     def get_method_report(self, url, method):
         """ return method report for a given url & method combination """
@@ -182,8 +183,9 @@ class CoverageReport(object):
                     report.get_method_report(method)
 
         # create and prepare report
-        report = CoverageReport(suite_result=suite_result, schemas=schemas,
-                                paths=paths)
+        report = CoverageReport(
+            suite_result=suite_result, schemas=schemas, paths=paths
+        )
         report.prepare()
         return report
 
@@ -193,7 +195,15 @@ class CoverageReport(object):
 CASE = "__key_case__"
 SCENARIO = "__key_scenario__"
 STEP = "__key_step__"
-COLUMNS = ["url", "method", "cases_passed", "cases_failed", "scenarios_passed",
-           "scenarios_failed", "steps_passed", "steps_failed"]
+COLUMNS = [
+    "url",
+    "method",
+    "cases_passed",
+    "cases_failed",
+    "scenarios_passed",
+    "scenarios_failed",
+    "steps_passed",
+    "steps_failed",
+]
 HEADERS = [column.replace("_", " ").title() for column in COLUMNS]
 WIDTHS = [10000] + [4000] * (len(COLUMNS))

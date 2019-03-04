@@ -8,7 +8,6 @@ TITLE = "Dorothy Vaughan - Wikipedia"
 
 
 def test_aiohttp_call():
-
     async def go():
         async with aiohttp.ClientSession() as session:
             async with session.get(URL) as context:
@@ -22,7 +21,7 @@ def test_aiohttp_call():
     text = loop.run_until_complete(go())
     assert isinstance(text, str)
 
-    soup = BeautifulSoup(text, 'html.parser')
+    soup = BeautifulSoup(text, "html.parser")
     assert soup.title.string == TITLE
 
     fmt = "{soup.title.string}"

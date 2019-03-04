@@ -21,9 +21,7 @@ class Match(object):
 
     @classmethod
     def create(cls, step):
-        return cls(
-            location="features/step_definitions/steps.rb;1"
-        )
+        return cls(location="features/step_definitions/steps.rb;1")
 
 
 @related.immutable
@@ -53,15 +51,24 @@ class DocString(object):
 
     @classmethod
     def create(cls, step_result):
-        return cls(value="\n".join([
-            cls.section("REQUEST", step_result.fetch),
-            cls.section("RESPONSE [%s]" % step_result.status,
-                        step_result.response),
-            cls.section("TRANSFORM", step_result.transform),
-            cls.section("EXTRACT", step_result.extract),
-            cls.section("FAILURES", step_result.failed_validations,
-                        suppress_empty_values=False)
-        ]))
+        return cls(
+            value="\n".join(
+                [
+                    cls.section("REQUEST", step_result.fetch),
+                    cls.section(
+                        "RESPONSE [%s]" % step_result.status,
+                        step_result.response,
+                    ),
+                    cls.section("TRANSFORM", step_result.transform),
+                    cls.section("EXTRACT", step_result.extract),
+                    cls.section(
+                        "FAILURES",
+                        step_result.failed_validations,
+                        suppress_empty_values=False,
+                    ),
+                ]
+            )
+        )
 
 
 @related.immutable
@@ -90,14 +97,14 @@ class Step(object):
     def create(cls, step_result, scenario_result):
         if step_result is None:
             output = related.to_dict(scenario_result.scenario)
-            output['__file__'] = scenario_result.case.file_path
+            output["__file__"] = scenario_result.case.file_path
             return cls(
                 keyword="",
                 line=3,
                 name="Scenario Setup",
                 doc_string=DocString.section("SCENARIO", output),
                 match=Match(),
-                result=StatusResult.create(True, 0)
+                result=StatusResult.create(True, 0),
             )
         else:
             return cls(
@@ -106,8 +113,9 @@ class Step(object):
                 name=step_result.step.description,
                 doc_string=DocString.create(step_result),
                 match=Match.create(step_result.step),
-                result=StatusResult.create(step_result.success,
-                                           step_result.duration),
+                result=StatusResult.create(
+                    step_result.success, step_result.duration
+                ),
             )
 
 
@@ -123,13 +131,16 @@ class Element(object):
 
     @classmethod
     def create(cls, scenario_result):
-        uuid = "%s;%s" % (urllib.parse.quote_plus(scenario_result.case.name),
-                          scenario_result.uuid)
+        uuid = "%s;%s" % (
+            urllib.parse.quote_plus(scenario_result.case.name),
+            scenario_result.uuid,
+        )
 
         # scenario step + steps
-        steps = [Step.create(None, scenario_result)] + \
-                [Step.create(step_result, scenario_result)
-                 for step_result in scenario_result.step_results]
+        steps = [Step.create(None, scenario_result)] + [
+            Step.create(step_result, scenario_result)
+            for step_result in scenario_result.step_results
+        ]
 
         return cls(
             keyword="Scenario",
@@ -163,15 +174,18 @@ class Feature(object):
             id=uuid,
             name=case.name,
             line=1,
-            elements=[Element.create(scenario_result) for scenario_result in
-                      chain(case_result.passed, case_result.failed)],
-            tags=[Tag(name=tag) for tag in case.tags]
+            elements=[
+                Element.create(scenario_result)
+                for scenario_result in chain(
+                    case_result.passed, case_result.failed
+                )
+            ],
+            tags=[Tag(name=tag) for tag in case.tags],
         )
 
 
 @related.immutable
 class Cucumber(object):
-
     @classmethod
     def create(cls, suite_result):
         features = []
@@ -221,10 +235,16 @@ class ReportEngine(object):
         html_dir_path = os.path.join(output_path, "html-%s" % timestamp)
         html_report_path = None
 
-        args = ["java", "-jar", jar_path,   # java command w/ jar path
-                "-o", html_dir_path,        # where to place html
-                "-n",                       # run once, not daemon
-                "-f", output_path]          # where to find cucumber.json
+        args = [
+            "java",
+            "-jar",
+            jar_path,  # java command w/ jar path
+            "-o",
+            html_dir_path,  # where to place html
+            "-n",  # run once, not daemon
+            "-f",
+            output_path,
+        ]  # where to find cucumber.json
 
         try:
             # call cucumber sandwich
@@ -233,8 +253,9 @@ class ReportEngine(object):
             # check report path
             html_report_path = os.path.join(html_dir_path, self.CUKE_PATH)
             assert os.path.exists(html_report_path)
-            get_logger().debug("generated html",
-                               html_report_path=html_report_path)
+            get_logger().debug(
+                "generated html", html_report_path=html_report_path
+            )
 
         except Exception as e:  # pragma: no cover
             get_logger().error("failed html report", error=str(e))

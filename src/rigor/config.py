@@ -19,11 +19,14 @@ class Profile(object):
     concurrency = related.IntegerField(default=5)
     retries = related.IntegerField(default=0)
     sleep = related.IntegerField(default=60)
+    retry_failed = related.BooleanField(default=False, required=False)
 
     def __attrs_post_init__(self):
         # circumvent frozen error due to immutable
-        extensions = [ext[1:] if ext.startswith(".") else ext
-                      for ext in self.extensions or []]
+        extensions = [
+            ext[1:] if ext.startswith(".") else ext
+            for ext in self.extensions or []
+        ]
         object.__setattr__(self, "extensions", extensions)
 
     def as_dict(self):
@@ -80,12 +83,18 @@ class Config(Profile):
     @classmethod
     def loads(cls, content, file_path=None):
         """ Load JSON string into a Config object. """
-        vals = related.from_yaml(content, file_path=file_path,
-                                 object_pairs_hook=dict)
+        vals = related.from_yaml(
+            content, file_path=file_path, object_pairs_hook=dict
+        )
 
         # environment namespace (RIGOR_)
-        env_ns = Namespace(env={k[6:]: v for k, v in os.environ.items()
-                                if k.startswith("RIGOR_")})
+        env_ns = Namespace(
+            env={
+                k[6:]: v
+                for k, v in os.environ.items()
+                if k.startswith("RIGOR_")
+            }
+        )
 
         # pop profiles and file_path from root config
         profiles = vals.pop("profiles", {})
@@ -99,9 +108,9 @@ class Config(Profile):
             profiles[name] = profile
 
         # construct root config profile
-        vals['name'] = '__root__'
-        vals['file_path'] = file_path
-        vals['profiles'] = profiles
+        vals["name"] = "__root__"
+        vals["file_path"] = file_path
+        vals["profiles"] = profiles
         eval_update_ns(vals, env_ns)
         return related.to_model(cls, vals)
 

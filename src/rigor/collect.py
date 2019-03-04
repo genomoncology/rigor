@@ -18,8 +18,9 @@ def collect(suite):
     for case in future.result():
         suite.add_case(case)
 
-    log.info("tests collected", queued=len(suite.queued),
-             skipped=len(suite.skipped))
+    log.info(
+        "tests collected", queued=len(suite.queued), skipped=len(suite.skipped)
+    )
 
 
 async def async_collect(suite):
@@ -33,16 +34,17 @@ async def async_collect(suite):
 
 async def collect_case(suite, file_path):
     from . import Case
-    async with aiofiles.open(file_path, mode='r') as f:
+
+    async with aiofiles.open(file_path, mode="r") as f:
         return Case.loads(await f.read(), file_path=file_path)
 
 
 def glob_patterns(suite):
-    for path in suite.paths or ['.']:
+    for path in suite.paths or ["."]:
         if os.path.exists(path) and os.path.isfile(path):
             yield path
 
-        for file_prefix in suite.prefixes or ['']:
-            for extension in suite.extensions or ['rigor']:
+        for file_prefix in suite.prefixes or [""]:
+            for extension in suite.extensions or ["rigor"]:
                 file_pattern = "%s*.%s" % (file_prefix, extension)
                 yield os.path.join(path, "**", file_pattern)

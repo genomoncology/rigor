@@ -3,7 +3,7 @@ import sys
 import structlog
 
 
-LOGGER_NAME = 'rigor'
+LOGGER_NAME = "rigor"
 
 DEFAULT_PROCESSORS = [
     structlog.stdlib.filter_by_level,
@@ -27,8 +27,11 @@ def setup_logging(quiet=False, verbose=False, json=False):
     root.addHandler(logging.StreamHandler(sys.stdout))
 
     # renderer
-    renderer = structlog.processors.JSONRenderer() if json else \
-        structlog.dev.ConsoleRenderer()
+    renderer = (
+        structlog.processors.JSONRenderer()
+        if json
+        else structlog.dev.ConsoleRenderer()
+    )
 
     # https://structlog.readthedocs.io/en/stable/development.html
     structlog.configure(

@@ -2,139 +2,85 @@
 
 from . import const, utils
 
-from .logging import (
-    setup_logging,
-    get_logger,
-    log_with_success,
-)
+from .logging import setup_logging, get_logger, log_with_success
 
-from .metrics import (
-    Timer
-)
+from .metrics import Timer
 
-from .collect import (
-    collect
-)
+from .collect import collect
 
-from .enums import (
-    Comparison,
-    Method,
-    Status,
-)
+from .enums import Comparison, Method, Status
 
-from .namespace import (
-    Namespace,
-)
+from .namespace import Namespace
 
-from .config import (
-    Config,
-    Profile
-)
+from .config import Config, Profile
 
-from .model import (
-    Case,
-    Requestor,
-    Step,
-    Suite,
-    Validator,
-)
+from .model import Case, Requestor, Step, Suite, Validator
 
-from .session import (
-    Session
-)
+from .session import Session
 
-from .state import (
-    State,
-    SuiteResult,
-    StepState,
-)
+from .state import State, SuiteResult, StepState
 
-from .execute import (
-    execute
-)
+from .execute import execute
 
-from .reporting import (
-    ReportEngine
-)
+from .reporting import ReportEngine
 
-from .swagger import (
-    Path,
-    Swagger
-)
+from .swagger import Path, Swagger
 
-from .coverage import (
-    CoverageReport
-)
+from .coverage import CoverageReport
 
-from .cli import (
-    main
-)
+from .cli import main
 
 
 __all__ = [
     # const.py
     "const",
     "utils",
-
     # logging.py
     "setup_logging",
     "get_logger",
     "log_with_success",
-
     # metrics.py
     "Timer",
-
     # collect.py
     "collect",
-
     # enums.py
     "Comparison",
     "Method",
     "Status",
-
     # execute.py
     "execute",
-
     # namespace.py
     "Namespace",
-
     # config.py
     "Config",
     "Profile",
-
     # model.py
     "Case",
     "Requestor",
     "Step",
     "Suite",
     "Validator",
-
     # session.py
     "Session",
-
     # reporting.py
     "ReportEngine",
-
     # state.py
     "State",
     "StepState",
     "SuiteResult",
-
     # swagger.py
     "Path",
     "Swagger",
-
     # coverage.py
     "CoverageReport",
-
     # cli.py
     "main",
 ]
 
 
 __author__ = """Ian Maurer"""
-__email__ = 'ian@genomoncology.com'
-__version__ = '0.5.10'
+__email__ = "ian@genomoncology.com"
+__version__ = "0.5.10"
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"

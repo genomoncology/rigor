@@ -5,36 +5,78 @@ from . import setup_logging, get_logger, execute
 
 
 @click.command()
-@click.argument('paths', nargs=-1)
-@click.option('--profile', default="__root__",
-              help="Profile name (e.g. test)")
-@click.option('--host', help="Host name (e.g. http://localhost:8000)")
-@click.option('--includes', '-i', multiple=True,
-              help="Include tag of cases. (e.g. smoke)")
-@click.option('--excludes', '-e', multiple=True,
-              help="Exclude tag of cases to run. (e.g. broken)")
-@click.option('--prefixes', '-p', multiple=True,
-              help="Filter cases by file prefix. (e.g. smoke_)")
-@click.option('--extensions', '-e', multiple=True,
-              help="Filter cases by file extension. (e.g. rigor)")
-@click.option('--concurrency', '-c', type=int, default=None,
-              help='# of concurrent HTTP requests. (default: 5)')
-@click.option('--output', '-o', default=None,
-              help='Report output folder.')
-@click.option('--quiet', '-q', is_flag=True,
-              help='Run in quiet mode. (warning/critical level only)')
-@click.option('--verbose', '-v', is_flag=True,
-              help='Run in verbose mode. (debug level logging)')
-@click.option('--json', '-j', is_flag=True,
-              help='JSON-style logging.')
-@click.option('--html', '-h', is_flag=True,
-              help='Generate HTML report.')
-@click.option('--coverage', '-g', is_flag=True,
-              help='Generate Coverage report.')
-@click.option('--retries', '-r', type=int, default=0,
-              help='# of retries for GET calls only. (default: 0)')
-@click.option('--sleep', '-s', type=int, default=60,
-              help='Retry sleep (seconds multiplied by retry). (default: 60)')
+@click.argument("paths", nargs=-1)
+@click.option("--profile", default="__root__", help="Profile name (e.g. test)")
+@click.option("--host", help="Host name (e.g. http://localhost:8000)")
+@click.option(
+    "--includes",
+    "-i",
+    multiple=True,
+    help="Include tag of cases. (e.g. smoke)",
+)
+@click.option(
+    "--excludes",
+    "-e",
+    multiple=True,
+    help="Exclude tag of cases to run. (e.g. broken)",
+)
+@click.option(
+    "--prefixes",
+    "-p",
+    multiple=True,
+    help="Filter cases by file prefix. (e.g. smoke_)",
+)
+@click.option(
+    "--extensions",
+    "-e",
+    multiple=True,
+    help="Filter cases by file extension. (e.g. rigor)",
+)
+@click.option(
+    "--concurrency",
+    "-c",
+    type=int,
+    default=None,
+    help="# of concurrent HTTP requests. (default: 5)",
+)
+@click.option("--output", "-o", default=None, help="Report output folder.")
+@click.option(
+    "--quiet",
+    "-q",
+    is_flag=True,
+    help="Run in quiet mode. (warning/critical level only)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Run in verbose mode. (debug level logging)",
+)
+@click.option("--json", "-j", is_flag=True, help="JSON-style logging.")
+@click.option("--html", "-h", is_flag=True, help="Generate HTML report.")
+@click.option(
+    "--coverage", "-g", is_flag=True, help="Generate Coverage report."
+)
+@click.option(
+    "--retries",
+    "-r",
+    type=int,
+    default=0,
+    help="# of retries for GET calls only. (default: 0)",
+)
+@click.option(
+    "--sleep",
+    "-s",
+    type=int,
+    default=60,
+    help="Retry sleep (seconds multiplied by retry). (default: 60)",
+)
+@click.option(
+    "--retry_failed",
+    "-f",
+    is_flag=True,
+    help="Retries all failed scenarios at the end.",
+)
 def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
     # default paths
     paths = paths or ["."]
@@ -61,19 +103,17 @@ def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
     # system error code
     if suite_result.failed or not suite_result.passed:
         raise click.ClickException(
-            "%s test(s) failed. %s test(s) passed." % (
-                len(suite_result.failed),
-                len(suite_result.passed)
-            )
+            "%s test(s) failed. %s test(s) passed."
+            % (len(suite_result.failed), len(suite_result.passed))
         )
 
 
 def generate_reports(suite_result, html, output, coverage):
     # construct report engine
     if output or html:
-        report_engine = ReportEngine(output_path=output,
-                                     suite_result=suite_result,
-                                     with_html=html)
+        report_engine = ReportEngine(
+            output_path=output, suite_result=suite_result, with_html=html
+        )
 
         # generate report
         report_path = report_engine.generate()
@@ -90,5 +130,5 @@ def generate_reports(suite_result, html, output, coverage):
             get_logger().info("launching excel", report_path=report_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

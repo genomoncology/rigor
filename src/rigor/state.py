@@ -37,14 +37,14 @@ class Fetch(object):
             if isinstance(data, dict) and isinstance(files, dict):
                 data.update(files)
         else:
-            kw['data'] = related.to_json(data)
+            kw["data"] = related.to_json(data)
 
         # unlimited timeout if not specified
         kw.setdefault("timeout", None)
 
         # add verify = False for requests
         if not is_aiohttp:
-            kw['verify'] = False
+            kw["verify"] = False
 
         return kw
 
@@ -104,8 +104,7 @@ class SuiteResult(object):
 
         for result in scenario_results:
             case_result = cache.setdefault(
-                result.case.uuid,
-                CaseResult(suite=suite, case=result.case)
+                result.case.uuid, CaseResult(suite=suite, case=result.case)
             )
 
             sink = case_result.passed if result.success else case_result.failed
@@ -156,14 +155,18 @@ class State(ScenarioResult, Timer):
         values.update(self.extract if self.extract else {})
 
         # add handles to namespaces (overrides scenario, extract and iterate!)
-        values.update(dict(__uuid__=self.uuid,
-                           globals=self.globals,
-                           scenario=self.scenario,
-                           transform=self.transform,
-                           extract=self.extract,
-                           response=self.response,
-                           iterate=self.iterate,
-                           env=os.environ))
+        values.update(
+            dict(
+                __uuid__=self.uuid,
+                globals=self.globals,
+                scenario=self.scenario,
+                transform=self.transform,
+                extract=self.extract,
+                response=self.response,
+                iterate=self.iterate,
+                env=os.environ,
+            )
+        )
 
         return values
 
@@ -176,11 +179,13 @@ class State(ScenarioResult, Timer):
         if step.transform:
             transform = Namespace.render(step.transform, self.namespace)
             output = jmespath.search(transform, self.response)
-            get_logger().debug("transform",
-                               response=self.response,
-                               original=self.transform,
-                               input=transform,
-                               output=transform)
+            get_logger().debug(
+                "transform",
+                response=self.response,
+                original=self.transform,
+                input=transform,
+                output=transform,
+            )
             return output
 
     def do_extract(self, step):
@@ -192,13 +197,19 @@ class State(ScenarioResult, Timer):
 
         # status check
         expected_status = step.request.status or HTTP_SUCCESS
-        validator = Validator(actual="${status}",
-                              expect=expected_status,
-                              compare=enums.Comparison.IN)
-        results.append(ValidationResult(actual=status,
-                                        expect=expected_status,
-                                        success=status in expected_status,
-                                        validator=validator))
+        validator = Validator(
+            actual="${status}",
+            expect=expected_status,
+            compare=enums.Comparison.IN,
+        )
+        results.append(
+            ValidationResult(
+                actual=status,
+                expect=expected_status,
+                success=status in expected_status,
+                validator=validator,
+            )
+        )
 
         # validators check
         for validator in step.validate or []:
@@ -229,20 +240,24 @@ class State(ScenarioResult, Timer):
         compare = related.to_model(enums.Comparison, compare)
         success = compare.evaluate(actual, expect)
 
-        return ValidationResult(actual=actual, expect=expect, success=success,
-                                validator=validator)
+        return ValidationResult(
+            actual=actual, expect=expect, success=success, validator=validator
+        )
 
     def add_step(self, step_result):
         self.step_results.append(step_result)
         self.success = self.success and step_result.success
 
     def result(self):
-        log_with_success("scenario", self.success,
-                         feature=self.case.name,
-                         scenario=self.scenario.__name__,
-                         file_path=self.case.file_path,
-                         num_steps=len(self.step_results),
-                         timer=self.get_duration())
+        log_with_success(
+            "scenario",
+            self.success,
+            feature=self.case.name,
+            scenario=self.scenario.__name__,
+            file_path=self.case.file_path,
+            num_steps=len(self.step_results),
+            timer=self.get_duration(),
+        )
 
         return ScenarioResult(
             uuid=self.uuid,
@@ -250,7 +265,7 @@ class State(ScenarioResult, Timer):
             case=self.case,
             scenario=self.scenario,
             success=self.success,
-            step_results=self.step_results
+            step_results=self.step_results,
         )
 
 
@@ -322,8 +337,9 @@ class StepState(StepResult, Timer):
             params = self.request.get_params(self.namespace)
             files = self.get_files()
             kw = dict(headers=headers, data=data, params=params, files=files)
-            self.fetch = Fetch(method=self.method, url=self.url, kwargs=kw,
-                               is_form=is_form)
+            self.fetch = Fetch(
+                method=self.method, url=self.url, kwargs=kw, is_form=is_form
+            )
 
         return self.fetch
 

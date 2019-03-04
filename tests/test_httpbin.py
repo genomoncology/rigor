@@ -1,5 +1,12 @@
-from rigor import Suite, Config, Namespace, Validator, State, ReportEngine,\
-    execute
+from rigor import (
+    Suite,
+    Config,
+    Namespace,
+    Validator,
+    State,
+    ReportEngine,
+    execute,
+)
 
 from collections import OrderedDict
 
@@ -22,8 +29,9 @@ def suite(config):
 
 @pytest.fixture
 def sync_suite(config):
-    return Suite.create(paths, config, excludes=["broken", "profile-only"],
-                        concurrency=0)
+    return Suite.create(
+        paths, config, excludes=["broken", "profile-only"], concurrency=0
+    )
 
 
 def test_collect(suite):
@@ -68,8 +76,10 @@ def test_case_get(suite):
         Validator(actual="{response.args}", expect=OrderedDict()),
         Validator(actual="{response.headers.Accept}", expect="*/*"),
         Validator(actual="{response.headers.Connection}", expect="close"),
-        Validator(actual="{response.headers.Authorization}",
-                  expect="Token GUEST-TOKEN"),
+        Validator(
+            actual="{response.headers.Authorization}",
+            expect="Token GUEST-TOKEN",
+        ),
     ]
 
 
@@ -87,8 +97,9 @@ def test_case_params(suite):
     # check scenarios
     assert case.scenarios[0] == Namespace(value=1, __name__="Scenario #1")
     assert case.scenarios[1] == Namespace(value=2, __name__="Override!")
-    assert case.scenarios[2] == Namespace(value=['a', 'b', 'c'],
-                                          __name__="Scenario #3")
+    assert case.scenarios[2] == Namespace(
+        value=["a", "b", "c"], __name__="Scenario #3"
+    )
 
 
 def test_case_http_status(suite):
@@ -111,7 +122,7 @@ def test_case_http_status(suite):
 def test_case_iterate(suite):
     case = suite.get_case(ROOT_DIR, "iterate.rigor")
     assert len(case.steps) == 4
-    assert 'iterable' in suite.semaphores.keys()
+    assert "iterable" in suite.semaphores.keys()
 
     step = case.steps[0]
     namespace = State(case=case).namespace
@@ -144,11 +155,11 @@ def test_case_load_yaml(suite):
 
     scenario = case.scenarios[0]
     assert scenario.keys() == {"data", "__name__"}
-    assert scenario['__name__'] == "same"
+    assert scenario["__name__"] == "same"
 
     scenario = case.scenarios[1]
     assert scenario.keys() == {"data", "__name__"}
-    assert scenario['__name__'] == "same"
+    assert scenario["__name__"] == "same"
 
 
 def test_case_conditional(config):
