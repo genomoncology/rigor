@@ -172,7 +172,7 @@ class Case(object):
             split_on_comment = line.split('#')
             line_content_before_comment = split_on_comment[0]
             stripped_before_comment = line_content_before_comment.strip()
-            if stripped_before_comment is not '':
+            if stripped_before_comment != '':
                 no_comments_content += line
         return no_comments_content
 
