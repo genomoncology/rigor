@@ -6,8 +6,10 @@ import os
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "petstore")
 HOST = "https://raw.githubusercontent.com"
-SCHEMA = "OAI/OpenAPI-Specification/master/examples/v2.0/" \
-         "json/petstore-simple.json"
+SCHEMA = (
+    "OAI/OpenAPI-Specification/master/examples/v2.0/"
+    "json/petstore-simple.json"
+)
 
 
 @pytest.fixture
@@ -39,7 +41,7 @@ def report(result):
 
 def test_config_ok_in_suite(suite):
     assert suite.host == HOST
-    assert suite.schemas['v2-simple'] == SCHEMA
+    assert suite.schemas["v2-simple"] == SCHEMA
     assert len(suite.queued) == 2
 
 

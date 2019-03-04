@@ -8,7 +8,6 @@ from . import get_logger
 
 
 class Namespace(related.ImmutableDict):
-
     def __getattr__(self, item):
         try:
             return self.__getitem__(item)
@@ -85,13 +84,21 @@ class Namespace(related.ImmutableDict):
     def do_substitute(cls, namespace, ns, value):
         try:
             substituted = string.Template(value).substitute(**ns)
-            get_logger().debug("substitution success", value=value,
-                               substituted=substituted, namespace=namespace)
+            get_logger().debug(
+                "substitution success",
+                value=value,
+                substituted=substituted,
+                namespace=namespace,
+            )
 
         except Exception as error:
             substituted = value
-            get_logger().debug("substitution failed", value=value,
-                               namespace=namespace, error=error)
+            get_logger().debug(
+                "substitution failed",
+                value=value,
+                namespace=namespace,
+                error=error,
+            )
 
         return substituted
 
@@ -99,13 +106,18 @@ class Namespace(related.ImmutableDict):
     def do_render(cls, namespace, ns, substituted, value):
         try:
             formatted = substituted.format(**ns)
-            get_logger().debug("render success", substituted=substituted,
-                               formatted=formatted, namespace=namespace)
+            get_logger().debug(
+                "render success",
+                substituted=substituted,
+                formatted=formatted,
+                namespace=namespace,
+            )
 
         except Exception as error:
             formatted = substituted
-            get_logger().debug("render failed", value=value,
-                               namespace=namespace, error=error)
+            get_logger().debug(
+                "render failed", value=value, namespace=namespace, error=error
+            )
 
         return formatted
 
@@ -127,6 +139,7 @@ class Namespace(related.ImmutableDict):
                 evaluated = ast.literal_eval(stripped)
 
         except Exception as error:
-            get_logger().debug("literal eval failed", formatted=formatted,
-                               error=error)
+            get_logger().debug(
+                "literal eval failed", formatted=formatted, error=error
+            )
         return evaluated

@@ -7,10 +7,10 @@ JSON_DICT = {
         "Accept": "*/*",
         "Connection": "close",
         "Host": "httpbin.org",
-        "User-Agent": "curl/7.51.0"
+        "User-Agent": "curl/7.51.0",
     },
     "origin": "127.0.0.1",
-    "url": "https://httpbin.org/get"
+    "url": "https://httpbin.org/get",
 }
 
 VALIDATION_KWARGS = [

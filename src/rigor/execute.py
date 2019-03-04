@@ -29,9 +29,11 @@ def execute(suite):
 
         suite_result = SuiteResult.create(suite, all_results)
 
-    log.info("execute suite complete",
-             passed=len(suite_result.passed),
-             failed=len(suite_result.failed),
-             timer=timer)
+    log.info(
+        "execute suite complete",
+        passed=len(suite_result.passed),
+        failed=len(suite_result.failed),
+        timer=timer,
+    )
 
     return suite_result

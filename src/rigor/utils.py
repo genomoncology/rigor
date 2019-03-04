@@ -1,6 +1,7 @@
 # https://stackoverflow.com/a/3233356
 def nested_update(d, u):
     import collections
+
     for k, v in u.items():
         if isinstance(v, collections.Mapping):
             r = nested_update(d.get(k, {}), v)
@@ -26,7 +27,7 @@ def clean_split(line, delimiter="|"):
         items = items[:-1]
 
     # replace empty strings with Nones
-    return [None if item == '' else item for item in items]
+    return [None if item == "" else item for item in items]
 
 
 def parse_into_header_rows(text_table):

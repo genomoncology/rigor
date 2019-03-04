@@ -17,7 +17,6 @@ def pytest_collect_file(parent, path):
 
 
 class PytestCase(pytest.File):
-
     def __init__(self, fspath, parent, case):
         super().__init__(fspath, parent)
         self.case = case
@@ -28,7 +27,6 @@ class PytestCase(pytest.File):
 
 
 class PytestScenario(pytest.Item):
-
     def __init__(self, parent, case, scenario):
         super().__init__(scenario.__name__, parent)
         self.case = case

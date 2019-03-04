@@ -2,7 +2,6 @@ import time
 
 
 class Timer(object):
-
     def __repr__(self):
         return "%.3fs" % self.interval if self.interval >= 0 else "N/A"
 

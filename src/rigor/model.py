@@ -11,7 +11,6 @@ from . import Method, Namespace, Profile, get_logger, utils
 
 
 class Iterator(Namespace):
-
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], str) and not kwargs:
             data = utils.parse_into_dicts_of_rows(args[0])
@@ -75,13 +74,15 @@ class Requestor(object):
 
     def get_files(self, dir_path, namespace):
         files = self.files.evaluate(namespace) if self.files else {}
-        files = {k: open(os.path.join(dir_path, v), "rb")
-                 for k, v in files.items()}
+        files = {
+            k: open(os.path.join(dir_path, v), "rb") for k, v in files.items()
+        }
         return files
 
     def get_body(self, namespace):
-        get_logger().debug("enter get_body", data_type=type(self.data),
-                           data=self.data)
+        get_logger().debug(
+            "enter get_body", data_type=type(self.data), data=self.data
+        )
 
         body = None
         if isinstance(self.data, str):
@@ -154,8 +155,9 @@ class Case(object):
         for scenario in original or [{}]:
             if isinstance(scenario, str):
                 scenario_file_path = os.path.join(dir_path, scenario)
-                scenario = related.from_yaml(open(scenario_file_path),
-                                             object_pairs_hook=dict)
+                scenario = related.from_yaml(
+                    open(scenario_file_path), object_pairs_hook=dict
+                )
 
             name = scenario.get("__name__") or "Scenario #%s" % counter
             scenario["__name__"] = name
@@ -167,12 +169,12 @@ class Case(object):
     @classmethod
     def strip_comments(cls, content):
         # only strip out comments if they are on their own line
-        no_comments_content = ''
+        no_comments_content = ""
         for line in content.splitlines(True):
-            split_on_comment = line.split('#')
+            split_on_comment = line.split("#")
             line_content_before_comment = split_on_comment[0]
             stripped_before_comment = line_content_before_comment.strip()
-            if stripped_before_comment != '':
+            if stripped_before_comment != "":
                 no_comments_content += line
         return no_comments_content
 
@@ -180,18 +182,20 @@ class Case(object):
     def loads(cls, content, file_path=None):
         try:
             content = cls.strip_comments(content)
-            as_dict = related.from_yaml(content, file_path=file_path,
-                                        object_pairs_hook=dict)
+            as_dict = related.from_yaml(
+                content, file_path=file_path, object_pairs_hook=dict
+            )
             scenarios = as_dict.get("scenarios", [])
             dir_path = os.path.dirname(file_path)
-            as_dict['scenarios'] = cls.prep_scenarios(scenarios, dir_path)
+            as_dict["scenarios"] = cls.prep_scenarios(scenarios, dir_path)
 
             return related.to_model(Case, as_dict)
 
         except Exception as e:
             # raise e
-            get_logger().error("Failed to Load Case", file_path=file_path,
-                               error=str(e))
+            get_logger().error(
+                "Failed to Load Case", file_path=file_path, error=str(e)
+            )
             return Case(file_path=file_path, is_valid=False, scenarios=[])
 
     def is_active(self, included, excluded):
@@ -214,16 +218,19 @@ class Suite(Profile):
 
     def __attrs_post_init__(self):
         from . import collect
+
         collect(self)
-        get_logger().debug("suite constructed",
-                           host=self.host,
-                           paths=self.paths,
-                           prefixes=self.prefixes,
-                           extensions=self.extensions,
-                           includes=self.includes,
-                           excludes=self.excludes,
-                           concurrency=self.concurrency,
-                           retry_failed=self.retry_failed)
+        get_logger().debug(
+            "suite constructed",
+            host=self.host,
+            paths=self.paths,
+            prefixes=self.prefixes,
+            extensions=self.extensions,
+            includes=self.includes,
+            excludes=self.excludes,
+            concurrency=self.concurrency,
+            retry_failed=self.retry_failed,
+        )
 
     def get_case(self, path, filename=None):
         file_path = os.path.join(path, filename) if filename else path
@@ -255,6 +262,7 @@ class Suite(Profile):
 
 
 # dispatch
+
 
 @related.to_dict.register(io.BufferedReader)
 def _(obj, **kwargs):

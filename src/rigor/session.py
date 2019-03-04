@@ -21,11 +21,13 @@ class Session(object):
     def create(suite):
         if suite.concurrency > 0:
             loop = asyncio.get_event_loop()
-            connector = TCPConnector(limit_per_host=suite.concurrency,
-                                     verify_ssl=False)
+            connector = TCPConnector(
+                limit_per_host=suite.concurrency, verify_ssl=False
+            )
             http = ClientSession(loop=loop, connector=connector)
-            return AsyncSession(suite=suite, http=http, loop=loop,
-                                connector=connector)
+            return AsyncSession(
+                suite=suite, http=http, loop=loop, connector=connector
+            )
 
         else:
             return Session(suite=suite)
@@ -103,17 +105,21 @@ class Session(object):
         response = self.get_response(context)
         status = context.status_code
 
-        get_logger().debug("fetch response", response=response, status=status,
-                           **related.to_dict(fetch))
+        get_logger().debug(
+            "fetch response",
+            response=response,
+            status=status,
+            **related.to_dict(fetch)
+        )
 
         return response, status
 
     def get_response(self, context):
-        content_type = context.headers.get(const.CONTENT_TYPE, '')
+        content_type = context.headers.get(const.CONTENT_TYPE, "")
         content_type = content_type.lower()
 
         if const.TEXT_HTML in content_type:
-            html = OurSoup(context.content, 'html.parser')
+            html = OurSoup(context.content, "html.parser")
             response = html
 
         elif const.APPLICATION_JSON in content_type:
@@ -151,9 +157,9 @@ class AsyncSession(Session):
         if case_scenarios is None:
             case_scenarios = self.case_scenarios()
         for case, scenario in case_scenarios:
-            tasks.append(asyncio.ensure_future(
-                self.run_case_scenario(case, scenario)
-            ))
+            tasks.append(
+                asyncio.ensure_future(self.run_case_scenario(case, scenario))
+            )
         return await asyncio.gather(*tasks, return_exceptions=False)
 
     async def run_case_scenario(self, case, scenario):
@@ -212,29 +218,34 @@ class AsyncSession(Session):
                 status = context.status
 
         except Exception as e:  # pragma: no cover
-            get_logger().error("do_fetch exception", error=e,
-                               **related.to_dict(fetch))
+            get_logger().error(
+                "do_fetch exception", error=e, **related.to_dict(fetch)
+            )
             response = "Error"
             status = 500
 
-        get_logger().debug("fetch response", response=response, status=status,
-                           **related.to_dict(fetch))
+        get_logger().debug(
+            "fetch response",
+            response=response,
+            status=status,
+            **related.to_dict(fetch)
+        )
 
         return response, status
 
     async def get_response(self, context):
-        content_type = context.headers.get(const.CONTENT_TYPE, '')
+        content_type = context.headers.get(const.CONTENT_TYPE, "")
         content_type = content_type.lower()
 
         if const.TEXT_HTML in content_type:
-            html = OurSoup(await context.text(), 'html.parser')
+            html = OurSoup(await context.text(), "html.parser")
             response = html
 
         elif const.APPLICATION_JSON in content_type:
             response = await context.json()
 
         elif const.TEXT_PLAIN in content_type:
-            response = await context.text()   # pragma: no cover
+            response = await context.text()  # pragma: no cover
 
         else:
             response = None

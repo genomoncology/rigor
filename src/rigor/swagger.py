@@ -13,12 +13,12 @@ class Scheme(enum.Enum):
 
 @enum.unique
 class DataType(enum.Enum):
-    STRING = 'string'
-    NUMBER = 'number'
-    INTEGER = 'integer'
-    BOOLEAN = 'boolean'
-    ARRAY = 'array'
-    OBJECT = 'object'
+    STRING = "string"
+    NUMBER = "number"
+    INTEGER = "integer"
+    BOOLEAN = "boolean"
+    ARRAY = "array"
+    OBJECT = "object"
 
 
 class MIMEType(str):
@@ -28,6 +28,7 @@ class MIMEType(str):
 @related.mutable
 class Contact(object):
     """Contact information for the owners of the API."""
+
     name = related.StringField(required=False)
     url = related.StringField(required=False)
     email = related.StringField(required=False)
@@ -42,6 +43,7 @@ class License(object):
 @related.mutable
 class Info(object):
     """General information about the API."""
+
     version = related.StringField(required=True)
     title = related.StringField(required=True)
     description = related.StringField(required=False)
@@ -178,6 +180,7 @@ class Swagger(object):
     @classmethod
     def gather_schemas(cls, suite):
         from . import utils
+
         schemas = []
         for name, path in suite.schemas.items():
             json = utils.download_json_with_headers(suite, path)
