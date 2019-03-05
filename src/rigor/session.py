@@ -163,15 +163,21 @@ class AsyncSession(Session):
         return await asyncio.gather(*tasks, return_exceptions=False)
 
     async def run_case_scenario(self, case, scenario):
+        # Allows only 1 scenario run at a time with same semaphore name
+        if case.semaphore is not None:
+            async with self.suite.semaphores[case.semaphore]:
+                return await self.run_single_case_scenario(case, scenario)
+        else:
+            return await self.run_single_case_scenario(case, scenario)
+
+    async def run_single_case_scenario(self, case, scenario):
         from . import State
 
-        # Allows only 1 scenario run at a time with same semaphore name
-        async with self.suite.semaphores[case.semaphore]:
-            with State(session=self, case=case, scenario=scenario) as state:
-                async for step_result in self.iter_steps(state):
-                    state.add_step(step_result)
-                scenario_result = state.result()
-                return scenario_result
+        with State(session=self, case=case, scenario=scenario) as state:
+            async for step_result in self.iter_steps(state):
+                state.add_step(step_result)
+            scenario_result = state.result()
+            return scenario_result
 
     async def iter_steps(self, state):
         for step in state.case.steps:
