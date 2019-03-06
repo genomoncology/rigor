@@ -161,6 +161,7 @@ class Case(object):
 
             name = scenario.get("__name__") or "Scenario #%s" % counter
             scenario["__name__"] = name
+            scenario["__sequence__"] = counter
             counter += 1
             updated.append(scenario)
 
