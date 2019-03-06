@@ -13,7 +13,7 @@ def get_case_scenario(case, scenario_seq_num):
     )
 
 
-def get_failed_results(scenario_results):
+def get_failed_scenarios(scenario_results):
     failed_results = [
         (
             result.case,
@@ -35,12 +35,12 @@ def execute(suite):
 
         # rerun failed cases again
         retry_scenario_results = []
-        failed_results = get_failed_results(scenario_results)
+        failed_scenarios = get_failed_scenarios(scenario_results)
 
-        if len(failed_results) > 0 and suite.retry_failed:
-            log.info("retrying failed scenarios", failed=len(failed_results))
+        if len(failed_scenarios) > 0 and suite.retry_failed:
+            log.info("retrying failed scenarios", failed=len(failed_scenarios))
             retry_session = Session.create(suite)
-            retry_scenario_results = retry_session.run(failed_results)
+            retry_scenario_results = retry_session.run(failed_scenarios)
             scenario_results = [
                 result for result in scenario_results if result.success
             ]
