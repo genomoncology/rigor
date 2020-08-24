@@ -178,7 +178,7 @@ class State(ScenarioResult, Timer):
         # make request and store response
         if step.transform:
             transform = Namespace.render(step.transform, self.namespace)
-            output = jmespath.search(transform, self.response)
+            output = jmespath.search(transform, self.response if self.response else [])
             get_logger().debug(
                 "transform",
                 response=self.response,
