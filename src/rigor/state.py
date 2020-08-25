@@ -1,6 +1,7 @@
 import related
 import jmespath
 import os
+import traceback
 
 from . import Case, Namespace, Step, Suite, Validator, Timer, Session
 from . import enums, get_logger, const, log_with_success, utils
@@ -178,7 +179,10 @@ class State(ScenarioResult, Timer):
         # make request and store response
         if step.transform:
             transform = Namespace.render(step.transform, self.namespace)
-            output = jmespath.search(transform, self.response if self.response else [])
+            try:
+                output = jmespath.search(transform, self.response)
+            except Exception as ex:
+                output = self.get_error_msg(ex)
             get_logger().debug(
                 "transform",
                 response=self.response,
@@ -187,6 +191,11 @@ class State(ScenarioResult, Timer):
                 output=transform,
             )
             return output
+
+    def get_error_msg(method_name: str, ex: Exception):
+        """ https://stackoverflow.com/a/35712784 """
+        stack = "".join(traceback.TracebackException.from_exception(ex).format())
+        return f"Failure: {method_name}\n\n{stack}"
 
     def do_extract(self, step):
         existing = related.to_dict(self.extract) if self.extract else {}
