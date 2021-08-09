@@ -28,6 +28,7 @@ def test_same():
     assert Comparison.SAME.evaluate("hi", "hi")
     assert not Comparison.SAME.evaluate("1", 1)
     assert not Comparison.SAME.evaluate("1", None)
+    assert not Comparison.SAME.evaluate([1], [1, 1])
 
 
 def test_contains():
