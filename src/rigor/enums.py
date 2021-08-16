@@ -44,7 +44,7 @@ class Comparison(enum.Enum):
         ts = (list, tuple)
         same = actual == expect
         if not same and isinstance(actual, ts) and isinstance(expect, ts):
-            same = bool(len(actual) and len(expect))
+            same = len(actual) == len(expect)
             same = same and all([item in expect for item in actual])
             same = same and all([item in actual for item in expect])
         return same
