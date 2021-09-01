@@ -1,0 +1,32 @@
+name: Range
+host: https://httpbin.org
+
+steps:
+
+  - description: Do a get just to do the range validations.
+
+    request:
+        path: /get
+
+    extract:
+      a: 3
+
+    validate:
+      - actual: range(3)
+        compare: equals
+        expect: [0, 1, 2]
+      - actual: range({extract.a})
+        compare: equals
+        expect: [0, 1, 2]
+      - actual: range(1, {extract.a})
+        compare: equals
+        expect: [1, 2]
+      - actual: range_inclusive(3)
+        compare: equals
+        expect: [0, 1, 2, 3]
+      - actual: range_inclusive({extract.a})
+        compare: equals
+        expect: [0, 1, 2, 3]
+      - actual: range_inclusive(1, {extract.a})
+        compare: equals
+        expect: [1, 2, 3]

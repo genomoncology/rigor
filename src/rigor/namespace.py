@@ -132,11 +132,28 @@ class Namespace(related.ImmutableDict):
             # if is a list, set, dict, or embedded string
             is_lit = first_last in [("{", "}"), ("[", "]"), ("'", "'")]
 
-            # https://stackoverflow.com/a/15814655
+            # if it is a number (https://stackoverflow.com/a/15814655)
             is_lit = is_lit or re.match(r"^-?[0-9]\d*(\.\d+)?$", stripped)
 
             if is_lit:
                 evaluated = ast.literal_eval(stripped)
+
+            # see if this is a range
+            if re.match(r"^range(_inclusive)?\(\d+(,\s?\d+)?\)$", stripped):
+                is_inclusive = "range_inclusive" in stripped
+                numbers_within_range = stripped.replace("range_inclusive(", "range(")
+                numbers_within_range = numbers_within_range.replace("range(", "").replace(")", "")
+                numbers = [int(n.strip()) for n in numbers_within_range.split(",")]
+                if len(numbers) == 1:
+                    n = numbers[0]
+                    if is_inclusive:
+                        n += 1
+                    return list(range(n))
+                elif len(numbers) == 2:
+                    n1, n2 = numbers
+                    if is_inclusive:
+                        n2 += 1
+                    return list(range(n1, n2))
 
         except Exception as error:
             get_logger().debug(
