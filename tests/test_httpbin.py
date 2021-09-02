@@ -179,7 +179,7 @@ def test_profile_only(config):
     suite = Suite.create(paths, profile)
 
     assert len(suite.queued) == 1
-    assert len(suite.skipped) == 14
+    assert len(suite.skipped) == 15
     assert suite.name == "www"
 
     result = execute(suite)

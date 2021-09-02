@@ -9,7 +9,7 @@ test-all: clean
 	tox
 
 run:
-	rigor tests/httpbin/ --exclude=broken
+	rigor tests/httpbin/ --excludes=broken
 
 #----------
 # clean
