@@ -7,11 +7,30 @@ def test_namespace_render():
     assert Namespace.render("-22.330", {}) == -22.330
     assert Namespace.render_string("['1', '2', '3']", {}) == ["1", "2", "3"]
     assert Namespace.render_string("range(2,12)", {}) == [
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
     ]
     assert Namespace.render_string("range(3)", {}) == [0, 1, 2]
     assert Namespace.render_string("range_inclusive(2,12)", {}) == [
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
     ]
     assert Namespace.render_string("range_inclusive(3)", {}) == [0, 1, 2, 3]
 

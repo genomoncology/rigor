@@ -141,9 +141,9 @@ class Namespace(related.ImmutableDict):
             # see if this is a range
             if re.match(r"^range(_inclusive)?\(\d+(,\s?\d+)?\)$", stripped):
                 is_inclusive = "range_inclusive" in stripped
-                numbers_within_range = stripped.replace("range_inclusive(", "range(")
-                numbers_within_range = numbers_within_range.replace("range(", "").replace(")", "")
-                numbers = [int(n.strip()) for n in numbers_within_range.split(",")]
+                numbers = stripped.replace("range_inclusive(", "range(")
+                numbers = numbers.replace("range(", "").replace(")", "")
+                numbers = [int(n.strip()) for n in numbers.split(",")]
                 if len(numbers) == 1:
                     n = numbers[0]
                     if is_inclusive:
