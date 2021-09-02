@@ -37,7 +37,7 @@ def sync_suite(config):
 def test_collect(suite):
     assert suite.excludes == ["broken", "profile-only"]
     assert len(suite.skipped) == 5
-    assert len(suite.queued) == 10
+    assert len(suite.queued) == 11
     assert suite.name == "__root__"
 
 
@@ -95,7 +95,9 @@ def test_case_params(suite):
     assert len(case.scenarios) == 3
 
     # check scenarios
-    assert case.scenarios[0] == Namespace(value=1, __name__="Scenario #1")
+    assert case.scenarios[0] == Namespace(
+        value=1, __name__="Scenario #1", __sequence__=1
+    )
     assert case.scenarios[1] == Namespace(value=2, __name__="Override!")
     assert case.scenarios[2] == Namespace(
         value=["a", "b", "c"], __name__="Scenario #3"
@@ -154,11 +156,11 @@ def test_case_load_yaml(suite):
     assert len(case.steps) == 1
 
     scenario = case.scenarios[0]
-    assert scenario.keys() == {"data", "__name__"}
+    assert scenario.keys() == {"data", "__name__", "__sequence__"}
     assert scenario["__name__"] == "same"
 
     scenario = case.scenarios[1]
-    assert scenario.keys() == {"data", "__name__"}
+    assert scenario.keys() == {"data", "__name__", "__sequence__"}
     assert scenario["__name__"] == "same"
 
 

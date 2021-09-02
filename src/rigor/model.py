@@ -241,8 +241,8 @@ class Suite(Profile):
         if case.is_active(self.includes, self.excludes):
             self.queued.add(case)
             if (
-                case.semaphore is not None and
-                case.semaphore not in self.semaphores.keys()
+                case.semaphore is not None
+                and case.semaphore not in self.semaphores.keys()
             ):
                 self.semaphores[case.semaphore] = Semaphore()
             get_logger().debug("case queued", case=case.file_path)

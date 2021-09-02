@@ -3,34 +3,27 @@
 
 from setuptools import setup
 
-with open('README.md') as readme_file:
+with open("README.md") as readme_file:
     readme = readme_file.read()
 
-with open('CHANGELOG.md') as history_file:
+with open("CHANGELOG.md") as history_file:
     history = history_file.read()
 
-with open('dev-requirements.txt') as dev_requirements_file:
+with open("dev-requirements.txt") as dev_requirements_file:
     tests_require = [r.strip() for r in dev_requirements_file.readlines()]
 
 setup(
     name="rigor",
-    version='0.5.17',
+    version="0.5.18",
     url="https://github.com/genomoncology/rigor",
-
-    package_dir={
-        '': 'src'
-    },
-
+    package_dir={"": "src"},
     packages=[
         "rigor",
     ],
-
     include_package_data=True,
-
     package_data={
-        '': ['*.jar'],
+        "": ["*.jar"],
     },
-
     install_requires=[
         "addict==2.1.1",
         "related >= 0.5.2",
@@ -45,31 +38,26 @@ setup(
         "hyperlink==17.3.1",
         "xlwt==1.3.0",
     ],
-
     setup_requires=[
-        'pytest-runner',
+        "pytest-runner",
     ],
-
     license="MIT license",
-
-    keywords='',
+    keywords="",
     description="rigor",
     long_description="%s\n\n%s" % (readme, history),
-    long_description_content_type='text/markdown',
-
+    long_description_content_type="text/markdown",
     entry_points={
-        'console_scripts': [
-            'rigor=rigor.cli:main',
+        "console_scripts": [
+            "rigor=rigor.cli:main",
         ],
     },
-
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Framework :: Pytest',
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Framework :: Pytest",
     ],
 )
