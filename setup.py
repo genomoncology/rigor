@@ -12,9 +12,12 @@ with open("CHANGELOG.md") as history_file:
 with open("dev-requirements.txt") as dev_requirements_file:
     tests_require = [r.strip() for r in dev_requirements_file.readlines()]
 
+with open("./src/rigor/version.py") as version_file:
+    __version__ = version_file.read().split(" = ")[-1].strip()
+
 setup(
     name="rigor",
-    version="0.5.18",
+    version=__version__,
     url="https://github.com/genomoncology/rigor",
     package_dir={"": "src"},
     packages=[

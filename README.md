@@ -59,6 +59,11 @@ Install using `pip3`...
       -j, --json                 JSON-style logging.
       -h, --html                 Generate HTML report.
       -g, --coverage             Generate Coverage report.
+      -r, --retries INTEGER      # of retries for GET calls only. (default: 0)
+      -s, --sleep INTEGER        Retry sleep (seconds multiplied by retry).
+                                (default: 60)
+      -f, --retry_failed         Retries all failed scenarios at the end.
+      --version                  Logs current version and exits.
       --help                     Show this message and exit.
 
 # Simple Example
