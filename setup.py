@@ -13,7 +13,7 @@ with open("dev-requirements.txt") as dev_requirements_file:
     tests_require = [r.strip() for r in dev_requirements_file.readlines()]
 
 with open("./src/rigor/version.py") as version_file:
-    __version__ = version_file.read().split(" = ")[-1].strip()
+    __version__ = version_file.read().split('"')[1]
 
 setup(
     name="rigor",
