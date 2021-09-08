@@ -2,6 +2,7 @@ import click
 
 from . import Suite, Config, ReportEngine, CoverageReport
 from . import setup_logging, get_logger, execute
+from .version import __version__
 
 
 @click.command()
@@ -77,12 +78,23 @@ from . import setup_logging, get_logger, execute
     is_flag=True,
     help="Retries all failed scenarios at the end.",
 )
-def main(paths, profile, output, quiet, verbose, json, html, coverage, **cli):
+@click.option(
+    "--version",
+    is_flag=True,
+    help="Logs current version and exits.",
+)
+def main(paths, profile, output, quiet, verbose, json, html, coverage, version, 
+         **cli):
     # default paths
     paths = paths or ["."]
 
     # setup logging
     setup_logging(quiet=quiet, verbose=verbose, json=json)
+
+    # print version and exit if --version is provided
+    if cli['version']:
+        print(f"rigor v{__version__}")
+        exit(0)
 
     # cli = host, includes, excludes, prefixes, extensions, concurrency
     get_logger().debug("cli options", **cli)

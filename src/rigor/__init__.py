@@ -30,6 +30,8 @@ from .coverage import CoverageReport
 
 from .cli import main
 
+from .version import __version__
+
 
 __all__ = [
     # const.py
@@ -80,7 +82,6 @@ __all__ = [
 
 __author__ = """Ian Maurer"""
 __email__ = "ian@genomoncology.com"
-__version__ = "0.5.13"
 
 __uri__ = "http://www.github.com/genomoncology/rigor"
 __copyright__ = "Copyright (c) 2017 genomoncology.com"
