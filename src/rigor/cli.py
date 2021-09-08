@@ -83,8 +83,18 @@ from .version import __version__
     is_flag=True,
     help="Logs current version and exits.",
 )
-def main(paths, profile, output, quiet, verbose, json, html, coverage, version, 
-         **cli):
+def main(
+    paths,
+    profile,
+    output,
+    quiet,
+    verbose,
+    json,
+    html,
+    coverage,
+    version,
+    **cli,
+):
     # default paths
     paths = paths or ["."]
 

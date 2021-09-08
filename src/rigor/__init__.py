@@ -77,6 +77,7 @@ __all__ = [
     "CoverageReport",
     # cli.py
     "main",
+    "__version__",
 ]
 
 
