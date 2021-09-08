@@ -92,7 +92,7 @@ def main(paths, profile, output, quiet, verbose, json, html, coverage, version,
     setup_logging(quiet=quiet, verbose=verbose, json=json)
 
     # print version and exit if --version is provided
-    if cli['version']:
+    if version:
         print(f"rigor v{__version__}")
         exit(0)
 
