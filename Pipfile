@@ -14,7 +14,6 @@ pytest-mccabe = "*"
 pytest-pythonpath = "*"
 pytest-sugar = "*"
 tox = "*"
-pipenv = "*"
 
 
 [packages]

@@ -94,7 +94,7 @@ class CoverageReport(object):
     paths = related.MappingField(PathReport, "url")
 
     def prepare(self):
-        """ iterate through all scenario-steps and record the counts. """
+        """iterate through all scenario-steps and record the counts."""
         for scenario_result, scenario_pass, case_pass in self.iterate():
             for step_result in scenario_result.step_results:
                 step_pass = step_result.success
@@ -107,7 +107,7 @@ class CoverageReport(object):
                     )
 
     def get_method_report(self, url, method):
-        """ return method report for a given url & method combination """
+        """return method report for a given url & method combination"""
         path_obj = None
 
         # scan schemas
@@ -125,7 +125,7 @@ class CoverageReport(object):
             return path_report.get_method_report(method)
 
     def iterate(self):  # pragma: no mccabe
-        """ yields scenario_result, scenario_pass, case_pass """
+        """yields scenario_result, scenario_pass, case_pass"""
         for case_result in self.suite_result.passed:
             for scenario_result in case_result.passed:
                 yield scenario_result, True, True

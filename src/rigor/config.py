@@ -48,7 +48,7 @@ class Config(Profile):
 
     @classmethod
     def load(cls, paths):
-        """ Find rigor.yml file and load it into a Config object. """
+        """Find rigor.yml file and load it into a Config object."""
         file_path = cls.find_file_path(paths)
 
         if file_path and os.path.exists(file_path):
@@ -64,7 +64,7 @@ class Config(Profile):
 
     @classmethod
     def find_file_path(cls, paths):
-        """ Return valid 'rigor.yml' file in the paths or parents of paths. """
+        """Return valid 'rigor.yml' file in the paths or parents of paths."""
 
         for path in paths:
             path = os.path.abspath(path)
@@ -82,7 +82,7 @@ class Config(Profile):
 
     @classmethod
     def loads(cls, content, file_path=None):
-        """ Load JSON string into a Config object. """
+        """Load JSON string into a Config object."""
         vals = related.from_yaml(
             content, file_path=file_path, object_pairs_hook=dict
         )

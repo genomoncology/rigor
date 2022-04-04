@@ -1,3 +1,7 @@
+import re
+
+splitter = re.compile(r"(?<![\\])[|]")
+
 # https://stackoverflow.com/a/3233356
 def nested_update(d, u):
     import collections
@@ -15,8 +19,9 @@ def overlap(l1, l2):
     return set(l1 or []) & set(l2 or [])
 
 
-def clean_split(line, delimiter="|"):
-    items = [value.strip() for value in line.split(delimiter)]
+def clean_split(line):
+    items = splitter.split(line)
+    items = [value.strip().replace("\\|", "|") for value in items]
 
     # trim empty first item
     if items and not items[0]:
@@ -67,7 +72,7 @@ def parse_into_dicts_of_rows(text_table):
 
 
 def download_json_with_headers(suite, path):
-    """ Download using a suite profile (such as headers). """
+    """Download using a suite profile (such as headers)."""
     from . import Requestor, StepState, Step, State, Case
     import requests
 

@@ -125,7 +125,7 @@ class Swagger(object):
     _lookup = related.ChildField(dict, required=False)
 
     def __attrs_post_init__(self):
-        """ populate the nested _lookup dictionary."""
+        """populate the nested _lookup dictionary."""
         self.populate_lookup()
 
     @classmethod
@@ -134,11 +134,11 @@ class Swagger(object):
         return related.to_model(cls, as_dict)
 
     def resolve(self, url):
-        """ Resolve to Path object based on the URL path provided. """
+        """Resolve to Path object based on the URL path provided."""
         return self.descend_lookup(url, try_var=True).get(OBJ)
 
     def populate_lookup(self):
-        """ Populate the lookup nested dictionary with paths. """
+        """Populate the lookup nested dictionary with paths."""
         # todo: use basePath to ensure mapping is correct?
         self._lookup = {}
         for path_url, path_obj in self.paths.items():
@@ -146,7 +146,7 @@ class Swagger(object):
             nested[OBJ] = path_obj
 
     def descend_lookup(self, url, try_var=False):
-        """ Descend lookup nested dictionary, finding bottom dict and tuple."""
+        """Descend lookup nested dictionary, finding bottom dict and tuple."""
         as_tuple = self.path_as_tuple(url)
         sub_lookup = self._lookup
         for item in as_tuple:
@@ -162,7 +162,7 @@ class Swagger(object):
 
     @classmethod
     def path_as_tuple(cls, url):
-        """ Convert URL path into a set of tuples replacing variables. """
+        """Convert URL path into a set of tuples replacing variables."""
 
         # remove leading and trailing blanks
         items = hyperlink.URL.from_text(url).path
@@ -174,7 +174,7 @@ class Swagger(object):
 
     @staticmethod
     def is_var(s):
-        """ Determines if follows path variable format of {pk}. """
+        """Determines if follows path variable format of {pk}."""
         return isinstance(s, str) and s.startswith("{") and s.endswith("}")
 
     @classmethod

@@ -18,8 +18,6 @@ steps:
         actual: '{response.args}'
       - expect: "*/*"
         actual: '{response.headers.Accept}'
-      - expect: close
-        actual: '{response.headers.Connection}'
       - expect: 'Token GUEST-TOKEN'
         actual: '{response.headers.Authorization}'
 
