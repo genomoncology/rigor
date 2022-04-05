@@ -24,9 +24,8 @@ def collect(suite):
 
 async def async_collect(suite):
     tasks = []
-    for pattern in glob_patterns(suite):
-        for file_path in glob.iglob(pattern, recursive=True):
-            tasks.append(asyncio.ensure_future(collect_case(suite, file_path)))
+    for file_path in glob_paths(suite):
+        tasks.append(asyncio.ensure_future(collect_case(suite, file_path)))
     cases = await asyncio.gather(*tasks)
     return cases
 
@@ -36,6 +35,12 @@ async def collect_case(suite, file_path):
 
     async with aiofiles.open(file_path, mode="r") as f:
         return Case.loads(await f.read(), file_path=file_path)
+
+
+def glob_paths(suite):
+    for pattern in glob_patterns(suite):
+        for file_path in glob.iglob(pattern, recursive=True):
+            yield file_path
 
 
 def glob_patterns(suite):

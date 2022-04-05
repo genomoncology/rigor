@@ -10,14 +10,12 @@ steps:
         path: get
 
     validate:
-      - expect: https://www.httpbin.org/get
+      - expect: https://httpbin.org/get
         actual: '{response.url}'
       - expect: {}
         actual: '{response.args}'
       - expect: "*/*"
         actual: '{response.headers.Accept}'
-      - expect: close
-        actual: '{response.headers.Connection}'
       - expect: 'Token GUEST-TOKEN'
         actual: '{response.headers.Authorization}'
 
@@ -38,7 +36,7 @@ steps:
     validate:
       - actual: '{transform}'
         expect:
-            host: www.httpbin.org
+            host: httpbin.org
             keys:
                 - two
                 - one

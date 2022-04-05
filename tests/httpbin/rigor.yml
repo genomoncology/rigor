@@ -17,7 +17,7 @@ headers:
 profiles:
 
     www:
-        host: https://www.httpbin.org
+        host: https://httpbin.org
 
         globals:
             tokens:

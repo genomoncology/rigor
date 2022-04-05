@@ -6,7 +6,7 @@ from .logging import setup_logging, get_logger, log_with_success
 
 from .metrics import Timer
 
-from .collect import collect
+from .collect import collect, glob_paths
 
 from .enums import Comparison, Method, Status
 
@@ -28,6 +28,8 @@ from .swagger import Path, Swagger
 
 from .coverage import CoverageReport
 
+from .reformat import do_reformat
+
 from .cli import main
 
 from .version import __version__
@@ -45,6 +47,7 @@ __all__ = [
     "Timer",
     # collect.py
     "collect",
+    "glob_paths",
     # enums.py
     "Comparison",
     "Method",
@@ -75,6 +78,8 @@ __all__ = [
     "Swagger",
     # coverage.py
     "CoverageReport",
+    # reformat.py
+    "do_reformat",
     # cli.py
     "main",
     "__version__",

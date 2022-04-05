@@ -104,7 +104,7 @@ class Requestor(object):
         return body
 
     def get_data(self, namespace):
-        """ Returns body or form and a flag indicating if a form or not."""
+        """Returns body or form and a flag indicating if a form or not."""
         body = self.get_body(namespace) if self.data else None
         form = self.get_form(namespace) if self.form else None
         return (body, False) if body else (form, True)

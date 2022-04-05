@@ -45,7 +45,7 @@ pex:
 
 
 publish:
-	python setup.py sdist
-	python setup.py bdist_wheel --universal
+	pipenv run python setup.py sdist
+	pipenv run python setup.py bdist_wheel --universal
 	twine upload dist/*
 	rm -fr build dist .egg related.egg-info

@@ -193,7 +193,7 @@ class State(ScenarioResult, Timer):
             return output
 
     def get_error_msg(method_name: str, ex: Exception):
-        """ https://stackoverflow.com/a/35712784 """
+        """https://stackoverflow.com/a/35712784"""
         stack = "".join(tb.TracebackException.from_exception(ex).format())
         return f"Failure: {method_name}\n\n{stack}"
 

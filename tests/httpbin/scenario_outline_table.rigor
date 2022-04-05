@@ -7,7 +7,7 @@ scenarios: |
   | Ada Lovelace            | Ada_Lovelace            | 1815 | ['L', 'A']      |
   | Betty Holberton         | Betty_Holberton         | 1917 | ['B', 'H']      |
   | Dorothy Vaughan         | Dorothy_Vaughan         | 1910 | ['D', 'V']      |
-  | Frances E. Allen        | Frances_E._Allen        | 1932 | ['F', 'E', 'A'] |
+  | Frances Allen           | Frances_Allen           | 1932 | ['F', 'E', 'A'] |
   | Grace Hopper            | Grace_Hopper            | 1906 | ['G', 'H']      |
   | Jean E. Sammet          | Jean_E._Sammet          | 1928 | ['J', 'E', 'S'] |
   | Katherine Johnson       | Katherine_Johnson       | 1918 | ['K', 'J']      |
