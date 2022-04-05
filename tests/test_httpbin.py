@@ -8,8 +8,6 @@ from rigor import (
     execute,
 )
 
-from collections import OrderedDict
-
 import pytest
 import os
 
@@ -44,7 +42,7 @@ def test_collect(suite):
 def test_execute(suite):
     result = execute(suite)
     assert result.success, "Failed: %s" % result.failed
-    assert len(result.passed) == 10
+    assert len(result.passed) == 11
 
     engine = ReportEngine(suite_result=result, with_html=True)
     report_path = engine.generate()
@@ -54,7 +52,7 @@ def test_execute(suite):
 def test_execute_sync(sync_suite):
     result = execute(sync_suite)
     assert result.success, "Failed: %s" % result.failed
-    assert len(result.passed) == 10
+    assert len(result.passed) == 11
 
 
 def test_case_get(suite):
@@ -73,9 +71,8 @@ def test_case_get(suite):
     assert step.request.path == "get"
     assert step.validate == [
         Validator(actual="{response.url}", expect="https://httpbin.org/get"),
-        Validator(actual="{response.args}", expect=OrderedDict()),
+        Validator(actual="{response.args}", expect={}),
         Validator(actual="{response.headers.Accept}", expect="*/*"),
-        Validator(actual="{response.headers.Connection}", expect="close"),
         Validator(
             actual="{response.headers.Authorization}",
             expect="Token GUEST-TOKEN",
@@ -98,9 +95,11 @@ def test_case_params(suite):
     assert case.scenarios[0] == Namespace(
         value=1, __name__="Scenario #1", __sequence__=1
     )
-    assert case.scenarios[1] == Namespace(value=2, __name__="Override!")
+    assert case.scenarios[1] == Namespace(
+        value=2, __name__="Override!", __sequence__=2
+    )
     assert case.scenarios[2] == Namespace(
-        value=["a", "b", "c"], __name__="Scenario #3"
+        value=["a", "b", "c"], __name__="Scenario #3", __sequence__=3
     )
 
 

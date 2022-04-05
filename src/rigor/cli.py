@@ -1,7 +1,7 @@
 import click
 
 from . import Suite, Config, ReportEngine, CoverageReport
-from . import setup_logging, get_logger, execute
+from . import setup_logging, get_logger, execute, do_reformat
 from .version import __version__
 
 
@@ -83,6 +83,11 @@ from .version import __version__
     is_flag=True,
     help="Logs current version and exits.",
 )
+@click.option(
+    "--reformat",
+    is_flag=True,
+    help="Reformat scenario tables then exit.",
+)
 def main(
     paths,
     profile,
@@ -93,6 +98,7 @@ def main(
     html,
     coverage,
     version,
+    reformat,
     **cli,
 ):
     # default paths
@@ -115,6 +121,10 @@ def main(
 
     # create/collect suite
     suite = Suite.create(paths, profile, **cli)
+
+    if reformat:
+        do_reformat(suite)
+        exit(0)
 
     # execute suite
     suite_result = execute(suite)
