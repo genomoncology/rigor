@@ -5,10 +5,10 @@ splitter = re.compile(r"(?<![\\])[|]")
 
 # https://stackoverflow.com/a/3233356
 def nested_update(d, u):
-    import collections
+    import collections.abc
 
     for k, v in u.items():
-        if isinstance(v, collections.Mapping):
+        if isinstance(v, collections.abc.Mapping):
             r = nested_update(d.get(k, {}), v)
             d[k] = r
         else:

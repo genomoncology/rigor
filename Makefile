@@ -1,3 +1,9 @@
+update:
+	pipenv update --dev
+	pipenv lock -r --dev > dev-requirements.txt
+	pipenv lock -r > requirements.txt
+
+
 #----------
 # test
 #----------

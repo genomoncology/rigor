@@ -22,7 +22,7 @@ class Session(object):
         if suite.concurrency > 0:
             loop = asyncio.get_event_loop()
             connector = TCPConnector(
-                limit_per_host=suite.concurrency, verify_ssl=False
+                limit_per_host=suite.concurrency, ssl=False
             )
             http = ClientSession(loop=loop, connector=connector)
             return AsyncSession(
