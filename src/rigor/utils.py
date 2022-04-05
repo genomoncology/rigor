@@ -79,7 +79,7 @@ def parse_into_dicts_of_rows(text_table):
 def download_json_with_headers(suite, path):
     """Download using a suite profile (such as headers)."""
     from . import Requestor, StepState, Step, State, Case
-    import requests
+    import httpx
 
     # a little bit painful, but ensures headers are full evaluated w/ globals
     request = Requestor(host=suite.host, path=path)
@@ -88,7 +88,7 @@ def download_json_with_headers(suite, path):
     step_state = StepState(state=state, step=step)
     fetch = step_state.get_fetch()
     kw = fetch.get_kwargs(is_aiohttp=False)
-    context = requests.request(fetch.method, fetch.url, **kw)
+    context = httpx.request(fetch.method, fetch.url, **kw)
 
     # hard failure during development.
     assert context.status_code == 200, "%s => %s" % (fetch.url, context)

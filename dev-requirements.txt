@@ -11,11 +11,8 @@
 -i https://pypi.python.org/simple
 -e .
 addict==2.1.1
-aiofiles==0.8.0; python_version >= '3.6' and python_version < '4'
-aiohttp==3.8.1; python_version >= '3.6'
-aiosignal==1.2.0; python_version >= '3.6'
-async-timeout==4.0.2; python_version >= '3.6'
-asynctest==0.13.0; python_version < '3.8'
+aiofiles==0.8.0; python_version >= '3.6' and python_version < '4.0'
+anyio==3.5.0; python_full_version >= '3.6.2'
 attrs==21.4.0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'
 beautifulsoup4==4.10.0; python_version >= '3.1'
 certifi==2021.10.8
@@ -26,15 +23,16 @@ coverage==6.3.2
 distlib==0.3.4
 filelock==3.6.0; python_version >= '3.7'
 flake8==4.0.1; python_version >= '3.6'
-frozenlist==1.3.0; python_version >= '3.7'
 future==0.18.2; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'
+h11==0.12.0; python_version >= '3.6'
+httpcore==0.14.7; python_version >= '3.6'
+httpx==0.22.0; python_version >= '3.6'
 hyperlink==17.3.1
-idna==3.3; python_version >= '3'
+idna==3.3; python_full_version >= '3.5.0'
 importlib-metadata==4.2.0; python_version < '3.8'
 iniconfig==1.1.1
 jmespath==0.9.3
 mccabe==0.6.1
-multidict==6.0.2; python_version >= '3.7'
 packaging==21.3; python_version >= '3.6'
 platformdirs==2.5.1; python_version >= '3.7'
 pluggy==1.0.0; python_version >= '3.6'
@@ -51,8 +49,9 @@ pytest==6.2.5
 python-dateutil==2.8.2; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 pyyaml==6.0; python_version >= '3.6'
 related==0.7.2
-requests==2.27.1; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'
+rfc3986[idna2008]==1.5.0
 six==1.16.0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
+sniffio==1.2.0; python_full_version >= '3.5.0'
 soupsieve==2.3.1; python_version >= '3.6'
 structlog==17.2.0
 termcolor==1.1.0
@@ -60,8 +59,6 @@ toml==0.10.2; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 
 tomli==2.0.1; python_version >= '3.7'
 tox==3.24.5
 typing-extensions==4.1.1; python_version < '3.8'
-urllib3==1.26.9; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'
 virtualenv==20.14.0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'
 xlwt==1.3.0
-yarl==1.7.2; python_version >= '3.6'
 zipp==3.8.0; python_version >= '3.7'

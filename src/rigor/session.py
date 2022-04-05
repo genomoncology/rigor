@@ -1,16 +1,12 @@
 import asyncio
-import requests
 import related
 import bs4
 import time
+import httpx
 
-from aiohttp import TCPConnector, ClientSession
 from . import Suite, const, get_logger
 
 sem = asyncio.Semaphore()
-
-# disable warning
-requests.packages.urllib3.disable_warnings()
 
 
 @related.immutable
@@ -21,13 +17,12 @@ class Session(object):
     def create(suite):
         if suite.concurrency > 0:
             loop = asyncio.get_event_loop()
-            connector = TCPConnector(
-                limit_per_host=suite.concurrency, ssl=False
+            limits = httpx.Limits(
+                max_connections=suite.concurrency,
+                max_keepalive_connections=suite.concurrency,
             )
-            http = ClientSession(loop=loop, connector=connector)
-            return AsyncSession(
-                suite=suite, http=http, loop=loop, connector=connector
-            )
+            http = httpx.AsyncClient(limits=limits)
+            return AsyncSession(suite=suite, http=http, loop=loop)
 
         else:
             return Session(suite=suite)
@@ -101,7 +96,7 @@ class Session(object):
         get_logger().debug("fetch request", **related.to_dict(fetch))
 
         kw = fetch.get_kwargs(is_aiohttp=False)
-        context = requests.request(fetch.method, fetch.url, **kw)
+        context = httpx.request(fetch.method, fetch.url, **kw)
         response = self.get_response(context)
         status = context.status_code
 
@@ -134,8 +129,7 @@ class Session(object):
 @related.immutable
 class AsyncSession(Session):
     loop = related.ChildField(object)
-    connector = related.ChildField(TCPConnector)
-    http = related.ChildField(object)
+    http = related.ChildField(httpx.AsyncClient)
 
     def run(self, case_scenarios=None):
         # run and get results
@@ -150,7 +144,8 @@ class AsyncSession(Session):
         return results
 
     async def close_http(self):
-        await self.http.close()
+        # await self.http.close()
+        pass
 
     async def run_suite(self, case_scenarios=None):
         tasks = []
@@ -219,9 +214,9 @@ class AsyncSession(Session):
 
         try:
             method, url = fetch.method, fetch.url
-            async with self.http.request(method, url, **kw) as context:
-                response = await self.get_response(context)
-                status = context.status
+            context = await self.http.request(method, url, **kw)
+            response = await self.get_response(context)
+            status = context.status_code
 
         except Exception as e:  # pragma: no cover
             get_logger().error(
@@ -244,14 +239,14 @@ class AsyncSession(Session):
         content_type = content_type.lower()
 
         if const.TEXT_HTML in content_type:
-            html = OurSoup(await context.text(), "html.parser")
+            html = OurSoup(context.text, "html.parser")
             response = html
 
         elif const.APPLICATION_JSON in content_type:
-            response = await context.json()
+            response = context.json()
 
         elif const.TEXT_PLAIN in content_type:
-            response = await context.text()  # pragma: no cover
+            response = context.text
 
         else:
             response = None
