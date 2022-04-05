@@ -47,6 +47,7 @@ def process_reformat(file_path: str):
 def to_line(values: List[str], widths: Dict[int, int], indent: str) -> str:
     texts = []
     for idx, value in enumerate(values):
+        value = "" if value is None else value
         right_padded = value.ljust(widths[idx])
         texts.append(right_padded)
 
@@ -65,7 +66,7 @@ def clean_table(curr_table: List[str]) -> Tuple[List[str], bool]:
     widths = defaultdict(int)
     for row in [header] + rows:
         for idx, item in enumerate(row):
-            widths[idx] = max(widths[idx], len(item))
+            widths[idx] = max(widths[idx], len(item or ""))
 
     new_table = [to_line(header, widths, indent)]
     for row in rows:
