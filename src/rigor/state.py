@@ -25,7 +25,7 @@ class Fetch(object):
     kwargs = related.ChildField(dict)
     is_form = related.BooleanField()
 
-    def get_kwargs(self, is_aiohttp):
+    def get_kwargs(self):
         kw = self.kwargs.copy()
         data = kw.get("data", None)
 
@@ -33,18 +33,13 @@ class Fetch(object):
         if files and isinstance(files, dict):
             file_upload = files.pop("file_upload", None)
             if file_upload:
-                files['upload-file'] = file_upload
+                files["upload-file"] = file_upload
 
         if not self.is_form:
             kw["data"] = related.to_json(data)
 
         # unlimited timeout if not specified
         kw.setdefault("timeout", None)
-
-        # add verify = False for requests
-        if not is_aiohttp:
-            kw["verify"] = False
-
         return kw
 
 

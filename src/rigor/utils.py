@@ -87,7 +87,7 @@ def download_json_with_headers(suite, path):
     step = Step(request=request, description="Download: %s" % path)
     step_state = StepState(state=state, step=step)
     fetch = step_state.get_fetch()
-    kw = fetch.get_kwargs(is_aiohttp=False)
+    kw = fetch.get_kwargs()
     context = httpx.request(fetch.method, fetch.url, **kw)
 
     # hard failure during development.

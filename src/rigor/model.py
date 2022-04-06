@@ -216,6 +216,7 @@ class Suite(Profile):
     queued = related.MappingField(Case, "file_path", default={})
     skipped = related.MappingField(Case, "file_path", default={})
     semaphores = related.MappingField(Semaphore, "semaphore", default={})
+    app = related.ChildField(object, default=None)
 
     def __attrs_post_init__(self):
         from . import collect

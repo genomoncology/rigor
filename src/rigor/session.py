@@ -2,7 +2,7 @@ import asyncio
 import related
 import bs4
 import time
-import httpx
+from httpx._client import BaseClient, Client, AsyncClient, Limits
 
 from . import Suite, const, get_logger
 
@@ -12,20 +12,22 @@ sem = asyncio.Semaphore()
 @related.immutable
 class Session(object):
     suite = related.ChildField(Suite)
+    http = related.ChildField(BaseClient)
 
     @staticmethod
     def create(suite):
         if suite.concurrency > 0:
             loop = asyncio.get_event_loop()
-            limits = httpx.Limits(
+            limits = Limits(
                 max_connections=suite.concurrency,
                 max_keepalive_connections=suite.concurrency,
             )
-            http = httpx.AsyncClient(limits=limits)
+            http = AsyncClient(limits=limits, app=suite.app)
             return AsyncSession(suite=suite, http=http, loop=loop)
 
         else:
-            return Session(suite=suite)
+            http = Client(app=suite.app)
+            return Session(suite=suite, http=http)
 
     def case_scenarios(self):
         for case in self.suite.queued.values():
@@ -95,10 +97,19 @@ class Session(object):
         fetch = step_state.get_fetch()
         get_logger().debug("fetch request", **related.to_dict(fetch))
 
-        kw = fetch.get_kwargs(is_aiohttp=False)
-        context = httpx.request(fetch.method, fetch.url, **kw)
-        response = self.get_response(context)
-        status = context.status_code
+        kw = fetch.get_kwargs()
+
+        try:
+            method, url = fetch.method, fetch.url
+            context = self.http.request(method, url, **kw)
+            response = self.get_response(context)
+            status = context.status_code
+        except Exception as e:  # pragma: no cover
+            get_logger().error(
+                "do_fetch exception", error=e, **related.to_dict(fetch)
+            )
+            response = "Error"
+            status = 500
 
         get_logger().debug(
             "fetch response",
@@ -129,7 +140,7 @@ class Session(object):
 @related.immutable
 class AsyncSession(Session):
     loop = related.ChildField(object)
-    http = related.ChildField(httpx.AsyncClient)
+    http = related.ChildField(AsyncClient)
 
     def run(self, case_scenarios=None):
         # run and get results
@@ -210,7 +221,7 @@ class AsyncSession(Session):
         fetch = step_state.get_fetch()
         get_logger().debug("fetch request", **related.to_dict(fetch))
 
-        kw = fetch.get_kwargs(is_aiohttp=True)
+        kw = fetch.get_kwargs()
 
         try:
             method, url = fetch.method, fetch.url
