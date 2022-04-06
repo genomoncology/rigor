@@ -1,18 +1,19 @@
 import os
-from flask import Flask
-from a2wsgi import WSGIMiddleware
+
+from a2wsgi import ASGIMiddleware
+from starlette.applications import Starlette
+from starlette.responses import JSONResponse
+from starlette.routing import Route
+
 from rigor import Suite, Config, execute
 
-wsgi = Flask(__name__)
+
+async def home(request):
+    return JSONResponse({"a": 123})
 
 
-@wsgi.route("/")
-def home():
-    return {"a": 123}
-
-
-# noinspection PyTypeChecker
-asgi = WSGIMiddleware(wsgi)
+asgi = Starlette(debug=True, routes=[Route("/home", home)])
+wsgi = ASGIMiddleware(asgi)
 
 ROOT_DIR = os.path.join(os.path.dirname(__file__), "wsgi")
 paths = [ROOT_DIR]

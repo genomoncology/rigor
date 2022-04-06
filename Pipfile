@@ -4,7 +4,7 @@ verify_ssl = true
 
 [dev-packages]
 a2wsgi = "*"
-flask = "*"
+starlette = "*"
 pytest = "*"
 coverage = "*"
 pytest-cov = "*"

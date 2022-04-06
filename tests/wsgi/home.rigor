@@ -9,7 +9,7 @@ steps:
   - description: Call home.
 
     request:
-        path: /
+        path: home
 
     validate:
       - expect: {'a': 123}
