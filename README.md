@@ -4,7 +4,6 @@ intent of Rigor is to be an HTTP-based API (e.g. REST) Testing Framework for
 automated functional or integration testing.
 
 <a href='https://codecov.io/github/genomoncology/rigor/'><img src='https://codecov.io/github/genomoncology/rigor/branch/master/graph/badge.svg' align="right" /></a>
-<a href='https://travis-ci.org/genomoncology/rigor'><img src='https://img.shields.io/travis/genomoncology/rigor.svg' align="right" /></a>
 <a href='https://pypi.python.org/pypi/rigor'><img src='https://img.shields.io/pypi/v/rigor.svg' align="right" /></a>
 
 <br/>

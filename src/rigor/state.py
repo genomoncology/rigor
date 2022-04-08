@@ -25,28 +25,21 @@ class Fetch(object):
     kwargs = related.ChildField(dict)
     is_form = related.BooleanField()
 
-    def get_kwargs(self, is_aiohttp):
+    def get_kwargs(self):
         kw = self.kwargs.copy()
         data = kw.get("data", None)
 
-        # aiohttp is different from requests in handling files
-        # http://aiohttp.readthedocs.io/en/stable/client.html
-        # http://docs.python-requests.org/en/master/user/quickstart
-        files = kw.pop("files", None) if is_aiohttp else None
+        files = data and data.get("files")
+        if files and isinstance(files, dict):
+            file_upload = files.pop("file_upload", None)
+            if file_upload:
+                files["upload-file"] = file_upload
 
-        if self.is_form:
-            if isinstance(data, dict) and isinstance(files, dict):
-                data.update(files)
-        else:
+        if not self.is_form:
             kw["data"] = related.to_json(data)
 
         # unlimited timeout if not specified
         kw.setdefault("timeout", None)
-
-        # add verify = False for requests
-        if not is_aiohttp:
-            kw["verify"] = False
-
         return kw
 
 

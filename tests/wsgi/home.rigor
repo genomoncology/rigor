@@ -1,0 +1,17 @@
+name: Get
+format: "1.0"
+host: http://127.0.0.1
+tags:
+  - wsgi
+
+steps:
+
+  - description: Call home.
+
+    request:
+        path: home
+
+    validate:
+      - expect: {'a': 123}
+        actual: '{response}'
+

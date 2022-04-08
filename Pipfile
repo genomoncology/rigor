@@ -3,10 +3,12 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pytest = "==3.6.1"
+a2wsgi = "*"
+starlette = "*"
+pytest = "*"
 coverage = "*"
 pytest-cov = "*"
-"pytest-flake8" = "*"
+pytest-flake8 = "*"
 pytest-mccabe = "*"
 pytest-pythonpath = "*"
 pytest-sugar = "*"

@@ -5,10 +5,10 @@ splitter = re.compile(r"(?<![\\])[|]")
 
 # https://stackoverflow.com/a/3233356
 def nested_update(d, u):
-    import collections
+    import collections.abc
 
     for k, v in u.items():
-        if isinstance(v, collections.Mapping):
+        if isinstance(v, collections.abc.Mapping):
             r = nested_update(d.get(k, {}), v)
             d[k] = r
         else:
@@ -79,7 +79,7 @@ def parse_into_dicts_of_rows(text_table):
 def download_json_with_headers(suite, path):
     """Download using a suite profile (such as headers)."""
     from . import Requestor, StepState, Step, State, Case
-    import requests
+    import httpx
 
     # a little bit painful, but ensures headers are full evaluated w/ globals
     request = Requestor(host=suite.host, path=path)
@@ -87,8 +87,8 @@ def download_json_with_headers(suite, path):
     step = Step(request=request, description="Download: %s" % path)
     step_state = StepState(state=state, step=step)
     fetch = step_state.get_fetch()
-    kw = fetch.get_kwargs(is_aiohttp=False)
-    context = requests.request(fetch.method, fetch.url, **kw)
+    kw = fetch.get_kwargs()
+    context = httpx.request(fetch.method, fetch.url, **kw)
 
     # hard failure during development.
     assert context.status_code == 200, "%s => %s" % (fetch.url, context)
