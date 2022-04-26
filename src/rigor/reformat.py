@@ -21,16 +21,26 @@ def process_reformat(file_path: str):
 
     all_lines = []
     curr_table = []
+    comments = dict()
     cleaned = 0
-    for line in file_obj:
+    for index, line in enumerate(file_obj):
         text = line.strip()
-        if text.startswith("|") and text.endswith("|"):
+        is_row = text.startswith("|") and text.endswith("|")
+        is_comment = text.startswith("#")
+
+        if is_row:
             curr_table.append(line)
+        elif is_comment:
+            comments[index] = f" {text}\n"
         else:
             (this_cleaned, was_cleaned) = clean_table(curr_table)
             cleaned += int(was_cleaned)
             curr_table = []
             all_lines += this_cleaned
+            if comments:
+                for comment_idx, comment_text in comments.items():
+                    all_lines.insert(comment_idx, comment_text)
+                comments.clear()
             all_lines.append(line)
 
     if cleaned:
