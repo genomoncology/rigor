@@ -31,7 +31,7 @@ setup(
         "addict==2.1.1",
         "aiofiles==0.8.0",
         "beautifulsoup4==4.10.0",
-        "click==8.1.2",
+        "click >=8.0.0,<9.0.0",
         "colorama==0.4.3",
         "httpx==0.22.0",
         "hyperlink==17.3.1",
