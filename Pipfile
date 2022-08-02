@@ -16,6 +16,7 @@ tox = "*"
 
 [packages]
 rigor = {editable = true, path = "."}
+related = "*"
 
 [version]
 python_version = "3.7"

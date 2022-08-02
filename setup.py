@@ -37,7 +37,7 @@ setup(
         "hyperlink==17.3.1",
         "importlib-metadata==4.2.0",
         "jmespath==0.9.3",
-        "related==0.7.2",
+        "related==0.7.3",
         "structlog==17.2.0",
         "xlwt==1.3.0",
     ],
