@@ -29,12 +29,6 @@ class Fetch(object):
         kw = self.kwargs.copy()
         data = kw.get("data", None)
 
-        files = kw and kw.get("files", None)
-        if files and isinstance(files, dict):
-            file_upload = files.pop("file_upload", None)
-            if file_upload:
-                files["upload-file"] = file_upload
-
         if not self.is_form:
             kw["data"] = related.to_json(data)
 
