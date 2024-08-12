@@ -12,3 +12,10 @@ test:
 
 run:
 	rigor tests/httpbin/ --excludes=broken
+
+rebuild:
+	cd ~/code/rigor; \
+	python3 -m pip install --upgrade build; \
+	python3 -m build
+
+
