@@ -11,14 +11,14 @@ automated functional or integration testing.
 
 # Requirements
 
-* Python 3.6
+* Python 3.11
 
 
 # Installation
 
-Install using `pip3`...
+Install using `pip`...
 
-    pip3 install rigor
+    pip install rigor
 
 
 # Feature List

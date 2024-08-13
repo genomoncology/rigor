@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rigor"
+authors = [
+    {name = "Ian Maurer", email = "ian@genomoncology.com"},
+]
+description = "rigor"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    'addict',
+    'aiofiles',
+    'beautifulsoup4',
+    'click',
+    'colorama',
+    'httpx',
+    'hyperlink',
+    'importlib-metadata',
+    'jmespath',
+    'related',
+    'xlwt',
+    'structlog'
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    'pytest',
+    'pytest-cov',
+    'pytest-asyncio',
+    'pytest-flake8',
+    'pytest-pythonpath',
+    'pytest-sugar',
+    'pylint',
+    'flake8',
+    'a2wsgi',
+    'starlette',
+    'coverage',
+    'tox'
+]
+
+[project.scripts]
+rigor = "rigor.cli:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "rigor.version.__version__"}
+
+[tool.pylint]
+max-line-length = 120
+disable = [
+    "C",     # Convention
+    "R",     # Refactor
+    "E0401", # import-error
+
+    # for pipeline code
+    'E1120', # no-value-for-parameter
+    'W0622', # redefined-builtin
+]
+
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py311, flake8
+isolated_build = True
+
+[testenv]
+deps =
+    pytest >= 8.0.0
+    flake8
+    -r{toxinidir}/dev-requirements.txt
+setenv =
+    PYTHONPATH = {toxinidir}:{toxinidir}/src
+    COVERAGE_PROCESS_START = {toxinidir}
+
+commands =
+    pytest --basetemp={envtmpdir}
+
+[testenv:flake8]
+description = Run flake8 linter
+deps = flake8
+commands = flake8 src/rigor
+"""
