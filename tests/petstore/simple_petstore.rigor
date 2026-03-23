@@ -5,7 +5,7 @@ steps:
   - description: Get list of pets
 
     request:
-        path: pets
+        path: pet
         status:
           - 400
           - 404
@@ -13,7 +13,7 @@ steps:
   - description: Get specific pet 1
 
     request:
-        path: pets/1
+        path: pet/1
         status:
           - 400
           - 404

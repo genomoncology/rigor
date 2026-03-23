@@ -1,32 +1,38 @@
 import asyncio
-import related
+import attrs
 import bs4
 import time
 from httpx._client import BaseClient, Client, AsyncClient, Limits
+from httpx._transports.asgi import ASGITransport
+from httpx._transports.wsgi import WSGITransport
 
 from . import Suite, const, get_logger
+from .converter import converter
 
-sem = asyncio.Semaphore()
 
-
-@related.immutable
-class Session(object):
-    suite = related.ChildField(Suite)
-    http = related.ChildField(BaseClient)
+@attrs.frozen
+class Session:
+    suite: Suite
+    http: BaseClient
 
     @staticmethod
     def create(suite):
         if suite.concurrency > 0:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             limits = Limits(
                 max_connections=suite.concurrency,
                 max_keepalive_connections=suite.concurrency,
             )
-            http = AsyncClient(limits=limits, app=suite.app)
+            kw = {"limits": limits}
+            if suite.app:
+                kw["transport"] = ASGITransport(app=suite.app)
+            http = AsyncClient(**kw)
             return AsyncSession(suite=suite, http=http, loop=loop)
 
         else:
-            http = Client(app=suite.app)
+            kw = {"transport": WSGITransport(app=suite.app)} if suite.app else {}
+            http = Client(**kw)
             return Session(suite=suite, http=http)
 
     def case_scenarios(self):
@@ -95,7 +101,7 @@ class Session(object):
 
     def do_fetch(self, step_state):
         fetch = step_state.get_fetch()
-        get_logger().debug("fetch request", **related.to_dict(fetch))
+        get_logger().debug("fetch request", **converter.unstructure(fetch))
 
         kw = fetch.get_kwargs()
 
@@ -106,7 +112,7 @@ class Session(object):
             status = context.status_code
         except Exception as e:  # pragma: no cover
             get_logger().error(
-                "do_fetch exception", error=e, **related.to_dict(fetch)
+                "do_fetch exception", error=e, **converter.unstructure(fetch)
             )
             response = "Error"
             status = 500
@@ -115,7 +121,7 @@ class Session(object):
             "fetch response",
             response=response,
             status=status,
-            **related.to_dict(fetch)
+            **converter.unstructure(fetch)
         )
 
         return response, status
@@ -137,20 +143,20 @@ class Session(object):
         return response
 
 
-@related.immutable
+@attrs.frozen
 class AsyncSession(Session):
-    loop = related.ChildField(object)
-    http = related.ChildField(AsyncClient)
+    loop: asyncio.AbstractEventLoop
 
     def run(self, case_scenarios=None):
+        # recreate semaphores bound to the current event loop
+        for key in list(self.suite.semaphores.keys()):
+            self.suite.semaphores[key] = asyncio.Semaphore()
+
         # run and get results
-        future = asyncio.ensure_future(self.run_suite(case_scenarios))
-        self.loop.run_until_complete(future)
-        results = future.result()
+        results = self.loop.run_until_complete(self.run_suite(case_scenarios))
 
         # close http
-        future = asyncio.ensure_future(self.close_http())
-        self.loop.run_until_complete(future)
+        self.loop.run_until_complete(self.close_http())
 
         return results
 
@@ -164,7 +170,7 @@ class AsyncSession(Session):
             case_scenarios = self.case_scenarios()
         for case, scenario in case_scenarios:
             tasks.append(
-                asyncio.ensure_future(self.run_case_scenario(case, scenario))
+                asyncio.create_task(self.run_case_scenario(case, scenario))
             )
         return await asyncio.gather(*tasks, return_exceptions=False)
 
@@ -219,7 +225,7 @@ class AsyncSession(Session):
 
     async def do_fetch(self, step_state):
         fetch = step_state.get_fetch()
-        get_logger().debug("fetch request", **related.to_dict(fetch))
+        get_logger().debug("fetch request", **converter.unstructure(fetch))
 
         kw = fetch.get_kwargs()
 
@@ -231,7 +237,7 @@ class AsyncSession(Session):
 
         except Exception as e:  # pragma: no cover
             get_logger().error(
-                "do_fetch exception", error=e, **related.to_dict(fetch)
+                "do_fetch exception", error=e, **converter.unstructure(fetch)
             )
             response = "Error"
             status = 500
@@ -240,7 +246,7 @@ class AsyncSession(Session):
             "fetch response",
             response=response,
             status=status,
-            **related.to_dict(fetch)
+            **converter.unstructure(fetch)
         )
 
         return response, status
@@ -272,6 +278,4 @@ class OurSoup(bs4.BeautifulSoup):
         return "{}\n\n{}".format(title, body)
 
 
-@related.to_dict.register(OurSoup)
-def _(obj, **kwargs):
-    return str(obj)
+converter.register_unstructure_hook(OurSoup, lambda obj: str(obj))

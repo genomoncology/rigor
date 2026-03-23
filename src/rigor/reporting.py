@@ -1,40 +1,45 @@
+import json
 import urllib
-import related
+from typing import Any, List
+
+import attrs
 import os
 import datetime
 import tempfile
+import yaml
 
 from itertools import chain
 from subprocess import DEVNULL, STDOUT, check_call
 
 from . import SuiteResult, get_logger
+from .converter import converter
 
 
-@related.immutable
-class Tag(object):
-    name = related.StringField()
+@attrs.frozen
+class Tag:
+    name: str
 
 
-@related.immutable
-class Match(object):
-    location = related.StringField(default="?")
+@attrs.frozen
+class Match:
+    location: str = attrs.field(default="?")
 
     @classmethod
     def create(cls, step):
         return cls(location="features/step_definitions/steps.rb;1")
 
 
-@related.immutable
-class Validators(object):
-    actual = related.ChildField(object)
-    expect = related.ChildField(object)
+@attrs.frozen
+class Validators:
+    actual: Any = attrs.field()
+    expect: Any = attrs.field()
 
 
-@related.immutable
-class DocString(object):
-    value = related.StringField()
-    content_type = related.StringField(required=False)
-    line = related.IntegerField(default=6)
+@attrs.frozen
+class DocString:
+    value: str
+    content_type: str = None
+    line: int = 6
 
     @classmethod
     def section(cls, title, obj, **kwargs):
@@ -43,7 +48,7 @@ class DocString(object):
         if isinstance(obj, str):
             content = obj  # pragma: no cover
         elif obj:
-            content = related.to_yaml(obj, **kwargs)
+            content = yaml.dump(converter.unstructure(obj))
         else:
             content = "None"
 
@@ -71,11 +76,11 @@ class DocString(object):
         )
 
 
-@related.immutable
-class StatusResult(object):
-    status = related.StringField()
-    duration = related.IntegerField()
-    line = related.IntegerField(default=4)
+@attrs.frozen
+class StatusResult:
+    status: str
+    duration: int
+    line: int = 4
 
     @classmethod
     def create(cls, success, duration):
@@ -83,26 +88,28 @@ class StatusResult(object):
         return cls(status=status, duration=duration)
 
 
-@related.immutable
-class Step(object):
-    keyword = related.StringField()
+@attrs.frozen
+class Step:
+    keyword: str
 
-    line = related.IntegerField()
-    match = related.ChildField(Match)
-    name = related.StringField()
-    doc_string = related.ChildField(DocString, required=False, default=None)
-    result = related.ChildField(StatusResult, required=False, default=None)
+    line: int
+    name: str
+    match: Match = None
+    doc_string: DocString = None
+    result: StatusResult = None
 
     @classmethod
     def create(cls, step_result, scenario_result):
         if step_result is None:
-            output = related.to_dict(scenario_result.scenario)
+            output = converter.unstructure(scenario_result.scenario)
             output["__file__"] = scenario_result.case.file_path
             return cls(
                 keyword="",
                 line=3,
                 name="Scenario Setup",
-                doc_string=DocString.section("SCENARIO", output),
+                doc_string=DocString(
+                    value=DocString.section("SCENARIO", output)
+                ),
                 match=Match(),
                 result=StatusResult.create(True, 0),
             )
@@ -119,15 +126,15 @@ class Step(object):
             )
 
 
-@related.immutable
-class Element(object):
-    keyword = related.StringField()
-    id = related.StringField()
-    name = related.StringField()
-    line = related.IntegerField()
-    description = related.StringField()
-    type = related.StringField()
-    steps = related.SequenceField(Step, default=[])
+@attrs.frozen
+class Element:
+    keyword: str
+    id: str
+    name: str
+    line: int
+    description: str
+    type: str
+    steps: List[Step] = attrs.field(factory=list)
 
     @classmethod
     def create(cls, scenario_result):
@@ -153,16 +160,16 @@ class Element(object):
         )
 
 
-@related.immutable
-class Feature(object):
-    uri = related.StringField()
-    keyword = related.StringField()
-    id = related.StringField()
-    name = related.StringField()
-    line = related.IntegerField()
-    elements = related.SequenceField(Element, default=[])
-    description = related.StringField(required=False, default=None)
-    tags = related.SequenceField(Tag, required=False, default=None)
+@attrs.frozen
+class Feature:
+    uri: str
+    keyword: str
+    id: str
+    name: str
+    line: int
+    elements: List[Element] = attrs.field(factory=list)
+    description: str = None
+    tags: List = None
 
     @classmethod
     def create(cls, case_result):
@@ -184,8 +191,8 @@ class Feature(object):
         )
 
 
-@related.immutable
-class Cucumber(object):
+@attrs.frozen
+class Cucumber:
     @classmethod
     def create(cls, suite_result):
         features = []
@@ -194,11 +201,11 @@ class Cucumber(object):
         return features
 
 
-@related.immutable
-class ReportEngine(object):
-    suite_result = related.ChildField(SuiteResult)
-    output_path = related.StringField(required=False, default=None)
-    with_html = related.BooleanField(default=False)
+@attrs.frozen
+class ReportEngine:
+    suite_result: SuiteResult
+    output_path: str = None
+    with_html: bool = False
 
     CUCUMBER_JSON = "cucumber.json"
     JAR_NAME = "cucumber-sandwich.jar"
@@ -215,7 +222,8 @@ class ReportEngine(object):
             path = os.path.join(output_path, self.CUCUMBER_JSON)
 
             file = open(path, "w+")
-            file.write(related.to_json(cucumber))
+            data = converter.unstructure(cucumber)
+            file.write(json.dumps(data, indent=4, sort_keys=True))
             file.close()
             get_logger().debug("created cucumber json", path=path)
             success = True

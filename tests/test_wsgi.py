@@ -31,3 +31,54 @@ def test_asgi():
     suite = Suite.create(paths, config, app=asgi, concurrency=1, retries=0)
     result = execute(suite)
     assert result.success
+
+
+def test_transport_no_app():
+    """Regression: httpx 0.28 removed app= from Client/AsyncClient.
+    Session.create() must not pass transport when app is None."""
+    from rigor.session import Session
+    from httpx import Client, AsyncClient
+
+    config = Config.load(paths)
+
+    sync_suite = Suite.create(paths, config, concurrency=0, retries=0)
+    assert isinstance(Session.create(sync_suite).http, Client)
+
+    async_suite = Suite.create(paths, config, concurrency=1, retries=0)
+    assert isinstance(Session.create(async_suite).http, AsyncClient)
+
+
+def test_transport_with_app():
+    """Session.create() uses ASGITransport/WSGITransport when app is set."""
+    from rigor.session import Session
+    from httpx._transports.asgi import ASGITransport
+    from httpx._transports.wsgi import WSGITransport
+
+    config = Config.load(paths)
+
+    wsgi_suite = Suite.create(paths, config, app=wsgi, concurrency=0)
+    wsgi_session = Session.create(wsgi_suite)
+    assert isinstance(wsgi_session.http._transport, WSGITransport)
+
+    asgi_suite = Suite.create(paths, config, app=asgi, concurrency=1)
+    asgi_session = Session.create(asgi_suite)
+    assert isinstance(asgi_session.http._transport, ASGITransport)
+
+
+def test_semaphore_reuse():
+    """Regression: semaphores must be rebound to the new event loop on each
+    execute() call. Before the fix, the second call raised:
+    RuntimeError: <Semaphore> is bound to a different event loop"""
+    semaphore_path = [os.path.join(ROOT_DIR, "semaphore.rigor")]
+    config = Config.load(semaphore_path)
+    suite = Suite.create(semaphore_path, config, app=asgi, concurrency=1)
+
+    assert "test_sem" in suite.semaphores
+
+    result1 = execute(suite)
+    assert result1.success
+
+    # Before the fix this raised RuntimeError about the semaphore being
+    # bound to a different event loop.
+    result2 = execute(suite)
+    assert result2.success

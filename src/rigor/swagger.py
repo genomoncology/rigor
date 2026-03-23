@@ -1,6 +1,12 @@
-import related
 import enum
 import hyperlink
+import yaml
+import attrs
+from attrs import field
+from typing import Any, List, Optional
+from cattrs.gen import make_dict_structure_fn, override
+
+from .converter import converter, mapping_field
 
 
 @enum.unique
@@ -25,104 +31,125 @@ class MIMEType(str):
     pass
 
 
-@related.mutable
-class Contact(object):
+converter.register_structure_hook(MIMEType, lambda v, _: MIMEType(v))
+
+
+@attrs.define
+class Contact:
     """Contact information for the owners of the API."""
 
-    name = related.StringField(required=False)
-    url = related.StringField(required=False)
-    email = related.StringField(required=False)
+    name: Optional[str] = None
+    url: Optional[str] = None
+    email: Optional[str] = None
 
 
-@related.mutable
-class License(object):
-    name = related.StringField(required=True)
-    url = related.StringField(required=False)
+@attrs.define
+class License:
+    name: str
+    url: Optional[str] = None
 
 
-@related.mutable
-class Info(object):
+@attrs.define
+class Info:
     """General information about the API."""
 
-    version = related.StringField(required=True)
-    title = related.StringField(required=True)
-    description = related.StringField(required=False)
-    termsOfService = related.StringField(required=False)
-    contact = related.ChildField(Contact, required=False)
-    license = related.ChildField(License, required=False)
+    version: str
+    title: str
+    description: Optional[str] = None
+    termsOfService: Optional[str] = None
+    contact: Optional[Contact] = None
+    license: Optional[License] = None
 
 
-@related.mutable
-class Definition(object):
-    key = related.StringField(required=True)
-    type = related.ChildField(DataType, required=False)
-    required = related.SequenceField(str, required=False)
-    allOf = related.SequenceField(object, required=False)
-    anyOf = related.SequenceField(object, required=False)
-    is_not = related.SequenceField(object, required=False, key="not")
-    properties = related.ChildField(object, required=False)
+@attrs.define
+class Definition:
+    key: str
+    type: Optional[DataType] = None
+    required: Optional[List[str]] = None
+    allOf: Optional[List[Any]] = None
+    anyOf: Optional[List[Any]] = None
+    is_not: Optional[List[Any]] = None
+    properties: Optional[Any] = None
 
 
-@related.mutable
-class Response(object):
-    code = related.StringField(required=True)
-    description = related.StringField(required=False)
-    schema = related.ChildField(dict, required=False)
+converter.register_structure_hook(
+    Definition,
+    make_dict_structure_fn(
+        Definition, converter, is_not=override(rename="not")
+    ),
+)
 
 
-@related.mutable
-class Parameter(object):
-    name = related.StringField(required=True)
-    is_in = related.StringField(required=True, key="in")
-    schema = related.ChildField(dict, required=False)
+@attrs.define
+class Response:
+    code: str
+    description: Optional[str] = None
+    schema: Optional[dict] = None
 
 
-@related.mutable
-class Operation(object):
-    responses = related.MappingField(Response, "code", required=True)
-    tags = related.SequenceField(str, required=False)
-    summary = related.StringField(required=False)
-    description = related.StringField(required=False)
-    operationId = related.StringField(required=False)
-    parameters = related.SequenceField(Parameter, required=False)
-    consumes = related.SequenceField(MIMEType, required=False)
-    produces = related.SequenceField(MIMEType, required=False)
-    externalDocs = related.ChildField(dict, required=False)
-    schemes = related.SequenceField(Scheme, required=False)
-    deprecated = related.BooleanField(required=False)
-    security = related.ChildField(dict, required=False)
+@attrs.define
+class Parameter:
+    name: str
+    is_in: str
+    schema: Optional[dict] = None
 
 
-@related.mutable
-class Path(object):
-    path = related.StringField(required=True)
-    delete = related.ChildField(Operation, required=False)
-    get = related.ChildField(Operation, required=False)
-    head = related.ChildField(Operation, required=False)
-    options = related.ChildField(Operation, required=False)
-    patch = related.ChildField(Operation, required=False)
-    post = related.ChildField(Operation, required=False)
-    put = related.ChildField(Operation, required=False)
+converter.register_structure_hook(
+    Parameter,
+    make_dict_structure_fn(
+        Parameter, converter, is_in=override(rename="in")
+    ),
+)
+
+
+@attrs.define
+class Operation:
+    responses: dict = mapping_field(Response, "code")
+    tags: Optional[List[str]] = None
+    summary: Optional[str] = None
+    description: Optional[str] = None
+    operationId: Optional[str] = None
+    parameters: Optional[List[Parameter]] = None
+    consumes: Optional[List[MIMEType]] = None
+    produces: Optional[List[MIMEType]] = None
+    externalDocs: Optional[dict] = None
+    schemes: Optional[List[Scheme]] = None
+    deprecated: Optional[bool] = None
+    security: Optional[List[dict]] = None
+
+
+@attrs.define
+class Path:
+    path: str
+    delete: Optional[Operation] = None
+    get: Optional[Operation] = None
+    head: Optional[Operation] = None
+    options: Optional[Operation] = None
+    patch: Optional[Operation] = None
+    post: Optional[Operation] = None
+    put: Optional[Operation] = None
 
     @property
     def methods(self):
         return [method for method in METHODS if getattr(self, method)]
 
 
-@related.mutable
-class Swagger(object):
-    swagger = related.StringField(required=True)
-    info = related.ChildField(Info, required=True)
-    paths = related.MappingField(Path, "path", required=True)
+@attrs.define
+class Swagger:
+    swagger: str
+    info: Info
+    paths: dict = mapping_field(Path, "path")
 
-    host = related.StringField(required=False)
-    basePath = related.StringField(required=False)
-    schemes = related.SequenceField(Scheme, required=False)
-    consumes = related.SequenceField(MIMEType, required=False)
-    produces = related.SequenceField(MIMEType, required=False)
-    definitions = related.MappingField(Definition, "key", required=False)
+    host: Optional[str] = None
+    basePath: Optional[str] = None
+    schemes: Optional[List[Scheme]] = None
+    consumes: Optional[List[MIMEType]] = None
+    produces: Optional[List[MIMEType]] = None
+    definitions: dict = mapping_field(
+        Definition, "key", default=attrs.Factory(dict)
+    )
 
-    _lookup = related.ChildField(dict, required=False)
+    _lookup: dict = field(init=False, factory=dict)
 
     def __attrs_post_init__(self):
         """populate the nested _lookup dictionary."""
@@ -130,8 +157,8 @@ class Swagger(object):
 
     @classmethod
     def loads(cls, content):
-        as_dict = related.from_yaml(content, object_pairs_hook=dict)
-        return related.to_model(cls, as_dict)
+        as_dict = yaml.safe_load(content)
+        return converter.structure(as_dict, cls)
 
     def resolve(self, url):
         """Resolve to Path object based on the URL path provided."""
@@ -183,8 +210,8 @@ class Swagger(object):
 
         schemas = []
         for name, path in suite.schemas.items():
-            json = utils.download_json_with_headers(suite, path)
-            schema = related.to_model(cls, json)
+            data = utils.download_json_with_headers(suite, path)
+            schema = converter.structure(data, cls)
             schemas.append(schema)
         return schemas
 

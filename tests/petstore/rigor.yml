@@ -1,4 +1,4 @@
-host: https://raw.githubusercontent.com
+host: https://petstore.swagger.io
 
 schemas:
-    v2-simple: OAI/OpenAPI-Specification/master/examples/v2.0/json/petstore-simple.json
+    v2-simple: v2/swagger.json

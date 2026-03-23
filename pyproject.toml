@@ -9,14 +9,14 @@ authors = [
 ]
 description = "rigor"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: Other/Proprietary License",
     "Natural Language :: English",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     'addict',
@@ -28,9 +28,11 @@ dependencies = [
     'hyperlink',
     'importlib-metadata',
     'jmespath',
-    'related',
+    'attrs',
+    'cattrs',
     'xlwt',
-    'structlog'
+    'structlog',
+    'pyyaml'
 ]
 dynamic = ["version"]
 
@@ -72,7 +74,7 @@ disable = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py311, flake8
+envlist = py314, flake8
 isolated_build = True
 
 [testenv]

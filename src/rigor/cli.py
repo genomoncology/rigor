@@ -29,7 +29,7 @@ from .version import __version__
 )
 @click.option(
     "--extensions",
-    "-e",
+    "-x",
     multiple=True,
     help="Filter cases by file extension. (e.g. rigor)",
 )

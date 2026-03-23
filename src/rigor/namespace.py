@@ -1,4 +1,3 @@
-import related
 import ast
 import re
 import addict
@@ -7,12 +6,12 @@ import string
 from . import get_logger
 
 
-class Namespace(related.ImmutableDict):
+class Namespace(dict):
     def __getattr__(self, item):
         try:
-            return self.__getitem__(item)
+            return self[item]
         except KeyError:
-            return super(Namespace, self).__getattr__(item)
+            raise AttributeError(item)
 
     def evaluate(self, namespace, existing=None):
         values = existing or {}

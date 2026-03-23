@@ -1,86 +1,95 @@
-import related
+import json
 import jmespath
 import os
 import traceback as tb
+from typing import Any, List, Optional
+from uuid import UUID, uuid4
+
+import attrs
+from attrs import field
 
 from . import Case, Namespace, Step, Suite, Validator, Timer, Session
 from . import enums, get_logger, const, log_with_success, utils
+from .converter import converter
 
 # https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success
 HTTP_SUCCESS = [200, 201, 202, 203, 204, 205, 206, 207, 208, 226]
 
 
-@related.immutable
-class ValidationResult(object):
-    actual = related.ChildField(object)
-    expect = related.ChildField(object)
-    success = related.BooleanField()
-    validator = related.ChildField(Validator)
+@attrs.frozen
+class ValidationResult:
+    actual: Any
+    expect: Any
+    success: bool
+    validator: Validator
 
 
-@related.immutable
-class Fetch(object):
-    url = related.StringField()
-    method = related.StringField()
-    kwargs = related.ChildField(dict)
-    is_form = related.BooleanField()
+@attrs.frozen
+class Fetch:
+    url: str
+    method: str
+    kwargs: dict
+    is_form: bool
 
     def get_kwargs(self):
         kw = self.kwargs.copy()
         data = kw.get("data", None)
 
         if not self.is_form:
-            kw["data"] = related.to_json(data)
+            if isinstance(data, (dict, list)):
+                kw["data"] = json.dumps(data, default=str)
+            else:
+                kw["data"] = data
 
         # unlimited timeout if not specified
         kw.setdefault("timeout", None)
         return kw
 
 
-@related.mutable
-class StepResult(object):
-    step = related.ChildField(Step)
-    success = related.BooleanField(default=True)
-    fetch = related.ChildField(Fetch, required=False)
-    response = related.ChildField(object, required=False)
-    transform = related.ChildField(object, required=False)
-    extract = related.ChildField(Namespace, required=False)
-    status = related.IntegerField(required=False)
-    validations = related.SequenceField(ValidationResult, required=False)
-    duration = related.IntegerField(required=False)
+@attrs.define(slots=False)
+class StepResult:
+    step: Step
+    success: bool = True
+    fetch: Optional[Fetch] = None
+    response: Any = None
+    transform: Any = None
+    extract: Optional[Namespace] = None
+    status: Optional[int] = None
+    validations: List[ValidationResult] = field(factory=list)
+    duration: Optional[int] = None
 
     @property
     def failed_validations(self):
         return [v for v in self.validations if not v.success]
 
 
-@related.mutable
-class ScenarioResult(object):
-    uuid = related.UUIDField()
-    case = related.ChildField(Case, required=None)
-    scenario = related.ChildField(Namespace, required=None)
-    success = related.BooleanField(default=True)
-    step_results = related.SequenceField(StepResult, default=[])
-    suite = related.ChildField(Suite, required=False)
+@attrs.define(slots=False)
+class ScenarioResult:
+    uuid: UUID = field(factory=uuid4)
+    case: Optional[Case] = None
+    scenario: Optional[Namespace] = None
+    success: bool = True
+    step_results: List[StepResult] = field(factory=list)
+    suite: Optional[Suite] = None
 
 
-@related.immutable
-class CaseResult(object):
-    suite = related.ChildField(Suite)
-    case = related.ChildField(Case)
-    passed = related.SequenceField(ScenarioResult, default=[])
-    failed = related.SequenceField(ScenarioResult, default=[])
+@attrs.frozen
+class CaseResult:
+    suite: Suite
+    case: Case
+    passed: List[ScenarioResult] = field(factory=list)
+    failed: List[ScenarioResult] = field(factory=list)
 
     @property
     def success(self):
         return bool(self.passed and not self.failed)
 
 
-@related.immutable
-class SuiteResult(object):
-    suite = related.ChildField(Suite)
-    passed = related.SequenceField(CaseResult, default=[])
-    failed = related.SequenceField(CaseResult, default=[])
+@attrs.frozen
+class SuiteResult:
+    suite: Suite
+    passed: List[CaseResult] = field(factory=list)
+    failed: List[CaseResult] = field(factory=list)
 
     @property
     def success(self):
@@ -106,14 +115,14 @@ class SuiteResult(object):
         return cls(suite=suite, passed=passed, failed=failed)
 
 
-@related.mutable
+@attrs.define(slots=False)
 class State(ScenarioResult, Timer):
-    session = related.ChildField(Session, required=False)
-    globals = related.ChildField(Namespace, default=Namespace())
-    extract = related.ChildField(Namespace, default=Namespace())
-    iterate = related.ChildField(Namespace, default=Namespace())
-    response = related.ChildField(Namespace, default=Namespace())
-    transform = related.ChildField(Namespace, default=Namespace())
+    session: Optional[Session] = None
+    globals: Namespace = field(factory=Namespace)
+    extract: Namespace = field(factory=Namespace)
+    iterate: Namespace = field(factory=Namespace)
+    response: Namespace = field(factory=Namespace)
+    transform: Namespace = field(factory=Namespace)
 
     def __attrs_post_init__(self):
         if self.suite is None:
@@ -185,7 +194,7 @@ class State(ScenarioResult, Timer):
         return f"Failure: {method_name}\n\n{stack}"
 
     def do_extract(self, step):
-        existing = related.to_dict(self.extract) if self.extract else {}
+        existing = converter.unstructure(self.extract) if self.extract else {}
         return step.extract.evaluate(self.namespace, existing)
 
     def do_validate(self, step, status):
@@ -196,7 +205,7 @@ class State(ScenarioResult, Timer):
         validator = Validator(
             actual="${status}",
             expect=expected_status,
-            compare=enums.Comparison.IN,
+            compare=enums.Comparison.IN.value,
         )
         results.append(
             ValidationResult(
@@ -233,7 +242,7 @@ class State(ScenarioResult, Timer):
         expect = Namespace.render(expect, self.namespace)
 
         compare = Namespace.render(validator.compare, self.namespace)
-        compare = related.to_model(enums.Comparison, compare)
+        compare = enums.Comparison(compare)
         success = compare.evaluate(actual, expect)
 
         return ValidationResult(
@@ -265,10 +274,10 @@ class State(ScenarioResult, Timer):
         )
 
 
-@related.mutable
+@attrs.define(slots=False)
 class StepState(StepResult, Timer):
-    state = related.ChildField(State, required=False)
-    retry = related.IntegerField(required=False, default=0)
+    state: Optional[State] = None
+    retry: int = 0
 
     @property
     def namespace(self):
@@ -313,12 +322,12 @@ class StepState(StepResult, Timer):
         if content_type:
             headers[const.CONTENT_TYPE] = content_type
 
-        headers.update(related.to_dict(self.suite.headers) or {})
+        headers.update(converter.unstructure(self.suite.headers) or {})
 
         if self.case:
-            headers.update(related.to_dict(self.case.headers) or {})
+            headers.update(converter.unstructure(self.case.headers) or {})
 
-        headers.update(related.to_dict(self.request.headers) or {})
+        headers.update(converter.unstructure(self.request.headers) or {})
 
         return Namespace(headers).evaluate(self.namespace)
 
