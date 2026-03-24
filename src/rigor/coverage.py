@@ -40,7 +40,7 @@ class MethodReport:
         self.step_counts.add(step_pass)
 
         all_pass = case_pass and scenario_pass and step_pass
-        for param in params:
+        for param in (params or []):
             self.param_counts(param).add(all_pass)
 
     @property

@@ -36,10 +36,13 @@ class Fetch:
         data = kw.get("data", None)
 
         if not self.is_form:
-            if isinstance(data, (dict, list)):
-                kw["data"] = json.dumps(data, default=str)
-            else:
-                kw["data"] = data
+            kw.pop("data", None)
+            if data is not None:
+                if isinstance(data, (dict, list)):
+                    kw["content"] = json.dumps(data, default=str).encode()
+                else:
+                    kw["content"] = data.encode() if isinstance(
+                        data, str) else data
 
         # unlimited timeout if not specified
         kw.setdefault("timeout", None)
