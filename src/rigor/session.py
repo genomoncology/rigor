@@ -3,8 +3,7 @@ import attrs
 import bs4
 import time
 from httpx._client import BaseClient, Client, AsyncClient, Limits
-from httpx._transports.asgi import ASGITransport
-from httpx._transports.wsgi import WSGITransport
+
 
 from . import Suite, const, get_logger
 from .converter import converter
@@ -25,13 +24,13 @@ class Session:
                 max_keepalive_connections=suite.concurrency,
             )
             kw = {"limits": limits}
-            if suite.app:
-                kw["transport"] = ASGITransport(app=suite.app)
+            if suite.transport:
+                kw["transport"] = suite.transport
             http = AsyncClient(**kw)
             return AsyncSession(suite=suite, http=http, loop=loop)
 
         else:
-            kw = {"transport": WSGITransport(app=suite.app)} if suite.app else {}
+            kw = {"transport": suite.transport} if suite.transport else {}
             http = Client(**kw)
             return Session(suite=suite, http=http)
 

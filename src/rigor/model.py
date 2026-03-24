@@ -238,7 +238,7 @@ class Suite(Profile):
                                   default=attrs.Factory(dict))
     semaphores: dict = mapping_field(Semaphore, "semaphore",
                                      default=attrs.Factory(dict))
-    app: object = field(default=None)
+    transport: object = field(default=None)
 
     def __attrs_post_init__(self):
         from . import collect
