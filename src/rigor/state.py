@@ -341,7 +341,11 @@ class StepState(StepResult, Timer):
 
             params = self.request.get_params(self.namespace)
             files = self.get_files()
-            kw = dict(headers=headers, data=data, params=params, files=files)
+            kw = dict(headers=headers, data=data)
+            if params:
+                kw["params"] = params
+            if files:
+                kw["files"] = files
             self.fetch = Fetch(
                 method=self.method, url=self.url, kwargs=kw, is_form=is_form
             )
