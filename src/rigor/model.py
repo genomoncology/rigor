@@ -232,9 +232,9 @@ class Case:
 @define
 class Suite(Profile):
     paths: Optional[list] = field(default=None)
-    queued: dict = mapping_field(Profile, "file_path",
+    queued: dict = mapping_field(Case, "file_path",
                                  default=attrs.Factory(dict))
-    skipped: dict = mapping_field(Profile, "file_path",
+    skipped: dict = mapping_field(Case, "file_path",
                                   default=attrs.Factory(dict))
     semaphores: dict = mapping_field(Semaphore, "semaphore",
                                      default=attrs.Factory(dict))
@@ -262,7 +262,6 @@ class Suite(Profile):
 
     def add_case(self, case):
         if case.is_active(self.includes, self.excludes):
-            # replaces: self.queued.add(case)
             self.queued[case.file_path] = case
             if (
                 case.semaphore is not None
@@ -271,7 +270,6 @@ class Suite(Profile):
                 self.semaphores[case.semaphore] = Semaphore()
             get_logger().debug("case queued", case=case.file_path)
         else:
-            # replaces: self.skipped.add(case)
             self.skipped[case.file_path] = case
             get_logger().debug("case skipped", case=case.file_path)
 
