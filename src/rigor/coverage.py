@@ -1,17 +1,23 @@
+from typing import List
+
+import attrs
+from attrs import define, field
+
 from . import Swagger, Path, SuiteResult
-import related
 import os
 import xlwt
 import tempfile
 import datetime
 
+from .converter import mapping_field
 
-@related.mutable
-class Counts(object):
-    key = related.StringField()
-    passed = related.IntegerField(default=0)
-    failed = related.IntegerField(default=0)
-    total = related.IntegerField(default=0)
+
+@define
+class Counts:
+    key: str
+    passed: int = field(default=0)
+    failed: int = field(default=0)
+    total: int = field(default=0)
 
     def add(self, passed):
         if passed:
@@ -22,11 +28,11 @@ class Counts(object):
         self.total += 1
 
 
-@related.mutable
-class MethodReport(object):
-    url = related.StringField()
-    method = related.StringField()
-    counts = related.MappingField(Counts, "key", default={})
+@define
+class MethodReport:
+    url: str
+    method: str
+    counts: dict = mapping_field(Counts, "key", default=attrs.Factory(dict))
 
     def add(self, case_pass, scenario_pass, step_pass, params):
         self.case_counts.add(case_pass)
@@ -34,7 +40,7 @@ class MethodReport(object):
         self.step_counts.add(step_pass)
 
         all_pass = case_pass and scenario_pass and step_pass
-        for param in params:
+        for param in (params or []):
             self.param_counts(param).add(all_pass)
 
     @property
@@ -77,21 +83,22 @@ class MethodReport(object):
         return self.step_counts.failed
 
 
-@related.mutable
-class PathReport(object):
-    url = related.StringField()
-    obj = related.ChildField(Path)
-    methods = related.MappingField(MethodReport, "method", default={})
+@define
+class PathReport:
+    url: str
+    obj: Path
+    methods: dict = mapping_field(MethodReport,
+                                  "method", default=attrs.Factory(dict))
 
     def get_method_report(self, method):
         return self.methods.setdefault(method, MethodReport(self.url, method))
 
 
-@related.mutable
-class CoverageReport(object):
-    suite_result = related.ChildField(SuiteResult)
-    schemas = related.SequenceField(Swagger)
-    paths = related.MappingField(PathReport, "url")
+@define
+class CoverageReport:
+    suite_result: SuiteResult
+    schemas: List[Swagger] = field(factory=list)
+    paths: dict = mapping_field(PathReport, "url")
 
     def prepare(self):
         """iterate through all scenario-steps and record the counts."""

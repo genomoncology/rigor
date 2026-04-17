@@ -5,10 +5,9 @@ import os
 
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "petstore")
-HOST = "https://raw.githubusercontent.com"
+HOST = "https://petstore.swagger.io"
 SCHEMA = (
-    "OAI/OpenAPI-Specification/master/examples/v2.0/"
-    "json/petstore-simple.json"
+    "v2/swagger.json"
 )
 
 
@@ -46,7 +45,7 @@ def test_config_ok_in_suite(suite):
 
 
 def test_schema_ok(schema):
-    assert len(schema.paths) == 2
+    assert len(schema.paths) == 14
 
 
 def test_suite_result(result):
@@ -57,8 +56,8 @@ def test_suite_result(result):
 
 
 def test_report_for_detail(report):
-    path_report = report.get_method_report("/pets/1", "get")
-    assert path_report.url == "/pets/{id}"
+    path_report = report.get_method_report("/pet/1", "get")
+    assert path_report.url == "/pet/{petId}"
     assert path_report.case_counts.passed == 1
     assert path_report.case_counts.failed == 1
     assert path_report.scenario_counts.passed == 1

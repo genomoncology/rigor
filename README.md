@@ -11,7 +11,7 @@ automated functional or integration testing.
 
 # Requirements
 
-* Python 3.11
+* Python 3.14
 
 
 # Installation
@@ -153,7 +153,6 @@ Copyright (c) 2017 [Ian Maurer], [Genomoncology LLC]
 
 [Click]: http://click.pocoo.org/
 [PyRestTest]: https://github.com/svanoort/pyresttest/
-[Related]: https://github.com/genomoncology/related
 [Swagger]: https://swagger.io/specification/
 [Tavern]: https://taverntesting.github.io/
 [aiohttp]: http://aiohttp.readthedocs.io/en/stable/

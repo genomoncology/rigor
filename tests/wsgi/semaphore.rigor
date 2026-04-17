@@ -1,0 +1,15 @@
+name: Semaphore
+host: http://127.0.0.1
+semaphore: test_sem
+tags:
+  - wsgi
+scenarios:
+  - {}
+  - {}
+steps:
+  - description: Call home
+    request:
+      path: home
+    validate:
+      - expect: {'a': 123}
+        actual: '{response}'

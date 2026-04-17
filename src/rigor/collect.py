@@ -10,11 +10,9 @@ def collect(suite):
     log = get_logger()
     log.info("collecting tests", paths=suite.paths, cwd=os.getcwd())
 
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(async_collect(suite))
-    loop.run_until_complete(future)
+    cases = asyncio.run(async_collect(suite))
 
-    for case in future.result():
+    for case in cases:
         suite.add_case(case)
 
     log.info(
@@ -24,10 +22,10 @@ def collect(suite):
 
 async def async_collect(suite):
     tasks = []
-    for file_path in glob_paths(suite):
-        tasks.append(asyncio.ensure_future(collect_case(suite, file_path)))
-    cases = await asyncio.gather(*tasks)
-    return cases
+    async with asyncio.TaskGroup() as tg:
+        for file_path in glob_paths(suite):
+            tasks.append(tg.create_task(collect_case(suite, file_path)))
+    return [task.result() for task in tasks]
 
 
 async def collect_case(suite, file_path):

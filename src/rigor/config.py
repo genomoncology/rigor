@@ -1,45 +1,43 @@
-import related
 import os
 import copy
+from typing import Optional
+
+import attrs
+import yaml
+from attrs import define, field
 
 from . import Namespace, const, get_logger, utils
+from .converter import mapping_field, converter
 
 
-@related.immutable
-class Profile(object):
-    name = related.StringField(default="__root__")
-    host = related.StringField(required=False)
-    schemas = related.ChildField(Namespace, required=False)
-    globals = related.ChildField(Namespace, required=False)
-    headers = related.ChildField(Namespace, required=False)
-    prefixes = related.SequenceField(str, default=None)
-    extensions = related.SequenceField(str, default=["rigor"])
-    includes = related.SequenceField(str, default=None)
-    excludes = related.SequenceField(str, default=None)
-    concurrency = related.IntegerField(default=5)
-    retries = related.IntegerField(default=0)
-    sleep = related.IntegerField(default=60)
-    retry_failed = related.BooleanField(default=False, required=False)
-
-    def __attrs_post_init__(self):
-        # circumvent frozen error due to immutable
-        extensions = [
-            ext[1:] if ext.startswith(".") else ext
-            for ext in self.extensions or []
-        ]
-        object.__setattr__(self, "extensions", extensions)
+@define
+class Profile:
+    name: str = field(default="__root__")
+    host: Optional[str] = field(default=None)
+    schemas: Optional[Namespace] = field(default=None)
+    globals: Optional[Namespace] = field(default=None)
+    headers: Optional[Namespace] = field(default=None)
+    prefixes: Optional[list] = field(factory=list)
+    extensions: list = field(factory=lambda: ["rigor"])
+    includes: Optional[list] = field(factory=list)
+    excludes: Optional[list] = field(factory=list)
+    concurrency: int = field(default=5)
+    retries: int = field(default=0)
+    sleep: int = field(default=60)
+    retry_failed: bool = False
 
     def as_dict(self):
-        kwargs = related.to_dict(self)
+        kwargs = converter.unstructure(self)
         kwargs.pop("profiles", None)
         kwargs.pop("file_path", None)
         return kwargs
 
 
-@related.immutable
+@define
 class Config(Profile):
-    profiles = related.MappingField(Profile, "name", default={})
-    file_path = related.StringField(required=False, default=None)
+    profiles: dict = mapping_field(Profile, "name",
+                                   default=attrs.Factory(dict))
+    file_path: str | None = attrs.field(default=None)
 
     def get_profile(self, name):
         # todo: determine if name is valid, rather than just returning default.
@@ -55,7 +53,8 @@ class Config(Profile):
             content = open(file_path).read()
             config = cls.loads(content, file_path)
             get_logger().info("config file", file_path=file_path)
-            get_logger().debug("config details", **related.to_dict(config))
+            details = converter.unstructure(config)
+            get_logger().debug("config details", **details)
         else:
             config = cls()
             get_logger().info("no config file not found", paths=paths)
@@ -82,10 +81,9 @@ class Config(Profile):
 
     @classmethod
     def loads(cls, content, file_path=None):
-        """Load JSON string into a Config object."""
-        vals = related.from_yaml(
-            content, file_path=file_path, object_pairs_hook=dict
-        )
+
+        """Load YAML string into a Config object."""
+        vals = yaml.safe_load(content) or {}
 
         # environment namespace (RIGOR_)
         env_ns = Namespace(
@@ -98,7 +96,6 @@ class Config(Profile):
 
         # pop profiles and file_path from root config
         profiles = vals.pop("profiles", {})
-        file_path = vals.pop("file_path")
 
         # iterate and construct profile sub-dictionaries with root info
         for name, profile in profiles.items():
@@ -112,7 +109,7 @@ class Config(Profile):
         vals["file_path"] = file_path
         vals["profiles"] = profiles
         eval_update_ns(vals, env_ns)
-        return related.to_model(cls, vals)
+        return converter.structure(vals, cls)
 
 
 def eval_update_ns(profile, env_ns, field="globals"):

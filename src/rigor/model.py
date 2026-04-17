@@ -1,13 +1,17 @@
 import os
-import io
 import json
 from asyncio import Semaphore
+from uuid import UUID, uuid4
+from typing import List, Any, Optional
 
 from itertools import product
 
-import related
-
+import attrs
+import yaml
+from attrs import define, field
 from . import Method, Namespace, Profile, get_logger, utils
+from cattrs.gen import make_dict_structure_fn
+from .converter import mapping_field, converter
 
 
 class Iterator(Namespace):
@@ -37,24 +41,30 @@ class Iterator(Namespace):
             yield Namespace()
 
 
-@related.immutable
-class Validator(object):
-    actual = related.ChildField(object)
-    expect = related.ChildField(object)
-    compare = related.StringField(default="equals")
+converter.register_structure_hook(
+    Iterator,
+    lambda v, cls: Iterator(v),
+)
 
 
-@related.immutable
-class Requestor(object):
-    path = related.StringField()
-    method = related.ChildField(Method, default=Method.GET)
-    host = related.StringField(required=False)
-    headers = related.ChildField(Namespace, required=False)
-    params = related.ChildField(Namespace, required=False)
-    data = related.ChildField(object, required=False)
-    form = related.ChildField(Namespace, required=False)
-    files = related.ChildField(Namespace, required=False)
-    status = related.SequenceField(int, required=False)
+@attrs.frozen
+class Validator:
+    actual: Any = attrs.field()
+    expect: Any = attrs.field()
+    compare: str = attrs.field(default="equals")
+
+
+@attrs.frozen
+class Requestor:
+    path: str
+    method: Method = field(default=Method.GET)
+    host: Optional[str] = field(default=None)
+    headers: Optional[Namespace] = field(default=None)
+    params: Optional[Namespace] = field(default=None)
+    data: Optional[Any] = field(default=None)
+    form: Optional[Namespace] = field(default=None)
+    files: Optional[Namespace] = field(default=None)
+    status: List[int] = field(factory=list)
 
     def get_params(self, namespace):
         dd = self.params.evaluate(namespace) if self.params else {}
@@ -110,18 +120,28 @@ class Requestor(object):
         return (body, False) if body else (form, True)
 
 
-@related.immutable
-class Step(object):
-    description = related.StringField()
-    request = related.ChildField(Requestor)
-    extract = related.ChildField(Namespace, default=Namespace())
-    iterate = related.ChildField(Iterator, default=Iterator())
-    validate = related.SequenceField(Validator, required=False)
-    condition = related.BooleanField(required=False, default=None)
-    transform = related.StringField(required=False, default=None)
-    name = related.StringField(required=False, default=None)
-    sleep = related.FloatField(required=False, default=0.01)
-    retryable = related.BooleanField(required=False, default=False)
+_default_structure_requestor = make_dict_structure_fn(Requestor, converter)
+
+converter.register_structure_hook(
+    Requestor,
+    lambda v, cls: _default_structure_requestor(
+        {"path": v} if isinstance(v, str) else v, cls
+    ),
+)
+
+
+@define
+class Step:
+    description: str
+    request: Requestor
+    extract: Namespace = field(default=attrs.Factory(Namespace))
+    iterate: Iterator = field(default=attrs.Factory(Iterator))
+    validate: Optional[List[Validator]] = field(default=attrs.Factory(list))
+    condition: Optional[bool] = None
+    transform: Optional[str] = field(default=None)
+    name: Optional[str] = field(default=None)
+    sleep: Optional[float] = field(default=0.01)
+    retryable: Optional[bool] = False
 
     def is_retryable(self):
         return self.is_get() or self.retryable
@@ -130,19 +150,19 @@ class Step(object):
         return self.request and self.request.method == Method.GET
 
 
-@related.immutable
-class Case(object):
-    scenarios = related.SequenceField(Namespace)
-    name = related.StringField(required=False, default=None)
-    steps = related.SequenceField(Step, default=[])
-    format = related.StringField(default="1.0")
-    host = related.StringField(required=False)
-    tags = related.SequenceField(str, required=False)
-    semaphore = related.StringField(required=False, default=None)
-    headers = related.ChildField(Namespace, required=False)
-    file_path = related.StringField(default=None)
-    is_valid = related.BooleanField(default=True)
-    uuid = related.UUIDField()
+@attrs.frozen
+class Case:
+    scenarios: List[Namespace]
+    host: str | None = None
+    tags: List[str] = field(factory=list)
+    headers: Optional[Namespace] | None = None
+    name: Optional[str] = None
+    steps: List[Step] = attrs.Factory(list)
+    format: str = "1.0"
+    semaphore: Optional[str] = None
+    file_path: Optional[str] = None
+    is_valid: bool = True
+    uuid: UUID = attrs.Factory(uuid4)
 
     @classmethod
     def prep_scenarios(cls, original, dir_path):
@@ -155,8 +175,8 @@ class Case(object):
         for scenario in original or [{}]:
             if isinstance(scenario, str):
                 scenario_file_path = os.path.join(dir_path, scenario)
-                scenario = related.from_yaml(
-                    open(scenario_file_path), object_pairs_hook=dict
+                scenario = yaml.safe_load(
+                    open(scenario_file_path)
                 )
 
             name = scenario.get("__name__") or "Scenario #%s" % counter
@@ -183,17 +203,16 @@ class Case(object):
     def loads(cls, content, file_path=None):
         try:
             content = cls.strip_comments(content)
-            as_dict = related.from_yaml(
-                content, file_path=file_path, object_pairs_hook=dict
-            )
+            as_dict = yaml.safe_load(content) or {}
+            if file_path:
+                as_dict["file_path"] = file_path
             scenarios = as_dict.get("scenarios", [])
             dir_path = os.path.dirname(file_path)
             as_dict["scenarios"] = cls.prep_scenarios(scenarios, dir_path)
 
-            return related.to_model(Case, as_dict)
+            return converter.structure(as_dict, Case)
 
         except Exception as e:
-            # raise e
             get_logger().error(
                 "Failed to Load Case", file_path=file_path, error=str(e)
             )
@@ -210,13 +229,16 @@ class Case(object):
         return os.path.dirname(self.file_path)
 
 
-@related.mutable
+@define
 class Suite(Profile):
-    paths = related.SequenceField(str, default=None)
-    queued = related.MappingField(Case, "file_path", default={})
-    skipped = related.MappingField(Case, "file_path", default={})
-    semaphores = related.MappingField(Semaphore, "semaphore", default={})
-    app = related.ChildField(object, default=None)
+    paths: Optional[list] = field(default=None)
+    queued: dict = mapping_field(Case, "file_path",
+                                 default=attrs.Factory(dict))
+    skipped: dict = mapping_field(Case, "file_path",
+                                  default=attrs.Factory(dict))
+    semaphores: dict = mapping_field(Semaphore, "semaphore",
+                                     default=attrs.Factory(dict))
+    transport: object = field(default=None)
 
     def __attrs_post_init__(self):
         from . import collect
@@ -240,7 +262,7 @@ class Suite(Profile):
 
     def add_case(self, case):
         if case.is_active(self.includes, self.excludes):
-            self.queued.add(case)
+            self.queued[case.file_path] = case
             if (
                 case.semaphore is not None
                 and case.semaphore not in self.semaphores.keys()
@@ -248,7 +270,7 @@ class Suite(Profile):
                 self.semaphores[case.semaphore] = Semaphore()
             get_logger().debug("case queued", case=case.file_path)
         else:
-            self.skipped.add(case)
+            self.skipped[case.file_path] = case
             get_logger().debug("case skipped", case=case.file_path)
 
     @classmethod
@@ -264,11 +286,3 @@ class Suite(Profile):
 
         # construct Suite
         return cls(paths=paths, **kwargs)
-
-
-# dispatch
-
-
-@related.to_dict.register(io.BufferedReader)
-def _(obj, **kwargs):
-    return "<file: %s>" % obj.name
