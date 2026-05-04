@@ -11,7 +11,7 @@ automated functional or integration testing.
 
 # Requirements
 
-* Python 3.14
+* Python 3.12+
 
 
 # Installation

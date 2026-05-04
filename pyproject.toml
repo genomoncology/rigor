@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,15 +7,18 @@ name = "rigor"
 authors = [
     {name = "Ian Maurer", email = "ian@genomoncology.com"},
 ]
-description = "rigor"
+description = "DSL and CLI for HTTP API testing"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: Other/Proprietary License",
     "Natural Language :: English",
     "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
@@ -35,6 +38,12 @@ dependencies = [
     'pyyaml'
 ]
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/genomoncology/rigor"
+Repository = "https://github.com/genomoncology/rigor"
+Changelog = "https://github.com/genomoncology/rigor/blob/master/CHANGELOG.md"
+Issues = "https://github.com/genomoncology/rigor/issues"
 
 [project.optional-dependencies]
 dev = [
